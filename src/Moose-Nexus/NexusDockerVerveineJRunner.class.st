@@ -42,3 +42,10 @@ NexusDockerVerveineJRunner >> version [
 
 	^ version ifNil: [ version := 'latest' ]
 ]
+
+{ #category : 'accessing' }
+NexusDockerVerveineJRunner >> version: aString [
+	"The VerveineJ version to use."
+
+	version := aString
+]
