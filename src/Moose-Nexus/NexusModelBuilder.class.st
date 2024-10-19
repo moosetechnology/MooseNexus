@@ -9,8 +9,8 @@ Class {
 	#instVars : [
 		'project',
 		'withDependencies',
-		'creator',
-		'importer'
+		'importer',
+		'extractor'
 	],
 	#category : 'Moose-Nexus-Modeling',
 	#package : 'Moose-Nexus',
@@ -23,7 +23,7 @@ NexusModelBuilder >> build [
 
 	[
 	self setUp.
-	creator run ] ensure: [ self cleanUp ]
+	extractor run ] ensure: [ self cleanUp ]
 ]
 
 { #category : 'cleanup' }
@@ -34,15 +34,15 @@ NexusModelBuilder >> cleanUp [
 ]
 
 { #category : 'accessing' }
-NexusModelBuilder >> creator [
+NexusModelBuilder >> extractor [
 
-	^ creator
+	^ extractor
 ]
 
 { #category : 'accessing' }
-NexusModelBuilder >> creator: aNexusModelCreator [
+NexusModelBuilder >> extractor: aNexusModelCreator [
 
-	creator := aNexusModelCreator
+	extractor := aNexusModelCreator
 ]
 
 { #category : 'accessing' }
@@ -83,9 +83,9 @@ NexusModelBuilder >> setUp [
 		                createDirectory.
 	project dependencies do: [ :dependency |
 		| artifact |
-		artifact := (dependency at: 'directory') asFileReference.
+		artifact := (dependency at: #directory) asFileReference.
 		artifact copyTo: dependencies / artifact basename ].
-	creator target: project directory
+	extractor target: project directory
 ]
 
 { #category : 'accessing' }

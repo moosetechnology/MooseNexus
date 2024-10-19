@@ -3,7 +3,7 @@
 "
 Class {
 	#name : 'NexusVerveineJRunner',
-	#superclass : 'NexusModelCreator',
+	#superclass : 'NexusModelExtractor',
 	#instVars : [
 		'format',
 		'summary',

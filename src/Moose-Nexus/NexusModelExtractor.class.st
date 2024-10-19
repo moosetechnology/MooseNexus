@@ -1,5 +1,5 @@
 Class {
-	#name : 'NexusModelCreator',
+	#name : 'NexusModelExtractor',
 	#superclass : 'Object',
 	#instVars : [
 		'target'
@@ -10,19 +10,19 @@ Class {
 }
 
 { #category : 'testing' }
-NexusModelCreator class >> canHandle: language [
+NexusModelExtractor class >> canHandle: language [
 
 	self subclassResponsibility
 ]
 
 { #category : 'instance creation' }
-NexusModelCreator class >> defaultImplementation [
+NexusModelExtractor class >> defaultImplementation [
 
 	^ self new
 ]
 
 { #category : 'instance creation' }
-NexusModelCreator class >> forLanguage: language [
+NexusModelExtractor class >> forLanguage: language [
 
 	self allSubclassesDo: [ :subclass |
 		(subclass canHandle: language) ifTrue: [
@@ -31,13 +31,13 @@ NexusModelCreator class >> forLanguage: language [
 ]
 
 { #category : 'accessing' }
-NexusModelCreator >> target [
+NexusModelExtractor >> target [
 
 	^ target
 ]
 
 { #category : 'accessing' }
-NexusModelCreator >> target: pathString [
+NexusModelExtractor >> target: pathString [
 
 	target := pathString
 ]

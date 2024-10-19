@@ -21,9 +21,9 @@ Class {
 	#instVars : [
 		'directory',
 		'group',
-		'artifact',
 		'version',
-		'dependencies'
+		'dependencies',
+		'name'
 	],
 	#category : 'Moose-Nexus-Project',
 	#package : 'Moose-Nexus',
@@ -73,18 +73,6 @@ NexusProject class >> isAbstract [
 	^ self == NexusProject
 ]
 
-{ #category : 'accessing' }
-NexusProject >> artifact [
-
-	^ artifact ifNil: [ artifact := self determineArtifact ]
-]
-
-{ #category : 'accessing' }
-NexusProject >> artifact: aSymbol [
-
-	artifact := aSymbol
-]
-
 { #category : 'building' }
 NexusProject >> buildModel [
 
@@ -104,13 +92,6 @@ NexusProject >> dependencies: aDictionary [
 ]
 
 { #category : 'querying' }
-NexusProject >> determineArtifact [
-
-	Error signal: 'Instance of ' , self className
-		, ' ignores how to determine the artifact'
-]
-
-{ #category : 'accessing' }
 NexusProject >> determineDependencies [
 
 	^ #(  )
@@ -121,6 +102,13 @@ NexusProject >> determineGroup [
 
 	Error signal: 'Instance of ' , self className
 		, ' ignores how to determine the group'
+]
+
+{ #category : 'querying' }
+NexusProject >> determineName [
+
+	Error signal: 'Instance of ' , self className
+		, ' ignores how to determine the artifact'
 ]
 
 { #category : 'querying' }
@@ -170,9 +158,21 @@ NexusProject >> language: aString [
 NexusProject >> modelBuilder [
 
 	^ NexusModelBuilder new
-		  creator: (NexusModelCreator forLanguage: self language);
+		  extractor: (NexusModelExtractor forLanguage: self language);
 		  project: self;
 		  yourself
+]
+
+{ #category : 'accessing' }
+NexusProject >> name [
+
+	^ name ifNil: [ name := self determineName ]
+]
+
+{ #category : 'accessing' }
+NexusProject >> name: aSymbol [
+
+	name := aSymbol
 ]
 
 { #category : 'printing' }
@@ -184,9 +184,9 @@ NexusProject >> printOn: stream [
 		ifNil: [ stream nextPutAll: '<group>' ]
 		ifNotNil: [ stream nextPutAll: group ].
 	stream nextPut: $:.
-	artifact
-		ifNil: [ stream nextPutAll: '<artifact>' ]
-		ifNotNil: [ stream nextPutAll: artifact ].
+	name
+		ifNil: [ stream nextPutAll: '<project>' ]
+		ifNotNil: [ stream nextPutAll: name ].
 	stream nextPut: $:.
 	version
 		ifNil: [ stream nextPutAll: '<version>' ]
@@ -202,7 +202,7 @@ NexusProject >> properties [
 		  with: #language -> self language
 		  with: #nature -> self className
 		  with: #group -> self group
-		  with: #artifact -> self artifact
+		  with: #name -> self name
 		  with: #version -> self version
 		  with: #dependencies -> self dependencies
 ]
@@ -211,7 +211,7 @@ NexusProject >> properties [
 NexusProject >> readProperties: properties [
 
 	properties keysAndValuesDo: [ :key :value |
-		key = 'nature' ifFalse: [
+		key = #nature ifFalse: [
 			self perform: key asSymbol asMutator with: value ] ]
 ]
 

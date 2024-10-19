@@ -54,12 +54,12 @@ NexusRepository >> directory: aFile [
 ]
 
 { #category : 'enumerating' }
-NexusRepository >> group: group artifact: artifact version: version [
-	"Search the repository for the project with the specified group, artifact and version."
+NexusRepository >> group: group project: project version: version [
+	"Search the repository for the project with the specified group, project name and version."
 
 	^ NexusProject fromNexusDirectory:
 		  directory / 'repository' / (group copyReplaceAll: '.' with: '/')
-		  / artifact / version
+		  / project / version
 ]
 
 { #category : 'printing' }
@@ -68,9 +68,9 @@ NexusRepository >> printProjectProperties: propertiesFile on: writeStream [
 	propertiesFile readStreamDo: [ :rs |
 		| properties |
 		properties := STON fromStream: rs.
-		writeStream << (properties at: 'nature') << '('
-		<< (properties at: 'group') << ':' << (properties at: 'artifact')
-		<< ':' << (properties at: 'version') << ')' ]
+		writeStream << (properties at: #nature) << '('
+		<< (properties at: #group) << ':' << (properties at: #artifact)
+		<< ':' << (properties at: #version) << ')' ]
 ]
 
 { #category : 'printing' }
@@ -101,17 +101,16 @@ NexusRepository >> projects [
 ]
 
 { #category : 'adding' }
-NexusRepository >> record: artifact fromDirectory: pathString [
+NexusRepository >> record: name fromDirectory: pathString [
 
 	^ self recordProject:
-		  ((NexusProject fromDirectory: pathString) analyze artifact:
-			   artifact)
+		  ((NexusProject fromDirectory: pathString) analyze name: name)
 ]
 
 { #category : 'adding' }
 NexusRepository >> recordFromDirectory: pathString [
-	"It is recommended that you specify the artifact name using `record:fromDirectory:`,
-	unless you are sure that there is only one artifact in the project and it can be determined."
+	"It is recommended that you specify the project name using `record:fromDirectory:`,
+	unless you are sure that there is only one managed project in the directory and it can be determined."
 
 	^ self recordProject:
 		  (NexusProject fromDirectory: pathString) analyze
@@ -141,6 +140,6 @@ NexusRepository >> recordProject: project [
 NexusRepository >> resolveDirectoryOf: project [
 
 	^ directory / 'repository'
-	  / (project group copyReplaceAll: '.' with: '/') / project artifact
+	  / (project group copyReplaceAll: '.' with: '/') / project name
 	  / project version
 ]

@@ -56,14 +56,6 @@ NexusManagedProject class >> knownLanguages [
 ]
 
 { #category : 'querying' }
-NexusManagedProject >> determineArtifact [
-
-	(projects size == 1 and: [ projects anyOne size == 1 ]) ifFalse: [
-		Error signal: 'Can only determine artifact if only one is declared' ].
-	projects anyOne keysDo: [ :key | ^ key ]
-]
-
-{ #category : 'querying' }
 NexusManagedProject >> determineDependencies [
 	"Resolve all dependencies of this project into a flat list.
 	A problem can occur if two projects define the same dependency with different versions."
@@ -72,7 +64,7 @@ NexusManagedProject >> determineDependencies [
 	theDependencies := Dictionary new.
 	self projectDependenciesDo: [ :dependencyGroup :descriptor |
 		| key mustAdd |
-		key := dependencyGroup , ':' , (descriptor at: 'artifact').
+		key := dependencyGroup , ':' , (descriptor at: #artifact).
 		mustAdd := true.
 		theDependencies at: key ifPresent: [ :existing |
 			mustAdd := (self mediateExisting: existing incoming: descriptor)
@@ -80,7 +72,7 @@ NexusManagedProject >> determineDependencies [
 		mustAdd ifTrue: [
 			theDependencies
 				at: key
-				put: (descriptor copyWith: 'group' -> dependencyGroup) ] ].
+				put: (descriptor copyWith: #group -> dependencyGroup) ] ].
 	^ theDependencies asArray
 ]
 
@@ -109,8 +101,8 @@ NexusManagedProject >> determineLanguage [
 
 	"check the sources of each project"
 	projects do: [ :projectGroup |
-		projectGroup keysDo: [ :projectArtifact |
-			directory asFileReference / projectArtifact ifExists: [
+		projectGroup keysDo: [ :projectName |
+			directory asFileReference / projectName ifExists: [
 				:projectDirectory |
 				projectDirectory / 'src/main' ifExists: [ :mainDirectory |
 					FileSystem disk directoryNamesAt: mainDirectory do: [ :dirName |
@@ -127,6 +119,14 @@ NexusManagedProject >> determineLanguage [
 					 separatedBy: [ s << ', ' ].
 				 s << '`, proceed to choose the first one' ]) ].
 	^ candidates anyOne
+]
+
+{ #category : 'querying' }
+NexusManagedProject >> determineName [
+
+	(projects size == 1 and: [ projects anyOne size == 1 ]) ifFalse: [
+		Error signal: 'Can only determine artifact if only one is declared' ].
+	projects anyOne keysDo: [ :key | ^ key ]
 ]
 
 { #category : 'querying' }
@@ -182,16 +182,17 @@ NexusManagedProject >> mediateExisting: existing incoming: incoming [
 	If they are different, we have to decide which one to use, which is complicated."
 
 	| existingVersion incomingVersion |
-	(existingVersion := existing at: 'version')
-	= (incomingVersion := incoming at: 'version') ifTrue: [ ^ existing ].
+	(existingVersion := existing at: #version)
+	= (incomingVersion := incoming at: #version) ifTrue: [ ^ existing ].
 
 	"This is a difficult problem: a managed project can have multiple projects, each declaring their own dependencies (and versions).
 	The user wants to create a model of the managed project, thus of all the projects it contains.
 	However, if two projects declare the same dependency but with different versions, which one should be included in the model?"
-	Warning signal: 'The dependency ' , (existing at: 'group') , ':'
-		, (existing at: 'artifact')
-		, ' is declared with different versions: ' , existingVersion
-		, ' and ' , incomingVersion , ', proceed to use the first one'.
+	Warning signal: (String streamContents: [ :s |
+			 s << 'The dependency ' << (existing at: #group) << ':'
+			 << (existing at: #artifact)
+			 << ' is declared with different versions: ' << existingVersion
+			 << ' and ' << incomingVersion << ', proceed to use the first one' ]).
 	^ existing
 ]
 
@@ -200,7 +201,7 @@ NexusManagedProject >> projectDependenciesDo: aBlock [
 
 	self projects do: [ :projectArtifacts |
 		projectArtifacts do: [ :projectArtifact |
-			(projectArtifact at: 'dependencies') keysAndValuesDo: aBlock ] ]
+			(projectArtifact at: #dependencies) keysAndValuesDo: aBlock ] ]
 ]
 
 { #category : 'accessing' }
