@@ -69,8 +69,8 @@ NexusRepository >> printProjectProperties: propertiesFile on: writeStream [
 		| properties |
 		properties := STON fromStream: rs.
 		writeStream << (properties at: #nature) << '('
-		<< (properties at: #group) << ':' << (properties at: #artifact)
-		<< ':' << (properties at: #version) << ')' ]
+		<< (properties at: #group) << ':' << (properties at: #name) << ':'
+		<< (properties at: #version) << ')' ]
 ]
 
 { #category : 'printing' }

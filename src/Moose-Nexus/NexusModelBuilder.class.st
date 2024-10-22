@@ -9,8 +9,8 @@ Class {
 	#instVars : [
 		'project',
 		'withDependencies',
-		'importer',
-		'extractor'
+		'extractor',
+		'importer'
 	],
 	#category : 'Moose-Nexus-Modeling',
 	#package : 'Moose-Nexus',
