@@ -3,14 +3,14 @@ A project with managed dependencies, such as using Maven or Gradle.
 
 My properties define the additional mapping:
 ```text
-home: [home]
-projects: [projects]
+home: <home>
+projects: <projects>
 dependencies:
-	- group:    [dependencyGroup]
-	  artifact: [dependencyArtifact]
-	  version:  [dependencyVersion]
-	  scope:    [dependencyScope]
-	  type:     [dependencyType]
+	- group:    <dependencyGroup>
+	  name:     <dependencyName>
+	  version:  <dependencyVersion>
+	  scope:    <dependencyScope>
+	  type:     <dependencyType>
 ```
 The home is the path to the home directory of the project manager (e.g. `~/.m2` is the default Maven home).
 The dependencies contain additional mappings for their own group, artifact, and version, as well as their type and scope.
@@ -20,14 +20,14 @@ The scope is the application lifecycle that requires the dependency (e.g. `compi
 A managed project can encompass multiple projects and sub-projects.
 Once analyzed, the following mapping can be read from the `projects` property:
 ```text
-[projectGroup]:
-	[projectArtifact]:
-		version: [projectVersion]
+<projectGroup>:
+	<projectName>:
+		version: <projectVersion>
 		dependencies:
-			[dependencyGroup]:
-				- artifact:  [dependencyArtifact]
-				  version:   [dependencyVersion]
-				  directory: [localPath]
+			<dependencyGroup>:
+				- name:      <dependencyName>
+				  version:   <dependencyVersion>
+				  directory: <localPath>
 ```
 "
 Class {
@@ -64,7 +64,7 @@ NexusManagedProject >> determineDependencies [
 	theDependencies := Dictionary new.
 	self projectDependenciesDo: [ :dependencyGroup :descriptor |
 		| key mustAdd |
-		key := dependencyGroup , ':' , (descriptor at: #artifact).
+		key := dependencyGroup , ':' , (descriptor at: #name).
 		mustAdd := true.
 		theDependencies at: key ifPresent: [ :existing |
 			mustAdd := (self mediateExisting: existing incoming: descriptor)
@@ -125,7 +125,7 @@ NexusManagedProject >> determineLanguage [
 NexusManagedProject >> determineName [
 
 	(projects size == 1 and: [ projects anyOne size == 1 ]) ifFalse: [
-		Error signal: 'Can only determine artifact if only one is declared' ].
+		Error signal: 'Can only determine name if only one is declared' ].
 	projects anyOne keysDo: [ :key | ^ key ]
 ]
 
@@ -135,14 +135,14 @@ NexusManagedProject >> determineVersion [
 	| theVersion |
 	(projects isNotEmpty and: [ projects anyOne isNotEmpty ]) ifFalse: [
 		Error signal:
-			'Cannot determine version because there are no artifacts' ].
-	"verify all artifacts declare the same version"
+			'Cannot determine version because there are no managed projects' ].
+	"verify all managed projects declare the same version"
 	theVersion := projects anyOne anyOne at: #version.
-	projects do: [ :artifacts |
-		artifacts do: [ :data |
-			(data at: #version) = theVersion ifFalse: [
+	projects do: [ :projectGroup |
+		projectGroup do: [ :descriptor |
+			(descriptor at: #version) = theVersion ifFalse: [
 				Error signal:
-					'Can only determine version if all artifacts declare the same one' ] ] ].
+					'Can only determine version if all managed projects declare the same one' ] ] ].
 	^ theVersion
 ]
 
@@ -190,7 +190,7 @@ NexusManagedProject >> mediateExisting: existing incoming: incoming [
 	However, if two projects declare the same dependency but with different versions, which one should be included in the model?"
 	Warning signal: (String streamContents: [ :s |
 			 s << 'The dependency ' << (existing at: #group) << ':'
-			 << (existing at: #artifact)
+			 << (existing at: #name)
 			 << ' is declared with different versions: ' << existingVersion
 			 << ' and ' << incomingVersion << ', proceed to use the first one' ]).
 	^ existing
@@ -198,10 +198,15 @@ NexusManagedProject >> mediateExisting: existing incoming: incoming [
 
 { #category : 'enumerating' }
 NexusManagedProject >> projectDependenciesDo: aBlock [
+	"Iterate over the group, name and descriptor of all project dependencies"
 
-	self projects do: [ :projectArtifacts |
-		projectArtifacts do: [ :projectArtifact |
-			(projectArtifact at: #dependencies) keysAndValuesDo: aBlock ] ]
+	self projects do: [ :projectGroup |
+		projectGroup do: [ :projectDescriptor |
+			(projectDescriptor at: #dependencies) keysAndValuesDo: [
+				:dependencyGroup
+				:descriptors |
+				descriptors do: [ :descriptor |
+					aBlock value: dependencyGroup value: descriptor ] ] ] ]
 ]
 
 { #category : 'accessing' }

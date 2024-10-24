@@ -12,9 +12,9 @@ Class {
 		'extractor',
 		'importer'
 	],
-	#category : 'MooseNexus-Modeling',
+	#category : 'MooseNexus-ModelExtraction',
 	#package : 'MooseNexus',
-	#tag : 'Modeling'
+	#tag : 'ModelExtraction'
 }
 
 { #category : 'building' }

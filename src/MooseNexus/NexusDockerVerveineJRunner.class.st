@@ -8,9 +8,9 @@ Class {
 	#instVars : [
 		'version'
 	],
-	#category : 'MooseNexus-Modeling',
+	#category : 'MooseNexus-ModelExtraction',
 	#package : 'MooseNexus',
-	#tag : 'Modeling'
+	#tag : 'ModelExtraction'
 }
 
 { #category : 'running' }

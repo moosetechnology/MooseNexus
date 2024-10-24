@@ -10,9 +10,13 @@ BaselineOfMooseNexus >> baseline: spec [
 
 	<baseline>
 	spec for: #common do: [
-		spec package: 'MooseNexus'.
+		spec
+			package: 'MooseNexus';
+			package: 'MooseNexus-Tests'
+			with: [ spec requires: #( 'MooseNexus' ) ].
+
 		spec
 			group: 'core' with: #( 'MooseNexus' );
-			group: 'tests' with: #(  );
+			group: 'tests' with: #( 'MooseNexus-Tests' );
 			group: 'default' with: #( core tests ) ]
 ]

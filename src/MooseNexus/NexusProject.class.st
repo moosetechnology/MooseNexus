@@ -3,16 +3,16 @@ I represent a project to analyze with Moose.
 
 My properties follows this mapping:
 ```text
-language: [language]
-nature:   [NexusProjectSubclass]
-group:    [group]
-artifact: [artifact]
-version:  [version]
+language: <language>
+nature:   <subclassOfNexusProject>
+group:    <group>
+name:     <name>
+version:  <version>
 dependencies:
-	- directory: [localPath]
+	- directory: <localPath>
 ```
 The nature corresponds to the concrete subclass of `NexusProject` that handles the project.
-The group, artifact, and version are the same concept used by other project managers (e.g. Maven).
+The group, name, and version are the same concept used by other project managers (e.g. Maven).
 They are used to uniquely identify a project to be modeled.
 "
 Class {
@@ -107,8 +107,9 @@ NexusProject >> determineGroup [
 { #category : 'querying' }
 NexusProject >> determineName [
 
-	Error signal: 'Instance of ' , self className
-		, ' ignores how to determine the artifact'
+	Error signal:
+		'Instance of ' , self className
+		, ' ignores how to determine the name'
 ]
 
 { #category : 'querying' }

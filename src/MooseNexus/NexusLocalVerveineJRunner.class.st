@@ -4,9 +4,9 @@ Class {
 	#instVars : [
 		'directory'
 	],
-	#category : 'MooseNexus-Modeling',
+	#category : 'MooseNexus-ModelExtraction',
 	#package : 'MooseNexus',
-	#tag : 'Modeling'
+	#tag : 'ModelExtraction'
 }
 
 { #category : 'accessing' }
