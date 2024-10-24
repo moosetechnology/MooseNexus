@@ -1,22 +1,37 @@
 name: Tests
 
+env:
+  GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
 on:
   push:
-    branches: [ "main" ]
+    branches: [ main ]
   pull_request:
-    branches: [ "main" ]
+    branches: [ main ]
 
 jobs:
-  run:
-    name: Setup and Run Tests
+  build:
     runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        smalltalk: [ Moose64-11, Moose64-12, Moose64-13 ]
+    name: ${{ matrix.smalltalk }}
     steps:
+      - uses: actions/checkout@v4
+
       - name: Install Maven
         run: sudo apt-get update && sudo apt-get install -y maven
 
-      - name: Run Tests
-        uses: moosetechnology/.github/.github/workflows/run-tests.yml@main
+      - uses: hpi-swa/setup-smalltalkCI@v1
         with:
-          run-coverage: true
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          smalltalk-image: ${{ matrix.smalltalk }}
+
+      - name: Run tests
+        run: smalltalkci -s ${{ matrix.smalltalk }}
+        shell: bash
+        timeout-minutes: 15
+
+      - name: Upload coverage
+        uses: coverallsapp/github-action@master
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
