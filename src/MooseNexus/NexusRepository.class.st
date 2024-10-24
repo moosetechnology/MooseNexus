@@ -29,8 +29,8 @@ Class {
 	#classInstVars : [
 		'default'
 	],
-	#category : 'Moose-Nexus-Repository',
-	#package : 'Moose-Nexus',
+	#category : 'MooseNexus-Repository',
+	#package : 'MooseNexus',
 	#tag : 'Repository'
 }
 

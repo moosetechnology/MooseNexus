@@ -38,8 +38,8 @@ Class {
 		'projects',
 		'language'
 	],
-	#category : 'Moose-Nexus-Project',
-	#package : 'Moose-Nexus',
+	#category : 'MooseNexus-Project',
+	#package : 'MooseNexus',
 	#tag : 'Project'
 }
 
@@ -88,7 +88,7 @@ NexusManagedProject >> determineGroup [
 NexusManagedProject >> determineLanguage [
 
 	| knownLanguages candidates |
-	knownLanguages := self class knownLanguages asSet.
+	knownLanguages := self class knownLanguages.
 	(projects isEmpty or: [ projects anyOne isEmpty ]) ifTrue: [
 		Error signal: 'Cannot determine language without any project' ].
 	candidates := Set new.

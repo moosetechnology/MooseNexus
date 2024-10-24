@@ -12,8 +12,8 @@ The scope is one of: compile, provided, runtime, test, system, import.
 Class {
 	#name : 'NexusMavenProject',
 	#superclass : 'NexusManagedProject',
-	#category : 'Moose-Nexus-Project',
-	#package : 'Moose-Nexus',
+	#category : 'MooseNexus-Project',
+	#package : 'MooseNexus',
 	#tag : 'Project'
 }
 
@@ -62,7 +62,10 @@ NexusMavenProject >> parse: raw [
 [INFO] The following files have been resolved:
 [INFO]    `none | (group:artifact:type:version:scope)+`"
 
-	| start |
+	| start newLines |
+	newLines := {
+		            Character lf.
+		            Character cr }.
 	start := 39. "= '[INFO] Scanning for projects...\n[INFO] ' size"
 	[ (start := raw indexOf: $< startingAt: start) == 0 ] whileFalse: [
 		| end projectGroup projectArtifact projectVersion projectDependencies |
@@ -86,14 +89,14 @@ NexusMavenProject >> parse: raw [
 		start := (raw indexOfSubCollection: ']    ' startingAt: end + 1) + 5. "= ']    ' size"
 		[
 		| dependency |
-		end := raw indexOf: Character lf startingAt: start + 1.
+		end := raw indexOfAnyOf: newLines startingAt: start + 1.
 		dependency := raw copyFrom: start to: end - 1.
 		dependency = 'none' ifFalse: [
 			projectDependencies add: (self resolve: dependency) ].
 
 		"skip over '[INFO] ' and check if new line, indicating the end of the list
 		else start of next dependency is 3 spaces later"
-		(raw at: (start := end + 11) - 3) == Character lf ] whileFalse ]
+		newLines includes: (raw at: (start := end + 11) - 3) ] whileFalse ]
 ]
 
 { #category : 'private' }

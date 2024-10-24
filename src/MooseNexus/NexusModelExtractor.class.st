@@ -4,8 +4,8 @@ Class {
 	#instVars : [
 		'target'
 	],
-	#category : 'Moose-Nexus-Modeling',
-	#package : 'Moose-Nexus',
+	#category : 'MooseNexus-Modeling',
+	#package : 'MooseNexus',
 	#tag : 'Modeling'
 }
 

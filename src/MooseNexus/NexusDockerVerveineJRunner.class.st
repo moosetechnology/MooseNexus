@@ -8,8 +8,8 @@ Class {
 	#instVars : [
 		'version'
 	],
-	#category : 'Moose-Nexus-Modeling',
-	#package : 'Moose-Nexus',
+	#category : 'MooseNexus-Modeling',
+	#package : 'MooseNexus',
 	#tag : 'Modeling'
 }
 

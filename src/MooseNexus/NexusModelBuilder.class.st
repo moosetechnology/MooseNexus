@@ -12,8 +12,8 @@ Class {
 		'extractor',
 		'importer'
 	],
-	#category : 'Moose-Nexus-Modeling',
-	#package : 'Moose-Nexus',
+	#category : 'MooseNexus-Modeling',
+	#package : 'MooseNexus',
 	#tag : 'Modeling'
 }
 

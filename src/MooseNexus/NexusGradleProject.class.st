@@ -1,8 +1,8 @@
 Class {
 	#name : 'NexusGradleProject',
 	#superclass : 'NexusManagedProject',
-	#category : 'Moose-Nexus-Project',
-	#package : 'Moose-Nexus',
+	#category : 'MooseNexus-Project',
+	#package : 'MooseNexus',
 	#tag : 'Project'
 }
 

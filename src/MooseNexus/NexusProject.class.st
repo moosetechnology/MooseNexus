@@ -25,8 +25,8 @@ Class {
 		'dependencies',
 		'name'
 	],
-	#category : 'Moose-Nexus-Project',
-	#package : 'Moose-Nexus',
+	#category : 'MooseNexus-Project',
+	#package : 'MooseNexus',
 	#tag : 'Project'
 }
 
