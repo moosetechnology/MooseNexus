@@ -3,14 +3,14 @@ A project with managed dependencies, such as using Maven or Gradle.
 
 My properties define the additional mapping:
 ```text
-home: <home>
+home:     <home>
 projects: <projects>
 dependencies:
-	- group:    <dependencyGroup>
-	  name:     <dependencyName>
-	  version:  <dependencyVersion>
-	  scope:    <dependencyScope>
-	  type:     <dependencyType>
+	- group:   <dependencyGroup>
+	  name:    <dependencyName>
+	  version: <dependencyVersion>
+	  scope:   <dependencyScope>
+	  type:    <dependencyType>
 ```
 The home is the path to the home directory of the project manager (e.g. `~/.m2` is the default Maven home).
 The dependencies contain additional mappings for their own group, artifact, and version, as well as their type and scope.
@@ -148,14 +148,15 @@ NexusManagedProject >> determineVersion [
 
 { #category : 'accessing' }
 NexusManagedProject >> home [
-	"The home folder of the project manager"
+	"The home folder of the project manager."
 
 	^ home
 ]
 
 { #category : 'accessing' }
 NexusManagedProject >> home: pathString [
-	"Define the home of the external project manager for this project."
+	"Define the home of the external project manager for this project.
+	The path must be relative to the home directory (result of `FileLocator home pathString`)."
 
 	home := pathString
 ]

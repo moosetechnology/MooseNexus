@@ -115,28 +115,22 @@ NexusMavenProjectParameterizedTest class >> case2 [
 					 with: #version -> '1.1'
 					 with: #type -> 'jar'
 					 with: #scope -> 'compile'
-					 with: #directory
-						 ->
-							 (self mavenHome , 'org/moose/fame/1.1/fame-1.1.jar')
-								 asFileReference absolutePath pathString).
+					 with: #directory -> 'repository/org/moose/fame/1.1/fame-1.1.jar').
 				(Dictionary
 					 with: #name -> 'famix'
 					 with: #version -> '2.0'
 					 with: #type -> 'jar'
 					 with: #scope -> 'runtime'
-					 with: #directory
-						 ->
-							 (self mavenHome , 'org/moose/famix/2.0/famix-2.0.jar')
-								 asFileReference absolutePath pathString) };
+					 with:
+						 #directory -> 'repository/org/moose/famix/2.0/famix-2.0.jar') };
 		at: 'com.example' put: { (Dictionary
 				 with: #name -> 'logger'
 				 with: #version -> '3.14.0'
 				 with: #type -> 'jar'
 				 with: #scope -> 'provided'
-				 with: #directory
-					 ->
-						 (self mavenHome , 'com/example/logger/3.14.0/logger-3.14.0.jar')
-							 asFileReference absolutePath pathString) }.
+				 with:
+					 #directory
+					 -> 'repository/com/example/logger/3.14.0/logger-3.14.0.jar') }.
 
 	^ {
 		  (#mavenOutput -> mavenOutput).
@@ -147,13 +141,6 @@ NexusMavenProjectParameterizedTest class >> case2 [
 		  (#dependencies -> dependencies).
 		  (#subDirectories -> { ('src/main/' , language) }).
 		  (#projects -> projects) }
-]
-
-{ #category : 'accessing' }
-NexusMavenProjectParameterizedTest class >> mavenHome [
-	"Where the mock Maven repository is located."
-
-	^ 'pharo-local/nexus/tests/maven/repository/'
 ]
 
 { #category : 'building suites' }
@@ -209,25 +196,25 @@ NexusMavenProjectParameterizedTest >> setUp [
 	root := 'pharo-local/nexus/tests' asFileReference.
 
 	"initialize mock Maven repository"
-	home := (root / 'maven/repository') ensureCreateDirectory.
+	home := (root / 'maven') ensureCreateDirectory.
 	dependencies do: [ :dependency |
-		| depName depVersion |
+		| depName depVersion depFile |
 		depName := dependency at: #name.
 		depVersion := dependency at: #version.
-		dependency
-			at: #directory
-			put:
-				(home / ((dependency at: #group) copyReplaceAll: '.' with: '/')
-				 / depName / depVersion / (String streamContents: [ :s |
-					  s << depName << '-' << depVersion << '.'
-					  << (dependency at: #type) ])) ensureCreateFile absolutePath
-					pathString ].
+		depFile := String streamContents: [ :s |
+			           s << 'repository/'
+			           <<
+			           ((dependency at: #group) copyReplaceAll: '.' with: '/')
+			           << '/' << depName << '/' << depVersion << '/' << depName
+			           << '-' << depVersion << '.' << (dependency at: #type) ].
+		dependency at: #directory put: depFile.
+		(home / depFile) ensureCreateFile ].
 
 	"initialize project"
 	subDirectories do: [ :path |
 		(root / name / path) ensureCreateDirectory ].
 	project := NexusMavenProject new.
-	project home: root / 'maven'.
+	project home: (root / 'maven') pathString.
 	project directory: root / name.
 	project parse: mavenOutput
 ]

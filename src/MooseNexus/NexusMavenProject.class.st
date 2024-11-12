@@ -42,9 +42,9 @@ NexusMavenProject >> analyze [
 
 { #category : 'initialization' }
 NexusMavenProject >> initialize [
-	"Set the default home of all Maven projects"
+	"Set the default home of all Maven projects."
 
-	home := FileLocator home pathString , '/.m2'
+	home := '.m2'
 ]
 
 { #category : 'private' }
@@ -122,33 +122,33 @@ NexusMavenProject >> read [
 NexusMavenProject >> resolve: descriptor [
 	"Attempts to find the local path to an artifact based on the descriptor."
 
-	| parts theGroup theName theType theVersion theScope theDirectory pathString |
+	| parts theGroup theName theType theVersion theScope theDirectory pathString fileName |
 	parts := $: split: descriptor.
 	theGroup := parts at: 1.
 	theName := parts at: 2.
 	theType := parts at: 3.
 	theVersion := parts at: 4.
 	theScope := parts at: 5.
-	(theDirectory := self home asFileReference / 'repository'
-	                 / (theGroup copyReplaceAll: '.' with: '/') / theName
-	                 / theVersion) ifAbsent: [
+
+	"search for the directory"
+	pathString := String streamContents: [ :s |
+		              s << 'repository/'
+		              << (theGroup copyReplaceAll: '.' with: '/') << '/'
+		              << theName << '/' << theVersion ].
+	(theDirectory := FileLocator home / home / pathString) ifAbsent: [
 		Error signal: 'Could not find dependency: ' , descriptor ].
 
-	theDirectory
-	/ ((pathString := theName , '-' , theVersion) , '.' , theType)
-		ifExists: [ :file | pathString := file pathString ]
-		ifAbsent: [ "try to look for the sources, although that's unlikely"
-			theDirectory / (pathString , '-sources.' , theType)
-				ifExists: [ :file | pathString := file pathString ]
-				ifAbsent: [
-					Error signal:
-						'Dependency `' , descriptor , '` found in `'
-						, theDirectory pathString , '` but the artifact is missing.' ] ].
+	"search for the artifact"
+	fileName := theName , '-' , theVersion , '.' , theType.
+	theDirectory / fileName ifAbsent: [
+		Error signal:
+			'Dependency `' , descriptor , '` found in `'
+			, theDirectory pathString , '` but the artifact is missing.' ].
 
 	^ theGroup -> (Dictionary
 		   with: #name -> theName
 		   with: #version -> theVersion
 		   with: #type -> theType
 		   with: #scope -> theScope
-		   with: #directory -> pathString)
+		   with: #directory -> (pathString , '/' , fileName))
 ]
