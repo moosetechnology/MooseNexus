@@ -150,5 +150,5 @@ NexusMavenProject >> resolve: descriptor [
 		   with: #version -> theVersion
 		   with: #type -> theType
 		   with: #scope -> theScope
-		   with: #directory -> (pathString , '/' , fileName))
+		   with: #path -> (pathString , '/' , fileName))
 ]

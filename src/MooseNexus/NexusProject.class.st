@@ -9,7 +9,7 @@ group:    <group>
 name:     <name>
 version:  <version>
 dependencies:
-	- directory: <localPath>
+	- path: <localPath>
 ```
 The nature corresponds to the concrete subclass of `NexusProject` that handles the project.
 The group, name, and version are the same concept used by other project managers (e.g. Maven).

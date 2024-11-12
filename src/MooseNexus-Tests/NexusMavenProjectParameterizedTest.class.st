@@ -115,21 +115,20 @@ NexusMavenProjectParameterizedTest class >> case2 [
 					 with: #version -> '1.1'
 					 with: #type -> 'jar'
 					 with: #scope -> 'compile'
-					 with: #directory -> 'repository/org/moose/fame/1.1/fame-1.1.jar').
+					 with: #path -> 'repository/org/moose/fame/1.1/fame-1.1.jar').
 				(Dictionary
 					 with: #name -> 'famix'
 					 with: #version -> '2.0'
 					 with: #type -> 'jar'
 					 with: #scope -> 'runtime'
-					 with:
-						 #directory -> 'repository/org/moose/famix/2.0/famix-2.0.jar') };
+					 with: #path -> 'repository/org/moose/famix/2.0/famix-2.0.jar') };
 		at: 'com.example' put: { (Dictionary
 				 with: #name -> 'logger'
 				 with: #version -> '3.14.0'
 				 with: #type -> 'jar'
 				 with: #scope -> 'provided'
 				 with:
-					 #directory
+					 #path
 					 -> 'repository/com/example/logger/3.14.0/logger-3.14.0.jar') }.
 
 	^ {
@@ -198,17 +197,17 @@ NexusMavenProjectParameterizedTest >> setUp [
 	"initialize mock Maven repository"
 	home := (root / 'maven') ensureCreateDirectory.
 	dependencies do: [ :dependency |
-		| depName depVersion depFile |
+		| depName depVersion depPath |
 		depName := dependency at: #name.
 		depVersion := dependency at: #version.
-		depFile := String streamContents: [ :s |
+		depPath := String streamContents: [ :s |
 			           s << 'repository/'
 			           <<
 			           ((dependency at: #group) copyReplaceAll: '.' with: '/')
 			           << '/' << depName << '/' << depVersion << '/' << depName
 			           << '-' << depVersion << '.' << (dependency at: #type) ].
-		dependency at: #directory put: depFile.
-		(home / depFile) ensureCreateFile ].
+		dependency at: #path put: depPath.
+		(home / depPath) ensureCreateFile ].
 
 	"initialize project"
 	subDirectories do: [ :path |

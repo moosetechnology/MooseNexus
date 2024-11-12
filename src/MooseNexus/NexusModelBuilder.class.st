@@ -78,12 +78,13 @@ NexusModelBuilder >> project: aNexusProject [
 { #category : 'building' }
 NexusModelBuilder >> setUp [
 
-	| dependencies |
+	| home dependencies |
+	home := FileLocator home / project home.
 	dependencies := (project directory asFileReference / 'dependencies')
 		                createDirectory.
 	project dependencies do: [ :dependency |
 		| artifact |
-		artifact := (dependency at: #directory) asFileReference.
+		artifact := home / (dependency at: #path).
 		artifact copyTo: dependencies / artifact basename ].
 	extractor target: project directory
 ]
