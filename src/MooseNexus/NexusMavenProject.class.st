@@ -57,7 +57,7 @@ NexusMavenProject >> parse: raw [
 [INFO]   from `path/`pom.xml
 [INFO] -------------------------------[ `type` ]-------------------------------
 [INFO] 
-[INFO] --- dependency:`pluginVersion`:list (default-cli) @ `name` ---
+[INFO] --- dependency:`pluginVersion`:resolve (default-cli) @ `name` ---
 [INFO] 
 [INFO] The following files have been resolved:
 [INFO]    `none | (group:name:type:version:scope)+`"
@@ -112,10 +112,10 @@ NexusMavenProject >> parse: raw [
 
 { #category : 'private' }
 NexusMavenProject >> read [
-	"Runs the `mvn` command using the `dependency:list` plugin.
+	"Runs the `mvn` command using the `dependency:resolve` plugin.
 	Requires Maven to be installed."
 
-	^ LibC resultOfCommand: 'cd ' , directory , ' && mvn dependency:list'
+	^ LibC resultOfCommand: 'cd ' , directory , ' && mvn dependency:resolve'
 ]
 
 { #category : 'private' }

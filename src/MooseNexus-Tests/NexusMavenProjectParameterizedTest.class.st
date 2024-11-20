@@ -32,7 +32,7 @@ NexusMavenProjectParameterizedTest class >> case1 [
 [INFO]   from pom.xml
 [INFO] -------------------------------[ compile ]-------------------------------
 [INFO] 
-[INFO] --- dependency:0.0.0:list (default-cli) @ test1 ---
+[INFO] --- dependency:0.0.0:resolve (default-cli) @ test1 ---
 [INFO] 
 [INFO] The following files have been resolved:
 [INFO]    none
@@ -65,14 +65,14 @@ NexusMavenProjectParameterizedTest class >> case2 [
 	version := '2.0.1'.
 	language := 'java'.
 
-	"result of the `mvn dependency:list` command"
+	"result of the `mvn dependency:resolve` command"
 	mavenOutput := '
 [INFO] ---------------------< org.moose:test2 >----------------------
 [INFO] Building ''Nother Moose Nexus Test2 2.0.1                           [1/1]
 [INFO]   from pom.xml
 [INFO] -------------------------------[ compile ]-------------------------------
 [INFO] 
-[INFO] --- dependency:0.0.0:list (default-cli) @ test2 ---
+[INFO] --- dependency:0.0.0:resolve (default-cli) @ test2 ---
 [INFO] 
 [INFO] The following files have been resolved:
 [INFO]    org.moose:fame:jar:1.1:compile
