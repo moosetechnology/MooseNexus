@@ -11,7 +11,8 @@ BaselineOfMooseNexus >> baseline: spec [
 	<baseline>
 	spec for: #common do: [
 		spec
-			package: 'MooseNexus';
+			package: 'MooseNexus'
+			with: [ spec requires: #( 'MooseNexus-UI' ) ];
 			package: 'MooseNexus-Tests'
 			with: [ spec requires: #( 'MooseNexus' ) ].
 

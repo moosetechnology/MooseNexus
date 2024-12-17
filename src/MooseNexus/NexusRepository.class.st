@@ -129,6 +129,10 @@ NexusRepository >> recordProject: project [
 	(dir / 'properties.json') ensureCreateFile writeStreamDo: [ :stream |
 		project writePropertiesOn: stream ].
 
+	"JSON list of models that were created, empty by default"
+	(dir / 'models.json') ensureCreateFile writeStreamDo: [ :stream |
+		stream nextPutAll: '[]' ].
+
 	"copy the project directory to the repository"
 	project directory asFileReference copyAllTo:
 		(dir / 'sources') createDirectory.
