@@ -115,7 +115,7 @@ NexusMavenProject >> read [
 	"Runs the `mvn` command using the `dependency:resolve` plugin.
 	Requires Maven to be installed."
 
-	^ LibC resultOfCommand: 'cd ' , directory , ' && mvn dependency:resolve'
+	^ LibC resultOfCommand: 'cd ' , directory , ' && mvn -B dependency:resolve'
 ]
 
 { #category : 'private' }
