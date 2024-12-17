@@ -40,6 +40,19 @@ NexusMavenProject >> analyze [
 	self parse: self read
 ]
 
+{ #category : 'private' }
+NexusMavenProject >> findMavenCommand [
+	"Return the name of the maven executable, can be a wrapper or the global 'mvn' command."
+
+	OSPlatform current isWindows
+		ifTrue: [
+		directory asFileReference / 'mvnw.cmd' ifExists: [ ^ 'mvnw.cmd' ] ]
+		ifFalse: [ "assume *nix"
+			directory asFileReference / 'mvnw' ifExists: [ ^ './mvnw' ] ].
+	"assume maven is installed"
+	^ 'mvn'
+]
+
 { #category : 'initialization' }
 NexusMavenProject >> initialize [
 	"Set the default home of all Maven projects."
@@ -115,7 +128,9 @@ NexusMavenProject >> read [
 	"Runs the `mvn` command using the `dependency:resolve` plugin.
 	Requires Maven to be installed."
 
-	^ LibC resultOfCommand: 'cd ' , directory , ' && mvn dependency:resolve'
+	^ LibC resultOfCommand:
+		  'cd "' , directory , '" && ' , self findMavenCommand
+		  , ' --batch-mode dependency:resolve'
 ]
 
 { #category : 'private' }
