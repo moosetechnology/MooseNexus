@@ -79,7 +79,7 @@ NexusModelBuilder >> project: aNexusProject [
 NexusModelBuilder >> setUp [
 
 	| home dependencies |
-	home := FileLocator home / project home.
+	home := FileLocator home.
 	dependencies := (project directory asFileReference / 'dependencies')
 		                createDirectory.
 	project dependencies do: [ :dependency |

@@ -121,7 +121,7 @@ NexusVerveineJRunner >> jvmArgs: aString [
 { #category : 'printing' }
 NexusVerveineJRunner >> printOptionsOn: stream [
 
-	jvmArgs ifNotNil: [ stream << jvmArgs << ' ' ].
+	self jvmArgs ifNotNil: [ :args | stream << args << ' ' ].
 	stream << '-format ' << self format.
 	self allLocals ifTrue: [ stream << ' -alllocals' ].
 	self anchor ifNotNil: [ :a | stream << ' -anchor ' << a ].

@@ -30,6 +30,12 @@ NexusModelExtractor class >> forLanguage: language [
 	Error signal: 'No NexusModelCreator for this language: ' , language
 ]
 
+{ #category : 'testing' }
+NexusModelExtractor class >> isAbstract [
+
+	^ self == NexusModelExtractor
+]
+
 { #category : 'accessing' }
 NexusModelExtractor >> target [
 

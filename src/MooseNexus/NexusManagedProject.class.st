@@ -34,9 +34,9 @@ Class {
 	#name : 'NexusManagedProject',
 	#superclass : 'NexusProject',
 	#instVars : [
-		'home',
 		'projects',
-		'language'
+		'language',
+		'localRepositories'
 	],
 	#category : 'MooseNexus-Project',
 	#package : 'MooseNexus',
@@ -146,19 +146,10 @@ NexusManagedProject >> determineVersion [
 	^ theVersion
 ]
 
-{ #category : 'accessing' }
-NexusManagedProject >> home [
-	"The home folder of the project manager."
+{ #category : 'initialization' }
+NexusManagedProject >> initialize [
 
-	^ home
-]
-
-{ #category : 'accessing' }
-NexusManagedProject >> home: pathString [
-	"Define the home of the external project manager for this project.
-	The path must be relative to the home directory (result of `FileLocator home pathString`)."
-
-	home := pathString
+	localRepositories := { NexusMavenRepository default }
 ]
 
 { #category : 'accessing' }
@@ -172,6 +163,21 @@ NexusManagedProject >> language [
 NexusManagedProject >> language: aString [
 
 	language := aString
+]
+
+{ #category : 'accessing' }
+NexusManagedProject >> localRepositories [
+	"The directories containing the local repositories of the project managers."
+
+	^ localRepositories
+]
+
+{ #category : 'accessing' }
+NexusManagedProject >> localRepositories: pathStringCollection [
+	"Define the local repositories of the project managers to use for this project.
+	All paths must be relative to the home directory (result of `FileLocator home pathString`)."
+
+	localRepositories := pathStringCollection
 ]
 
 { #category : 'versions' }
@@ -229,7 +235,16 @@ NexusManagedProject >> projects: aDictionary [
 NexusManagedProject >> properties [
 
 	^ super properties
-		  add: #home -> self home;
+		  add: #localRepositories -> self localRepositories;
 		  add: #projects -> self projects;
 		  yourself
+]
+
+{ #category : 'private' }
+NexusManagedProject >> resolve: descriptor [
+	"Attempts to find the local path to an artifact based on the descriptor."
+
+	localRepositories do: [ :repository |
+		(repository resolve: descriptor) ifNotNil: [ :mapping | ^ mapping ] ].
+	Error signal: 'Could not find dependency: ' , descriptor
 ]

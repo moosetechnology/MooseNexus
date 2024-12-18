@@ -30,14 +30,14 @@ Class {
 	#tag : 'Project'
 }
 
-{ #category : 'error handling' }
+{ #category : 'testing' }
 NexusProject class >> canHandle: directory [
 	"Subclasses define whether they can manage the project in the specified directory."
 
 	^ false
 ]
 
-{ #category : 'testing' }
+{ #category : 'instance creation' }
 NexusProject class >> fromDirectory: directory [
 	"Expects the path string of a directory containing the sources of a project.
 	Attempts to determine the type of project in the directory.

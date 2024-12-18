@@ -17,13 +17,10 @@ Class {
 	#tag : 'Project'
 }
 
-{ #category : 'error handling' }
+{ #category : 'testing' }
 NexusMavenProject class >> canHandle: directory [
 
-	FileSystem disk
-		fileNamesAt: directory
-		do: [ :filename | filename = 'pom.xml' ifTrue: [ ^ true ] ].
-	^ false
+	^ (directory asFileReference / 'pom.xml') exists
 ]
 
 { #category : 'testing' }
@@ -51,13 +48,6 @@ NexusMavenProject >> findMavenCommand [
 			directory asFileReference / 'mvnw' ifExists: [ ^ './mvnw' ] ].
 	"assume maven is installed"
 	^ 'mvn'
-]
-
-{ #category : 'initialization' }
-NexusMavenProject >> initialize [
-	"Set the default home of all Maven projects."
-
-	home := '.m2'
 ]
 
 { #category : 'private' }
@@ -131,39 +121,4 @@ NexusMavenProject >> read [
 	^ LibC resultOfCommand:
 		  'cd "' , directory , '" && ' , self findMavenCommand
 		  , ' --batch-mode dependency:resolve'
-]
-
-{ #category : 'private' }
-NexusMavenProject >> resolve: descriptor [
-	"Attempts to find the local path to an artifact based on the descriptor."
-
-	| parts theGroup theName theType theVersion theScope theDirectory pathString fileName |
-	parts := $: split: descriptor.
-	theGroup := parts at: 1.
-	theName := parts at: 2.
-	theType := parts at: 3.
-	theVersion := parts at: 4.
-	theScope := parts at: 5.
-
-	"search for the directory"
-	pathString := String streamContents: [ :s |
-		              s << 'repository/'
-		              << (theGroup copyReplaceAll: '.' with: '/') << '/'
-		              << theName << '/' << theVersion ].
-	(theDirectory := FileLocator home / home / pathString) ifAbsent: [
-		Error signal: 'Could not find dependency: ' , descriptor ].
-
-	"search for the artifact"
-	fileName := theName , '-' , theVersion , '.' , theType.
-	theDirectory / fileName ifAbsent: [
-		Error signal:
-			'Dependency `' , descriptor , '` found in `'
-			, theDirectory pathString , '` but the artifact is missing.' ].
-
-	^ theGroup -> (Dictionary
-		   with: #name -> theName
-		   with: #version -> theVersion
-		   with: #type -> theType
-		   with: #scope -> theScope
-		   with: #path -> (pathString , '/' , fileName))
 ]

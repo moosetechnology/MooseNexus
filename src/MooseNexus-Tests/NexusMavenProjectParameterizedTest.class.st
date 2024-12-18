@@ -2,14 +2,12 @@ Class {
 	#name : 'NexusMavenProjectParameterizedTest',
 	#superclass : 'ParametrizedTestCase',
 	#instVars : [
-		'mavenOutput',
+		'project',
 		'group',
 		'name',
 		'version',
 		'language',
-		'subDirectories',
 		'dependencies',
-		'project',
 		'projects'
 	],
 	#category : 'MooseNexus-Tests',
@@ -44,15 +42,16 @@ NexusMavenProjectParameterizedTest class >> case1 [
 				              with: #version -> version
 				              with: #dependencies -> Dictionary new)).
 
-	^ {
-		  (#mavenOutput -> mavenOutput).
-		  (#group -> group).
-		  (#name -> projectName).
-		  (#version -> version).
-		  (#language -> language).
-		  (#dependencies -> {  }).
-		  (#subDirectories -> { ('src/main/' , language) }).
-		  (#projects -> projects) }
+	^ self
+		  initializeCase: {
+				  (#group -> group).
+				  (#name -> projectName).
+				  (#version -> version).
+				  (#language -> language).
+				  (#dependencies -> {  }).
+				  (#projects -> projects) } asDictionary
+		  withMavenOutput: mavenOutput
+		  andDirectories: { ('src/main/' , language) }
 ]
 
 { #category : 'building suites' }
@@ -81,7 +80,7 @@ NexusMavenProjectParameterizedTest class >> case2 [
 [INFO] 
 [INFO]'.
 
-	"expected list of flattened dependencies"
+	"expected list of flat dependencies"
 	dependencies := {
 		                (Dictionary
 			                 with: #group -> group
@@ -115,31 +114,91 @@ NexusMavenProjectParameterizedTest class >> case2 [
 					 with: #version -> '1.1'
 					 with: #type -> 'jar'
 					 with: #scope -> 'compile'
-					 with: #path -> 'repository/org/moose/fame/1.1/fame-1.1.jar').
+					 with: #path -> 'mavenRepository').
 				(Dictionary
 					 with: #name -> 'famix'
 					 with: #version -> '2.0'
 					 with: #type -> 'jar'
 					 with: #scope -> 'runtime'
-					 with: #path -> 'repository/org/moose/famix/2.0/famix-2.0.jar') };
+					 with: #path -> 'mavenRepository') };
 		at: 'com.example' put: { (Dictionary
 				 with: #name -> 'logger'
 				 with: #version -> '3.14.0'
 				 with: #type -> 'jar'
 				 with: #scope -> 'provided'
-				 with:
-					 #path
-					 -> 'repository/com/example/logger/3.14.0/logger-3.14.0.jar') }.
+				 with: #path -> 'mavenRepository') }.
 
-	^ {
-		  (#mavenOutput -> mavenOutput).
-		  (#group -> group).
-		  (#name -> projectName).
-		  (#version -> version).
-		  (#language -> language).
-		  (#dependencies -> dependencies).
-		  (#subDirectories -> { ('src/main/' , language) }).
-		  (#projects -> projects) }
+	^ self
+		  initializeCase: {
+				  (#group -> group).
+				  (#name -> projectName).
+				  (#version -> version).
+				  (#language -> language).
+				  (#dependencies -> dependencies).
+				  (#projects -> projects) } asDictionary
+		  withMavenOutput: mavenOutput
+		  andDirectories: { ('src/main/' , language) }
+]
+
+{ #category : 'initialization' }
+NexusMavenProjectParameterizedTest class >> initializeCase: aCase withMavenOutput: mavenOutput andDirectories: directories [
+	"Some case data is computed here instead of being hard-coded, such as paths."
+
+	| projectName dependencies projects root repositoryPath project |
+	projectName := aCase at: #name.
+	dependencies := aCase at: #dependencies.
+	projects := aCase at: #projects.
+
+	root := 'pharo-local/nexus/tests' asFileReference.
+
+	"initialize mock Maven repository"
+	repositoryPath := (root / 'mavenRepository') ensureCreateDirectory
+		                  absolutePath pathString.
+	dependencies do: [ :dependency |
+		| depName depVersion depPath |
+		depName := dependency at: #name.
+		depVersion := dependency at: #version.
+		depPath := String streamContents: [ :s |
+			           s << repositoryPath << '/'
+			           <<
+			           ((dependency at: #group) copyReplaceAll: '.' with: '/')
+			           << '/' << depName << '/' << depVersion << '/' << depName
+			           << '-' << depVersion << '.' << (dependency at: #type) ].
+		"create mock artifact and set the expected path of the artifact"
+		depPath := (depPath asFileReference ensureCreateFile relativeTo:
+			            FileLocator home) pathString.
+		dependency at: #path put: depPath ].
+
+	"compute paths of dependencies of subprojects"
+	projects do: [ :projectGroup |
+		projectGroup do: [ :subProject |
+			(subProject at: #dependencies) keysAndValuesDo: [
+				:groupName
+				:dependencyGroup |
+				dependencyGroup do: [ :dependency | "'dependency at: #path' is the repository name only, compute the rest of the path"
+					| depName depVersion filename path |
+					depName := dependency at: #name.
+					depVersion := dependency at: #version.
+					filename := String streamContents: [ :s |
+						            s << depName << '-' << depVersion << '.jar' ].
+					path := ((root / (dependency at: #path)
+					          / (groupName copyReplaceAll: '.' with: '/') / depName
+					          / depVersion / filename) absolutePath relativeTo:
+						         FileLocator home) pathString.
+					dependency at: #path put: path ] ] ] ].
+
+	"create the project subdirectories, mostly used to determine the language"
+	directories do: [ :path |
+		(root / projectName / path) ensureCreateDirectory ].
+
+	"initialize the NexusProject"
+	project := aCase at: #project put: NexusMavenProject new.
+	project localRepositories: { (NexusMavenRepository new directory:
+			 (root / 'mavenRepository') pathString) }.
+	project directory: root / projectName.
+	project parse: mavenOutput.
+
+	^ aCase associations
 ]
 
 { #category : 'building suites' }
@@ -170,58 +229,21 @@ NexusMavenProjectParameterizedTest >> language: aString [
 ]
 
 { #category : 'accessing' }
-NexusMavenProjectParameterizedTest >> mavenOutput: aString [
-
-	mavenOutput := aString
-]
-
-{ #category : 'accessing' }
 NexusMavenProjectParameterizedTest >> name: aString [
 
 	name := aString
+]
+
+{ #category : 'accessing' }
+NexusMavenProjectParameterizedTest >> project: aNexusMavenProject [
+
+	project := aNexusMavenProject
 ]
 
 { #category : 'tests' }
 NexusMavenProjectParameterizedTest >> projects: aCollection [
 
 	projects := aCollection
-]
-
-{ #category : 'running' }
-NexusMavenProjectParameterizedTest >> setUp [
-
-	| root home |
-	super setUp.
-	root := 'pharo-local/nexus/tests' asFileReference.
-
-	"initialize mock Maven repository"
-	home := (root / 'maven') ensureCreateDirectory.
-	dependencies do: [ :dependency |
-		| depName depVersion depPath |
-		depName := dependency at: #name.
-		depVersion := dependency at: #version.
-		depPath := String streamContents: [ :s |
-			           s << 'repository/'
-			           <<
-			           ((dependency at: #group) copyReplaceAll: '.' with: '/')
-			           << '/' << depName << '/' << depVersion << '/' << depName
-			           << '-' << depVersion << '.' << (dependency at: #type) ].
-		dependency at: #path put: depPath.
-		(home / depPath) ensureCreateFile ].
-
-	"initialize project"
-	subDirectories do: [ :path |
-		(root / name / path) ensureCreateDirectory ].
-	project := NexusMavenProject new.
-	project home: (root / 'maven') pathString.
-	project directory: root / name.
-	project parse: mavenOutput
-]
-
-{ #category : 'accessing' }
-NexusMavenProjectParameterizedTest >> subDirectories: aCollection [
-
-	subDirectories := aCollection
 ]
 
 { #category : 'tests' }
