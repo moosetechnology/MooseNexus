@@ -16,9 +16,9 @@ NexusLocalVerveineJRunner >> directory [
 ]
 
 { #category : 'accessing' }
-NexusLocalVerveineJRunner >> directory: anObject [
+NexusLocalVerveineJRunner >> directory: pathString [
 
-	directory := anObject
+	directory := pathString
 ]
 
 { #category : 'running' }

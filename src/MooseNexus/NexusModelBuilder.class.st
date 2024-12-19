@@ -23,7 +23,7 @@ NexusModelBuilder >> build [
 
 	[
 	self setUp.
-	extractor run ] ensure: [ self cleanUp ]
+	self extractor run ] ensure: [ self cleanUp ]
 ]
 
 { #category : 'cleanup' }
@@ -36,13 +36,14 @@ NexusModelBuilder >> cleanUp [
 { #category : 'accessing' }
 NexusModelBuilder >> extractor [
 
-	^ extractor
+	^ extractor ifNil: [
+		  extractor := NexusModelExtractor forLanguage: project language ]
 ]
 
 { #category : 'accessing' }
-NexusModelBuilder >> extractor: aNexusModelCreator [
+NexusModelBuilder >> extractor: aNexusModelExtractor [
 
-	extractor := aNexusModelCreator
+	extractor := aNexusModelExtractor
 ]
 
 { #category : 'accessing' }
@@ -86,7 +87,7 @@ NexusModelBuilder >> setUp [
 		| artifact |
 		artifact := home / (dependency at: #path).
 		artifact copyTo: dependencies / artifact basename ].
-	extractor target: project directory
+	self extractor target: project directory
 ]
 
 { #category : 'accessing' }

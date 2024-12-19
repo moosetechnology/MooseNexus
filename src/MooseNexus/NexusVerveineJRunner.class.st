@@ -30,6 +30,12 @@ NexusVerveineJRunner class >> defaultImplementation [
 	^ NexusDockerVerveineJRunner new
 ]
 
+{ #category : 'testing' }
+NexusVerveineJRunner class >> isAbstract [
+
+	^ self == NexusVerveineJRunner
+]
+
 { #category : 'accessing' }
 NexusVerveineJRunner >> allLocals [
 
