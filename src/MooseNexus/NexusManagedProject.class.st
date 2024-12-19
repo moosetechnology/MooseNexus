@@ -35,8 +35,7 @@ Class {
 	#superclass : 'NexusProject',
 	#instVars : [
 		'projects',
-		'language',
-		'localRepositories'
+		'language'
 	],
 	#category : 'MooseNexus-Project',
 	#package : 'MooseNexus',
@@ -56,27 +55,6 @@ NexusManagedProject class >> knownLanguages [
 ]
 
 { #category : 'querying' }
-NexusManagedProject >> determineDependencies [
-	"Resolve all dependencies of this project into a flat list.
-	A problem can occur if two projects define the same dependency with different versions."
-
-	| theDependencies |
-	theDependencies := Dictionary new.
-	self projectDependenciesDo: [ :dependencyGroup :descriptor |
-		| key mustAdd |
-		key := dependencyGroup , ':' , (descriptor at: #name).
-		mustAdd := true.
-		theDependencies at: key ifPresent: [ :existing |
-			mustAdd := (self mediateExisting: existing incoming: descriptor)
-			           == descriptor ].
-		mustAdd ifTrue: [
-			theDependencies
-				at: key
-				put: (descriptor copyWith: #group -> dependencyGroup) ] ].
-	^ theDependencies asArray
-]
-
-{ #category : 'querying' }
 NexusManagedProject >> determineGroup [
 
 	projects size == 1 ifFalse: [
@@ -87,27 +65,25 @@ NexusManagedProject >> determineGroup [
 { #category : 'querying' }
 NexusManagedProject >> determineLanguage [
 
-	| knownLanguages candidates |
+	| knownLanguages candidates sourceDirectory |
 	knownLanguages := self class knownLanguages.
 	(projects isEmpty or: [ projects anyOne isEmpty ]) ifTrue: [
 		Error signal: 'Cannot determine language without any project' ].
 	candidates := Set new.
+	sourceDirectory := self projectSourceDirectory.
 
 	"check if this project directory has sources"
-	directory asFileReference / 'src/main' ifExists: [ :mainDirectory |
-		FileSystem disk directoryNamesAt: mainDirectory do: [ :dirName |
-			(knownLanguages includes: dirName) ifTrue: [
-				candidates add: dirName ] ] ].
+	sourceDirectory / 'src/main' ifExists: [ :mainDirectory |
+		knownLanguages do: [ :lang |
+			mainDirectory / lang ifExists: [ candidates add: lang ] ] ].
 
 	"check the sources of each project"
 	projects do: [ :projectGroup |
 		projectGroup keysDo: [ :projectName |
-			directory asFileReference / projectName ifExists: [
-				:projectDirectory |
+			sourceDirectory / projectName ifExists: [ :projectDirectory |
 				projectDirectory / 'src/main' ifExists: [ :mainDirectory |
-					FileSystem disk directoryNamesAt: mainDirectory do: [ :dirName |
-						(knownLanguages includes: dirName) ifTrue: [
-							candidates add: dirName ] ] ] ] ] ].
+					knownLanguages do: [ :lang |
+						mainDirectory / lang ifExists: [ candidates add: lang ] ] ] ] ] ].
 
 	candidates ifEmpty: [
 		Error signal: 'Could not determine language automatically' ].
@@ -146,10 +122,22 @@ NexusManagedProject >> determineVersion [
 	^ theVersion
 ]
 
-{ #category : 'initialization' }
-NexusManagedProject >> initialize [
+{ #category : 'testing' }
+NexusManagedProject >> isGradleProject [
 
-	localRepositories := { NexusMavenRepository default }
+	^ false
+]
+
+{ #category : 'testing' }
+NexusManagedProject >> isManagedProject [
+
+	^ true
+]
+
+{ #category : 'testing' }
+NexusManagedProject >> isMavenProject [
+
+	^ false
 ]
 
 { #category : 'accessing' }
@@ -163,44 +151,6 @@ NexusManagedProject >> language [
 NexusManagedProject >> language: aString [
 
 	language := aString
-]
-
-{ #category : 'accessing' }
-NexusManagedProject >> localRepositories [
-	"The directories containing the local repositories of the project managers."
-
-	^ localRepositories
-]
-
-{ #category : 'accessing' }
-NexusManagedProject >> localRepositories: pathStringCollection [
-	"Define the local repositories of the project managers to use for this project.
-	All paths must be relative to the home directory (result of `FileLocator home pathString`)."
-
-	localRepositories := pathStringCollection
-]
-
-{ #category : 'versions' }
-NexusManagedProject >> mediateExisting: existing incoming: incoming [
-	"Decide which version of the dependency to include in the model.
-	The terms 'existing' and 'incoming' are arbitrary, as the order is irrelevant.
-	The existing dependency has already been processed, and the incoming dependency is the one being processed.
-	If they are the same, the existing dependency should be returned to avoid unnecessary computations.
-	If they are different, we have to decide which one to use, which is complicated."
-
-	| existingVersion incomingVersion |
-	(existingVersion := existing at: #version)
-	= (incomingVersion := incoming at: #version) ifTrue: [ ^ existing ].
-
-	"This is a difficult problem: a managed project can have multiple projects, each declaring their own dependencies (and versions).
-	The user wants to create a model of the managed project, thus of all the projects it contains.
-	However, if two projects declare the same dependency but with different versions, which one should be included in the model?"
-	Warning signal: (String streamContents: [ :s |
-			 s << 'The dependency ' << (existing at: #group) << ':'
-			 << (existing at: #name)
-			 << ' is declared with different versions: ' << existingVersion
-			 << ' and ' << incomingVersion << ', proceed to use the first one' ]).
-	^ existing
 ]
 
 { #category : 'enumerating' }
@@ -235,16 +185,6 @@ NexusManagedProject >> projects: aDictionary [
 NexusManagedProject >> properties [
 
 	^ super properties
-		  add: #localRepositories -> self localRepositories;
 		  add: #projects -> self projects;
 		  yourself
-]
-
-{ #category : 'private' }
-NexusManagedProject >> resolve: descriptor [
-	"Attempts to find the local path to an artifact based on the descriptor."
-
-	localRepositories do: [ :repository |
-		(repository resolve: descriptor) ifNotNil: [ :mapping | ^ mapping ] ].
-	Error signal: 'Could not find dependency: ' , descriptor
 ]

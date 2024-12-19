@@ -62,6 +62,31 @@ NexusRepository >> group: group project: project version: version [
 		  / project / version
 ]
 
+{ #category : 'importing' }
+NexusRepository >> import: name fromDirectory: pathString [
+	"Import the project within the given directory and name it."
+
+	| importer project |
+	importer := NexusProjectImporter fromDirectory: pathString.
+	project := importer import.
+	project name: name.
+	self recordProject: project fromDirectory: pathString.
+	^ project
+]
+
+{ #category : 'importing' }
+NexusRepository >> importFromDirectory: pathString [
+	"Import the project within the given directory and try to determine its name.
+	It is recommended that you specify the project name using `import:fromDirectory:`,
+	unless you are sure that there is only one managed project in the directory."
+
+	| importer project |
+	importer := NexusProjectImporter fromDirectory: pathString.
+	project := importer import.
+	self recordProject: project fromDirectory: pathString.
+	^ project
+]
+
 { #category : 'printing' }
 NexusRepository >> printProjectProperties: propertiesFile on: writeStream [
 
@@ -77,10 +102,14 @@ NexusRepository >> printProjectProperties: propertiesFile on: writeStream [
 NexusRepository >> printProjects [
 
 	directory ifAbsent: [ ^ 'none' ].
-	^ String streamContents: [ :s |
-		  self projectProperties
-			  do: [ :properties | self printProjectProperties: properties on: s ]
-			  separatedBy: [ s cr ] ]
+	^ self projectProperties
+		  ifEmpty: [ ^ 'none' ]
+		  ifNotEmpty: [ :projectProperties |
+			  String streamContents: [ :s |
+				  projectProperties
+					  do: [ :properties |
+					  self printProjectProperties: properties on: s ]
+					  separatedBy: [ s cr ] ] ]
 ]
 
 { #category : 'enumerating' }
@@ -101,43 +130,47 @@ NexusRepository >> projects [
 ]
 
 { #category : 'adding' }
-NexusRepository >> record: name fromDirectory: pathString [
-
-	^ self recordProject:
-		  ((NexusProject fromDirectory: pathString) analyze name: name)
-]
-
-{ #category : 'adding' }
-NexusRepository >> recordFromDirectory: pathString [
-	"It is recommended that you specify the project name using `record:fromDirectory:`,
-	unless you are sure that there is only one managed project in the directory and it can be determined."
-
-	^ self recordProject:
-		  (NexusProject fromDirectory: pathString) analyze
-]
-
-{ #category : 'adding' }
 NexusRepository >> recordProject: project [
+	"Add the project to this repository, without including sources."
 
-	| dir |
-	(dir := self resolveDirectoryOf: project) ifExists: [
+	| projectDirectory |
+	(projectDirectory := self resolveDirectoryOf: project) ifExists: [
 		Warning signal:
 			'This project already exists in the given repository, proceed to overwrite it'.
-		dir deleteAll ].
+		projectDirectory deleteAll ].
+	project directory: projectDirectory.
 
 	"write properties file useful for Nexus"
-	(dir / 'properties.json') ensureCreateFile writeStreamDo: [ :stream |
-		project writePropertiesOn: stream ].
+	(projectDirectory / 'properties.json') ensureCreateFile
+		writeStreamDo: [ :stream | project writePropertiesOn: stream ].
 
 	"JSON list of models that were created, empty by default"
-	(dir / 'models.json') ensureCreateFile writeStreamDo: [ :stream |
-		stream nextPutAll: '[]' ].
+	(projectDirectory / 'models.json') ensureCreateFile writeStreamDo: [
+		:stream | stream nextPutAll: '[]' ]
+]
+
+{ #category : 'adding' }
+NexusRepository >> recordProject: project fromDirectory: pathString [
+	"Add the project to this repository, copying the sources from the given directory."
+
+	| projectDirectory |
+	(projectDirectory := self resolveDirectoryOf: project) ifExists: [
+		Warning signal:
+			'This project already exists in the given repository, proceed to overwrite it'.
+		projectDirectory deleteAll ].
+	project directory: projectDirectory.
 
 	"copy the project directory to the repository"
-	project directory asFileReference copyAllTo:
-		(dir / 'sources') createDirectory.
+	pathString asFileReference copyAllTo:
+		(projectDirectory / 'sources/project') ensureCreateDirectory.
 
-	^ project
+	"write properties file useful for Nexus"
+	(projectDirectory / 'properties.json') ensureCreateFile
+		writeStreamDo: [ :stream | project writePropertiesOn: stream ].
+
+	"JSON list of models that were created, empty by default"
+	(projectDirectory / 'models.json') ensureCreateFile writeStreamDo: [
+		:stream | stream nextPutAll: '[]' ]
 ]
 
 { #category : 'enumerating' }

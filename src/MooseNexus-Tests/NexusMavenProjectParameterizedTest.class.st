@@ -144,7 +144,7 @@ NexusMavenProjectParameterizedTest class >> case2 [
 NexusMavenProjectParameterizedTest class >> initializeCase: aCase withMavenOutput: mavenOutput andDirectories: directories [
 	"Some case data is computed here instead of being hard-coded, such as paths."
 
-	| projectName dependencies projects root repositoryPath project |
+	| projectName dependencies projects root repositoryPath importer project |
 	projectName := aCase at: #name.
 	dependencies := aCase at: #dependencies.
 	projects := aCase at: #projects.
@@ -189,14 +189,21 @@ NexusMavenProjectParameterizedTest class >> initializeCase: aCase withMavenOutpu
 
 	"create the project subdirectories, mostly used to determine the language"
 	directories do: [ :path |
-		(root / projectName / path) ensureCreateDirectory ].
+		(root / projectName / 'sources/project' / path)
+			ensureCreateDirectory ].
 
-	"initialize the NexusProject"
+	"initialize the NexusProject and its importer"
 	project := aCase at: #project put: NexusMavenProject new.
-	project localRepositories: { (NexusMavenRepository new directory:
-			 (root / 'mavenRepository') pathString) }.
 	project directory: root / projectName.
-	project parse: mavenOutput.
+
+	importer := NexusMavenProjectImporter new.
+	importer project: project.
+	importer directory: project directory.
+	importer localRepositories: { (NexusMavenRepository new directory:
+			 (root / 'mavenRepository') pathString) }.
+
+	importer parse: mavenOutput.
+	project dependencies: importer flattenDependencies.
 
 	^ aCase associations
 ]
@@ -247,14 +254,6 @@ NexusMavenProjectParameterizedTest >> projects: aCollection [
 ]
 
 { #category : 'tests' }
-NexusMavenProjectParameterizedTest >> testDetermineDependencies [
-
-	self
-		assertCollection: project determineDependencies
-		hasSameElements: dependencies
-]
-
-{ #category : 'tests' }
 NexusMavenProjectParameterizedTest >> testDetermineGroup [
 
 	self assert: project determineGroup equals: group
@@ -276,6 +275,14 @@ NexusMavenProjectParameterizedTest >> testDetermineName [
 NexusMavenProjectParameterizedTest >> testDetermineVersion [
 
 	self assert: project determineVersion equals: version
+]
+
+{ #category : 'tests' }
+NexusMavenProjectParameterizedTest >> testFlattenDependencies [
+
+	self
+		assertCollection: project dependencies
+		hasSameElements: dependencies
 ]
 
 { #category : 'tests' }

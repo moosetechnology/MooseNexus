@@ -19,36 +19,16 @@ Class {
 	#name : 'NexusProject',
 	#superclass : 'Object',
 	#instVars : [
-		'directory',
+		'name',
 		'group',
 		'version',
-		'dependencies',
-		'name'
+		'directory',
+		'dependencies'
 	],
 	#category : 'MooseNexus-Project',
 	#package : 'MooseNexus',
 	#tag : 'Project'
 }
-
-{ #category : 'testing' }
-NexusProject class >> canHandle: directory [
-	"Subclasses define whether they can manage the project in the specified directory."
-
-	^ false
-]
-
-{ #category : 'instance creation' }
-NexusProject class >> fromDirectory: directory [
-	"Expects the path string of a directory containing the sources of a project.
-	Attempts to determine the type of project in the directory.
-	Returns an instance of the appropriate class for managing the project."
-
-	self allSubclassesDo: [ :subclass |
-		(subclass isAbstract not and: [ subclass canHandle: directory ])
-			ifTrue: [ ^ subclass fromDirectory: directory ] ].
-	Error signal:
-		'Cannot figure out nature of project in directory: ' , directory
-]
 
 { #category : 'instance creation' }
 NexusProject class >> fromNexusDirectory: directory [
@@ -82,19 +62,13 @@ NexusProject >> buildModel [
 { #category : 'accessing' }
 NexusProject >> dependencies [
 
-	^ dependencies ifNil: [ dependencies := self determineDependencies ]
+	^ dependencies ifNil: [ dependencies := #(  ) ]
 ]
 
 { #category : 'accessing' }
 NexusProject >> dependencies: aDictionary [
 
 	dependencies := aDictionary
-]
-
-{ #category : 'querying' }
-NexusProject >> determineDependencies [
-
-	^ #(  )
 ]
 
 { #category : 'querying' }
@@ -176,6 +150,12 @@ NexusProject >> importModel: modelDescription [
 	^ model
 ]
 
+{ #category : 'testing' }
+NexusProject >> isManagedProject [
+
+	^ false
+]
+
 { #category : 'accessing' }
 NexusProject >> language [
 	"Subclasses must return a lowercase string of the project's language name."
@@ -192,7 +172,6 @@ NexusProject >> language: aString [
 NexusProject >> modelBuilder [
 
 	^ NexusModelBuilder new
-		  extractor: (NexusModelExtractor forLanguage: self language);
 		  project: self;
 		  yourself
 ]
@@ -234,6 +213,13 @@ NexusProject >> printOn: stream [
 	stream nextPut: $)
 ]
 
+{ #category : 'as yet unclassified' }
+NexusProject >> projectSourceDirectory [
+	"The directory containing all of the original project sources."
+
+	^ self sourceDirectory / 'project'
+]
+
 { #category : 'enumerating' }
 NexusProject >> properties [
 	"Gather all of the properties of this project in a dictionary"
@@ -253,6 +239,14 @@ NexusProject >> readProperties: properties [
 	properties keysAndValuesDo: [ :key :value |
 		key = #nature ifFalse: [
 			self perform: key asSymbol asMutator with: value ] ]
+]
+
+{ #category : 'accessing' }
+NexusProject >> sourceDirectory [
+	"The directory containing all of the sources for this project.
+	This includes the original project sources, and additional sources from dependencies."
+
+	^ directory asFileReference / 'sources'
 ]
 
 { #category : 'accessing' }
