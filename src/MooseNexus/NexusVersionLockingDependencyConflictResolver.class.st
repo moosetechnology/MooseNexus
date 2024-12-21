@@ -1,16 +1,20 @@
+"
+I resolve dependencies using a given table that maps the group and name of a dependency to a selected version.
+"
 Class {
 	#name : 'NexusVersionLockingDependencyConflictResolver',
 	#superclass : 'NexusDependencyConflictResolverWithFallback',
 	#instVars : [
 		'locks'
 	],
-	#category : 'MooseNexus-Strategy',
+	#category : 'MooseNexus-ConflictResolver',
 	#package : 'MooseNexus',
-	#tag : 'Strategy'
+	#tag : 'ConflictResolver'
 }
 
 { #category : 'adding' }
 NexusVersionLockingDependencyConflictResolver >> addLock: anAssociation [
+	"anAssociation = 'group:name' -> 'version'"
 
 	self locks add: anAssociation
 ]
@@ -23,14 +27,15 @@ NexusVersionLockingDependencyConflictResolver >> locks [
 
 { #category : 'accessing' }
 NexusVersionLockingDependencyConflictResolver >> locks: aDictionary [
-	"Expects a dictionary with 'group:name' as keys, and version as values.
+	"Expects a dictionary with 'group:name' strings as keys and version strings as values.
 	e.g. { 'org.domain:example': '1.2.3' }"
 
 	locks := aDictionary
 ]
 
-{ #category : 'adding' }
+{ #category : 'removing' }
 NexusVersionLockingDependencyConflictResolver >> removeLock: aString [
+	"aString = 'group:name'"
 
 	self locks removeKey: aString ifAbsent: [ "do nothing!" ]
 ]
@@ -41,16 +46,16 @@ NexusVersionLockingDependencyConflictResolver >> resolveConflicts: conflicts on:
 	| remaining |
 	remaining := Dictionary new.
 
-	conflicts keysAndValuesDo: [ :groupAndName :conflictList |
+	conflicts keysAndValuesDo: [ :groupAndName :descriptors |
 		self locks
 			at: groupAndName
 			ifPresent: [ :version |
-				conflictList
+				descriptors
 					detect: [ :descriptor | version = (descriptor at: #version) ]
 					ifFound: [ :descriptor |
 					dependencies at: groupAndName put: descriptor ]
-					ifNone: [ remaining at: groupAndName put: conflictList ] ]
-			ifAbsent: [ remaining at: groupAndName put: conflictList ] ].
+					ifNone: [ remaining at: groupAndName put: descriptors ] ]
+			ifAbsent: [ remaining at: groupAndName put: descriptors ] ].
 
 	remaining ifNotEmpty: [
 		self resolveRemainingConflicts: remaining on: dependencies ]
