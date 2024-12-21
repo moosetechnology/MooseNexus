@@ -245,6 +245,36 @@ NexusSemanticVersioningDependencyConflictResolverTest >> testResolveConflictsOn 
 ]
 
 { #category : 'tests' }
+NexusSemanticVersioningDependencyConflictResolverTest >> testResolveConflictsOnUsingOldest [
+
+	| conflicts resolved |
+	conflicts := Dictionary
+		             with: 'net:versioned' -> {
+				             (Dictionary with: #version -> '8.7.5').
+				             (Dictionary with: #version -> '5.3.9').
+				             (Dictionary with: #version -> '10.2.0-rc') }
+				             asOrderedCollection
+		             with: 'org:example' -> {
+				             (Dictionary with: #version -> '1.0.0').
+				             (Dictionary with: #version -> '2.0.0').
+				             (Dictionary with: #version -> '1.1.0') }
+				             asOrderedCollection
+		             with: 'com:potato' -> {
+				             (Dictionary with: #version -> '2.39.451e-rc').
+				             (Dictionary with: #version -> '2.39.452e-rc') }
+				             asOrderedCollection.
+
+	resolver useOldest.
+	resolver resolveConflicts: conflicts on: (resolved := Dictionary new).
+
+	self assert: resolved equals: (Dictionary
+			 with: 'net:versioned' -> (Dictionary with: #version -> '5.3.9')
+			 with: 'org:example' -> (Dictionary with: #version -> '1.0.0')
+			 with:
+			 'com:potato' -> (Dictionary with: #version -> '2.39.451e-rc'))
+]
+
+{ #category : 'tests' }
 NexusSemanticVersioningDependencyConflictResolverTest >> testResolveConflictsOnWithFallback [
 
 	| conflicts resolved |
