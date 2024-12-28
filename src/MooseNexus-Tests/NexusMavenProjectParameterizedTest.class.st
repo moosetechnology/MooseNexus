@@ -194,7 +194,7 @@ NexusMavenProjectParameterizedTest class >> initializeCase: aCase withMavenOutpu
 
 	"initialize the NexusProject and its importer"
 	project := aCase at: #project put: NexusMavenProject new.
-	project directory: root / projectName.
+	project directory: (root / projectName) pathString.
 
 	importer := NexusMavenProjectImporter new.
 	importer project: project.
