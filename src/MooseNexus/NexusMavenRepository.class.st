@@ -46,14 +46,3 @@ NexusMavenRepository >> resolve: descriptor [
 				   with: #path -> (file relativeTo: homeDirectory) pathString) ]
 		  ifAbsent: [ nil ]
 ]
-
-{ #category : 'ston persistence' }
-NexusMavenRepository >> stonOn: aSTONWriter [
-
-	aSTONWriter
-		encodeCharacter: ${;
-		encodeKey: 'type' value: self className;
-		mapElementSeparator;
-		encodeKey: 'directory' value: self directory;
-		encodeCharacter: $}
-]

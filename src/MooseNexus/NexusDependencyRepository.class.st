@@ -32,3 +32,14 @@ NexusDependencyRepository >> resolve: descriptor [
 
 	self subclassResponsibility
 ]
+
+{ #category : 'ston persistence' }
+NexusDependencyRepository >> stonOn: aSTONWriter [
+
+	aSTONWriter
+		encodeCharacter: ${;
+		encodeKey: 'type' value: self className;
+		mapElementSeparator;
+		encodeKey: 'directory' value: self directory;
+		encodeCharacter: $}
+]
