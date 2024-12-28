@@ -20,6 +20,12 @@ NexusVersionLockingDependencyConflictResolver >> addLock: anAssociation [
 ]
 
 { #category : 'accessing' }
+NexusVersionLockingDependencyConflictResolver >> displayName [
+
+	^ 'Version Locking'
+]
+
+{ #category : 'accessing' }
 NexusVersionLockingDependencyConflictResolver >> locks [
 
 	^ locks ifNil: [ locks := Dictionary new ]

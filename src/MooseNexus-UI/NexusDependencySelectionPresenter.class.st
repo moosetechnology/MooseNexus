@@ -12,7 +12,7 @@ Class {
 	#package : 'MooseNexus-UI'
 }
 
-{ #category : 'as yet unclassified' }
+{ #category : 'actions' }
 NexusDependencySelectionPresenter >> applyResolver: resolver [
 
 	| choices |
@@ -56,7 +56,7 @@ NexusDependencySelectionPresenter >> initializePresenters [
 							                   ==
 								                   NexusVersionLockingDependencyConflictResolver ] ]
 				                   thenCollect: #new);
-		                  display: [ :item | item className ];
+		                  display: [ :item | item displayName ];
 		                  whenSelectedItemChangedDo: [ :item |
 			                  self applyResolver: item ].
 
@@ -74,6 +74,13 @@ NexusDependencySelectionPresenter >> initializePresenters [
 	applyButton := self newButton
 		               label: 'Apply';
 		               action: [  ]
+]
+
+{ #category : 'initialization' }
+NexusDependencySelectionPresenter >> initializeWindow: aWindowPresenter [
+
+	super initializeWindow: aWindowPresenter.
+	aWindowPresenter initialExtent: 16 @ 9 * 50
 ]
 
 { #category : 'accessing - model' }

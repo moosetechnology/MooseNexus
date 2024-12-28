@@ -10,6 +10,12 @@ Class {
 	#tag : 'ConflictResolver'
 }
 
+{ #category : 'accessing' }
+NexusFirstFoundDependencyConflictResolver >> displayName [
+
+	^ 'First Found'
+]
+
 { #category : 'resolving' }
 NexusFirstFoundDependencyConflictResolver >> resolveConflicts: conflicts on: dependencies [
 

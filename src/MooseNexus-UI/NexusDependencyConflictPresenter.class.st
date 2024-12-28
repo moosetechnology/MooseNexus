@@ -14,7 +14,7 @@ Class {
 	#package : 'MooseNexus-UI'
 }
 
-{ #category : 'as yet unclassified' }
+{ #category : 'accessing' }
 NexusDependencyConflictPresenter >> conflictId [
 
 	^ conflictId
@@ -65,7 +65,7 @@ NexusDependencyConflictPresenter >> initializePresenters [
 		              yourself
 ]
 
-{ #category : 'actions api' }
+{ #category : 'actions' }
 NexusDependencyConflictPresenter >> lock [
 
 	isLocked ifTrue: [ ^ self ].
@@ -80,7 +80,7 @@ NexusDependencyConflictPresenter >> setModelBeforeInitialization: anAssociation 
 	descriptors := anAssociation value
 ]
 
-{ #category : 'actions api' }
+{ #category : 'actions' }
 NexusDependencyConflictPresenter >> toggleLock [
 
 	isLocked
@@ -88,7 +88,7 @@ NexusDependencyConflictPresenter >> toggleLock [
 		ifFalse: [ self lock ]
 ]
 
-{ #category : 'actions api' }
+{ #category : 'actions' }
 NexusDependencyConflictPresenter >> unlock [
 
 	isLocked ifFalse: [ ^ self ].
@@ -102,7 +102,7 @@ NexusDependencyConflictPresenter >> versionRadioButtons [
 	^ versionRadioButtons
 ]
 
-{ #category : 'enumerating' }
+{ #category : 'actions' }
 NexusDependencyConflictPresenter >> whenLockedVersionChangedDo: aBlock [
 
 	self

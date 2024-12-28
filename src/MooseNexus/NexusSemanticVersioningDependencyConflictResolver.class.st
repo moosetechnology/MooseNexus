@@ -118,6 +118,12 @@ NexusSemanticVersioningDependencyConflictResolver >> compare: leftVersion to: ri
 	^ true
 ]
 
+{ #category : 'accessing' }
+NexusSemanticVersioningDependencyConflictResolver >> displayName [
+
+	^ 'Semantic Versioning'
+]
+
 { #category : 'initialization' }
 NexusSemanticVersioningDependencyConflictResolver >> initialize [
 

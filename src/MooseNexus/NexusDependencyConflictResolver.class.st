@@ -24,6 +24,13 @@ NexusDependencyConflictResolver class >> newDefaultResolver [
 	^ NexusFirstFoundDependencyConflictResolver new
 ]
 
+{ #category : 'accessing' }
+NexusDependencyConflictResolver >> displayName [
+	"The name of the resolver to display in a GUI."
+
+	self subclassResponsibility
+]
+
 { #category : 'resolving' }
 NexusDependencyConflictResolver >> resolveConflicts: conflicts [
 
