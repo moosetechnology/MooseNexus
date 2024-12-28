@@ -1,9 +1,9 @@
 Class {
 	#name : 'NexusMavenProjectImporter',
 	#superclass : 'NexusManagedProjectImporter',
-	#category : 'MooseNexus-Project',
+	#category : 'MooseNexus-Importer',
 	#package : 'MooseNexus',
-	#tag : 'Project'
+	#tag : 'Importer'
 }
 
 { #category : 'testing' }
@@ -23,6 +23,12 @@ NexusMavenProjectImporter >> findMavenCommand [
 			directory asFileReference / 'mvnw' ifExists: [ ^ './mvnw' ] ].
 	"assume maven is installed"
 	^ 'mvn'
+]
+
+{ #category : 'initialization' }
+NexusMavenProjectImporter >> initialize [
+
+	localRepositories := { NexusMavenRepository default }
 ]
 
 { #category : 'instance creation' }
@@ -47,9 +53,7 @@ NexusMavenProjectImporter >> parse: raw [
 [INFO]    `none | (group:name:type:version:scope)+`"
 
 	| newLines start |
-	newLines := {
-		            Character cr.
-		            Character lf }.
+	newLines := String with: Character cr with: Character lf.
 	start := 1.
 	[ (start := raw indexOf: $< startingAt: start) == 0 ] whileFalse: [
 		| end projectGroup projectName projectVersion descriptor projectDependencies |

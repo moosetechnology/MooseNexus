@@ -5,9 +5,9 @@ Class {
 		'localRepositories',
 		'dependencyConflictResolver'
 	],
-	#category : 'MooseNexus-Project',
+	#category : 'MooseNexus-Importer',
 	#package : 'MooseNexus',
-	#tag : 'Project'
+	#tag : 'Importer'
 }
 
 { #category : 'testing' }
@@ -59,9 +59,11 @@ NexusManagedProjectImporter >> flattenDependencies [
 			ifAbsent: [
 				dependencies
 					at: key
-					ifPresent: [ "new conflict"
-						dependencies removeKey: key.
-						conflicts at: key put: (OrderedCollection with: descriptor) ]
+					ifPresent: [ :exisiting |
+						(exisiting at: #version) = (descriptor at: #version) ifFalse: [ "new conflict"
+							conflicts at: key put: (OrderedCollection
+									 with: (dependencies removeKey: key)
+									 with: descriptor) ] ]
 					ifAbsentPut: [ descriptor copyWith: #group -> dependencyGroup ] ] ].
 
 	conflicts ifNotEmpty: [
@@ -77,12 +79,6 @@ NexusManagedProjectImporter >> import [
 	self analyze.
 	project dependencies: self flattenDependencies.
 	^ project
-]
-
-{ #category : 'initialization' }
-NexusManagedProjectImporter >> initialize [
-
-	localRepositories := { NexusMavenRepository default }
 ]
 
 { #category : 'accessing' }
@@ -154,6 +150,8 @@ NexusManagedProjectImporter >> resolveDependencyConflicts: conflicts on: depende
 			dependencyConflictResolver
 				resolveConflicts: conflicts
 				on: dependencies ]
-		ifNil: [ "TODO presenter for manual resolution"
-		self shouldBeImplemented ]
+		ifNil: [
+			self shouldBeImplemented.
+			"TODO link presenter choices with actual result"
+			(NexusDependencySelectionPresenter on: conflicts) open ]
 ]

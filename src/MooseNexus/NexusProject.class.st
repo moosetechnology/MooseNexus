@@ -34,7 +34,7 @@ Class {
 NexusProject class >> fromNexusDirectory: directory [
 
 	^ (self fromProperties: directory / 'properties.json') directory:
-		  directory pathString
+		  (directory relativeTo: FileLocator home) pathString
 ]
 
 { #category : 'instance creation' }
@@ -179,7 +179,7 @@ NexusProject >> modelBuilder [
 { #category : 'enumerating' }
 NexusProject >> models [
 
-	^ STON fromString: self directory asFileReference / 'models.json'
+	^ STON fromString: FileLocator home / directory / 'models.json'
 ]
 
 { #category : 'accessing' }
@@ -213,7 +213,7 @@ NexusProject >> printOn: stream [
 	stream nextPut: $)
 ]
 
-{ #category : 'as yet unclassified' }
+{ #category : 'enumerating' }
 NexusProject >> projectSourceDirectory [
 	"The directory containing all of the original project sources."
 
@@ -241,12 +241,12 @@ NexusProject >> readProperties: properties [
 			self perform: key asSymbol asMutator with: value ] ]
 ]
 
-{ #category : 'accessing' }
+{ #category : 'enumerating' }
 NexusProject >> sourceDirectory [
 	"The directory containing all of the sources for this project.
 	This includes the original project sources, and additional sources from dependencies."
 
-	^ directory asFileReference / 'sources'
+	^ FileLocator home / directory / 'sources'
 ]
 
 { #category : 'accessing' }

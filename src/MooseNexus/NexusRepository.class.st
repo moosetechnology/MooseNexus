@@ -57,18 +57,27 @@ NexusRepository >> directory: aFile [
 NexusRepository >> group: group project: project version: version [
 	"Search the repository for the project with the specified group, project name and version."
 
-	^ NexusProject fromNexusDirectory:
-		  directory / 'repository' / (group copyReplaceAll: '.' with: '/')
-		  / project / version
+	| dir |
+	dir := directory / 'repository' / group ifAbsent: [
+		       NotFound signal:
+			       'Group `' , group , '`, not found in repository' ].
+	dir := dir / project ifAbsent: [
+		       NotFound signal:
+			       'Project `' , project , '` not found in group `' , group
+			       , '`' ].
+	dir := dir / version ifAbsent: [
+		       NotFound signal:
+			       'Version `' , version , '` not found for project `'
+			       , project , '` in group `' , group , '`' ].
+	^ NexusProject fromNexusDirectory: dir
 ]
 
 { #category : 'importing' }
 NexusRepository >> import: name fromDirectory: pathString [
 	"Import the project within the given directory and name it."
 
-	| importer project |
-	importer := NexusProjectImporter fromDirectory: pathString.
-	project := importer import.
+	| project |
+	project := NexusProjectImporter importFromDirectory: pathString.
 	project name: name.
 	self recordProject: project fromDirectory: pathString.
 	^ project
@@ -80,11 +89,19 @@ NexusRepository >> importFromDirectory: pathString [
 	It is recommended that you specify the project name using `import:fromDirectory:`,
 	unless you are sure that there is only one managed project in the directory."
 
-	| importer project |
-	importer := NexusProjectImporter fromDirectory: pathString.
-	project := importer import.
+	| project |
+	project := NexusProjectImporter importFromDirectory: pathString.
 	self recordProject: project fromDirectory: pathString.
 	^ project
+]
+
+{ #category : 'printing' }
+NexusRepository >> printOn: stream [
+
+	super printOn: stream.
+	stream nextPut: $(.
+	stream nextPutAll: directory pathString.
+	stream nextPut: $)
 ]
 
 { #category : 'printing' }
@@ -116,9 +133,13 @@ NexusRepository >> printProjects [
 NexusRepository >> projectProperties [
 	"Returns the properties files of all managed projects."
 
-	^ SelectVisitor
-		  preorder: directory
-		  select: [ :child | child basename = 'properties.json' ]
+	| properties |
+	properties := OrderedCollection new.
+	(directory / 'repository') directories do: [ :groupDirectory |
+		groupDirectory directories do: [ :nameDirectory |
+			nameDirectory directories do: [ :versionDirectory |
+				properties add: versionDirectory / 'properties.json' ] ] ].
+	^ properties
 ]
 
 { #category : 'enumerating' }
@@ -138,7 +159,8 @@ NexusRepository >> recordProject: project [
 		Warning signal:
 			'This project already exists in the given repository, proceed to overwrite it'.
 		projectDirectory deleteAll ].
-	project directory: projectDirectory.
+	project directory:
+		(projectDirectory relativeTo: FileLocator home) pathString.
 
 	"write properties file useful for Nexus"
 	(projectDirectory / 'properties.json') ensureCreateFile
@@ -158,7 +180,8 @@ NexusRepository >> recordProject: project fromDirectory: pathString [
 		Warning signal:
 			'This project already exists in the given repository, proceed to overwrite it'.
 		projectDirectory deleteAll ].
-	project directory: projectDirectory.
+	project directory:
+		(projectDirectory relativeTo: FileLocator home) pathString.
 
 	"copy the project directory to the repository"
 	pathString asFileReference copyAllTo:
@@ -176,7 +199,6 @@ NexusRepository >> recordProject: project fromDirectory: pathString [
 { #category : 'enumerating' }
 NexusRepository >> resolveDirectoryOf: project [
 
-	^ directory / 'repository'
-	  / (project group copyReplaceAll: '.' with: '/') / project name
+	^ directory / 'repository' / project group / project name
 	  / project version
 ]

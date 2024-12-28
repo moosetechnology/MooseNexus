@@ -30,6 +30,13 @@ NexusProjectImporter class >> fromDirectory: directory [
 		'Cannot figure out nature of project in directory: ' , directory
 ]
 
+{ #category : 'instance creation' }
+NexusProjectImporter class >> importFromDirectory: directory [
+	"Expects the path string of a directory containing the sources of a project, imports it and returns it."
+
+	^ (self fromDirectory: directory) import
+]
+
 { #category : 'testing' }
 NexusProjectImporter class >> isAbstract [
 
