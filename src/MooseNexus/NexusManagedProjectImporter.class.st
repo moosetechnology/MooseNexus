@@ -100,29 +100,6 @@ NexusManagedProjectImporter >> localRepositories: pathStringCollection [
 	localRepositories := pathStringCollection
 ]
 
-{ #category : 'versions' }
-NexusManagedProjectImporter >> mediateExisting: existing incoming: incoming [
-	"Decide which version of the dependency to include in the model.
-	The terms 'existing' and 'incoming' are arbitrary, as the order is irrelevant.
-	The existing dependency has already been processed, and the incoming dependency is the one being processed.
-	If they are the same, the existing dependency should be returned to avoid unnecessary computations.
-	If they are different, we have to decide which one to use, which is complicated."
-
-	| existingVersion incomingVersion |
-	(existingVersion := existing at: #version)
-	= (incomingVersion := incoming at: #version) ifTrue: [ ^ existing ].
-
-	"This is a difficult problem: a managed project can have multiple projects, each declaring their own dependencies (and versions).
-	The user wants to create a model of the managed project, thus of all the projects it contains.
-	However, if two projects declare the same dependency but with different versions, which one should be included in the model?"
-	Warning signal: (String streamContents: [ :s |
-			 s << 'The dependency ' << (existing at: #group) << ':'
-			 << (existing at: #name)
-			 << ' is declared with different versions: ' << existingVersion
-			 << ' and ' << incomingVersion << ', proceed to use the first one' ]).
-	^ existing
-]
-
 { #category : 'parsing' }
 NexusManagedProjectImporter >> parse: commandOutputString [
 	"Parse the result of the 'read' method, which contains the project data obtained from the project manager."
