@@ -1,3 +1,8 @@
+"
+I am responsible for importing a project that uses Gradle to manage dependencies.
+Gradle has the `dependencies` option to print the full dependency tree, which contains redundancies and is difficult to parse.
+However, it also allows the definition of custom tasks, which are used to efficiently obtain the project description.
+"
 Class {
 	#name : 'NexusGradleProjectImporter',
 	#superclass : 'NexusManagedProjectImporter',
@@ -77,10 +82,8 @@ NexusGradleProjectImporter class >> taskName [
 { #category : 'enumerating' }
 NexusGradleProjectImporter >> findBuildFile [
 
-	| directoryReference |
-	directoryReference := directory asFileReference.
-	directoryReference / 'build.gradle' ifExists: [ :file | ^ file ].
-	directoryReference / 'build.gradle.kts' ifExists: [ :file | ^ file ].
+	directory / 'build.gradle' ifExists: [ :file | ^ file ].
+	directory / 'build.gradle.kts' ifExists: [ :file | ^ file ].
 	Error signal: 'Cannot find gradle build file'
 ]
 
@@ -89,11 +92,9 @@ NexusGradleProjectImporter >> findGradleCommand [
 	"Return the name of the gradle executable, can be a wrapper or the global 'gradle' command."
 
 	OSPlatform current isWindows
-		ifTrue: [
-			directory asFileReference / 'gradlew.bat' ifExists: [
-				^ 'gradlew.bat' ] ]
+		ifTrue: [ directory / 'gradlew.bat' ifExists: [ ^ 'gradlew.bat' ] ]
 		ifFalse: [ "assume *nix"
-			directory asFileReference / 'gradlew' ifExists: [ ^ './gradlew' ] ].
+		directory / 'gradlew' ifExists: [ ^ './gradlew' ] ].
 	"assume gradle is installed"
 	^ 'gradle'
 ]

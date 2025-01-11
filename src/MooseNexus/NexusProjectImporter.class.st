@@ -1,3 +1,7 @@
+"
+I am responsible for importing a project to analyze with Moose from a local directory.
+A new `NexusProject` is created unless an existing one is given to update.
+"
 Class {
 	#name : 'NexusProjectImporter',
 	#superclass : 'Object',
@@ -50,13 +54,13 @@ NexusProjectImporter >> directory [
 ]
 
 { #category : 'accessing' }
-NexusProjectImporter >> directory: pathString [
+NexusProjectImporter >> directory: fileReference [
 
-	directory := pathString
+	directory := fileReference asFileReference
 ]
 
 { #category : 'querying' }
-NexusProjectImporter >> flattenDependencies [
+NexusProjectImporter >> flatDependencies [
 
 	^ #(  )
 ]

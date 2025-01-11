@@ -169,9 +169,10 @@ NexusMavenProjectParameterizedTest class >> initializeCase: aCase withMavenOutpu
 			            FileLocator home) pathString.
 		dependency at: #path put: depPath ].
 
-	"compute paths of dependencies of subprojects"
+	"compute paths of projects and dependencies"
 	projects do: [ :projectGroup |
 		projectGroup do: [ :subProject |
+			subProject at: #path put: '.'.
 			(subProject at: #dependencies) keysAndValuesDo: [
 				:groupName
 				:dependencyGroup |
@@ -203,7 +204,7 @@ NexusMavenProjectParameterizedTest class >> initializeCase: aCase withMavenOutpu
 			 (root / 'mavenRepository') pathString) }.
 
 	importer parse: mavenOutput.
-	project dependencies: importer flattenDependencies.
+	project dependencies: importer flatDependencies.
 
 	^ aCase associations
 ]

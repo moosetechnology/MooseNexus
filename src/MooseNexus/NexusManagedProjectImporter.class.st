@@ -1,3 +1,7 @@
+"
+I am responsible for importing a project that uses a build automation tool to manage dependencies.
+Each of my subclasses knows how to interact with a specific tool to get them.
+"
 Class {
 	#name : 'NexusManagedProjectImporter',
 	#superclass : 'NexusProjectImporter',
@@ -42,9 +46,9 @@ NexusManagedProjectImporter >> dependencyConflictResolver: aNexusDependencyConfl
 ]
 
 { #category : 'querying' }
-NexusManagedProjectImporter >> flattenDependencies [
+NexusManagedProjectImporter >> flatDependencies [
 	"Resolve all dependencies of this project into a flat list.
-	A problem can occur if two projects define the same dependency with different versions."
+	A conflict can occur if two projects define the same dependency with different versions."
 
 	| dependencies conflicts |
 	dependencies := Dictionary new.
@@ -77,7 +81,7 @@ NexusManagedProjectImporter >> import [
 
 	project ifNil: [ project := self newProject ].
 	self analyze.
-	project dependencies: self flattenDependencies.
+	project dependencies: self flatDependencies.
 	^ project
 ]
 
