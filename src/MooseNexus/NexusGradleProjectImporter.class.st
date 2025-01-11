@@ -167,30 +167,21 @@ NexusGradleProjectImporter >> read [
 	Instead of implementing dark magic parsing, we add a task to the build file and run it.
 	Either use the global 'gradle' command or a local 'gradlew' wrapper."
 
-	| buildFile isKotlin gradleCmd tempFile |
+	| buildFile gradleCmd originalSize |
 	buildFile := self findBuildFile.
-	isKotlin := buildFile extension = 'kts'.
-
-	"find the gradle executable, can be a local wrapper file"
 	gradleCmd := self findGradleCommand.
+	originalSize := buildFile size. "to restore it later"
 
-	"preserve the original build file in a temp file"
-	tempFile := FileReference
-		            newTempFilePrefix: 'mooseNexus'
-		            suffix: '-build.gradle'.
-	buildFile copyTo: tempFile.
-
-	^ [ "append code to the build file for a task to extract flat dependencies"
+	^ [ "append code to the build file for a task to extract resolved dependencies"
 	  buildFile writeStreamDo: [ :ws |
-		  ws setToEnd crlf << (isKotlin
+		  ws setToEnd crlf << (buildFile extension = 'kts'
 			   ifTrue: [ self class kotlinCodeForDependencies ]
 			   ifFalse: [ self class groovyCodeForDependencies ]) ].
 
 	  "execute the task we inserted and return the raw terminal output"
 	  LibC resultOfCommand:
-		  'cd "' , directory , '" && ' , gradleCmd , ' '
-		  , self class taskName ] ensure: [ "make sure the original build file is preserved"
-		  buildFile ensureDelete.
-		  tempFile copyTo: buildFile.
-		  tempFile ensureDelete ]
+		  'cd "' , directory pathString , '" && ' , gradleCmd , ' '
+		  , self class taskName ] ensure: [ "restore the original build file"
+		  (File named: buildFile fullName) writeStreamDo: [ :ws |
+			  ws truncate: originalSize ] ]
 ]
