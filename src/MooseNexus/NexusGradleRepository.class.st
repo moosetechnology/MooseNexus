@@ -50,7 +50,7 @@ NexusGradleRepository >> resolve: descriptor [
 			             findGroup: group
 			             name: name
 			             version: version
-			             type: type) ifAbsent: [ ^ nil ] ].
+			             type: type) ifNil: [ ^ nil ] ].
 
 	^ group -> (Dictionary
 		   with: #name -> name
