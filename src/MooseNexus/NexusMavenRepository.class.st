@@ -1,3 +1,6 @@
+"
+I am responsible for finding dependencies in a local Maven repository.
+"
 Class {
 	#name : 'NexusMavenRepository',
 	#superclass : 'NexusDependencyRepository',

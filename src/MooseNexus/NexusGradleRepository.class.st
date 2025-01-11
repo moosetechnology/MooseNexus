@@ -1,3 +1,6 @@
+"
+I am responsible for finding dependencies in a local Gradle repository.
+"
 Class {
 	#name : 'NexusGradleRepository',
 	#superclass : 'NexusDependencyRepository',

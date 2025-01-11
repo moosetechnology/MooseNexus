@@ -1,7 +1,7 @@
 "
 I represent a project to analyze with Moose.
 
-My properties follows this mapping:
+My properties follow this mapping:
 ```text
 language: <language>
 nature:   <subclassOfNexusProject>

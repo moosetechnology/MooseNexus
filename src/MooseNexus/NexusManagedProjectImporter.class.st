@@ -87,14 +87,14 @@ NexusManagedProjectImporter >> import [
 
 { #category : 'accessing' }
 NexusManagedProjectImporter >> localRepositories [
-	"The directories containing the local repositories of project managers."
+	"The directories containing the local repositories of build automation tools."
 
 	^ localRepositories
 ]
 
 { #category : 'accessing' }
 NexusManagedProjectImporter >> localRepositories: pathStringCollection [
-	"Define the local repositories of the project managers to use for this project.
+	"Define the local repositories of the build automation tools to use for this project.
 	All paths must be relative to the home directory (result of `FileLocator home pathString`)."
 
 	localRepositories := pathStringCollection
@@ -102,14 +102,14 @@ NexusManagedProjectImporter >> localRepositories: pathStringCollection [
 
 { #category : 'parsing' }
 NexusManagedProjectImporter >> parse: commandOutputString [
-	"Parse the result of the 'read' method, which contains the project data obtained from the project manager."
+	"Parse the result of the 'read' method, which contains the project data obtained from the build automation tool."
 
 	self subclassResponsibility
 ]
 
 { #category : 'reading' }
 NexusManagedProjectImporter >> read [
-	"Read project data from the project manager."
+	"Read project data from the build automation tool."
 
 	self subclassResponsibility
 ]

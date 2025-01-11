@@ -3,7 +3,6 @@ A project with managed dependencies, such as using Maven or Gradle.
 
 My properties define the additional mapping:
 ```text
-home:     <home>
 projects: <projects>
 dependencies:
 	- group:   <dependencyGroup>
@@ -17,8 +16,8 @@ The dependencies contain additional mappings for their own group, artifact, and 
 The type is the file format of the dependency (e.g. usually `jar` for Java).
 The scope is the application lifecycle that requires the dependency (e.g. `compile` or `runtime`).
 
-A managed project can encompass multiple projects and sub-projects.
-Once analyzed, the following mapping can be read from the `projects` property:
+A managed project can encompass multiple projects and subprojects.
+The `projects` property has the following mapping:
 ```text
 <projectGroup>:
 	<projectName>:
@@ -142,7 +141,7 @@ NexusManagedProject >> isMavenProject [
 
 { #category : 'accessing' }
 NexusManagedProject >> language [
-	"Project managers are language-agnostic, so it has to be determined."
+	"Build automation tools are language-agnostic, so it has to be determined."
 
 	^ language ifNil: [ language := self determineLanguage ]
 ]

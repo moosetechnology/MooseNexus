@@ -1,5 +1,5 @@
 "
-[VerveineJ](https://modularmoose.org/moose-wiki/Developers/Parsers/VerveineJ.html) is a tool written in java that create a json or a mse file from Java source code.
+[VerveineJ](https://modularmoose.org/moose-wiki/Developers/Parsers/VerveineJ.html) is a tool written in Java that creates a JSON or MSE file from Java source code.
 "
 Class {
 	#name : 'NexusVerveineJRunner',

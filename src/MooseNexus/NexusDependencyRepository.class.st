@@ -1,3 +1,7 @@
+"
+I represent a local dependency repository of a build automation tool.
+Each of my subclasses knows how to resolve a dependency based on a descriptor string based on the indexing of a specific tool.
+"
 Class {
 	#name : 'NexusDependencyRepository',
 	#superclass : 'Object',
