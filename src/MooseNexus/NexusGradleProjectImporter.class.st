@@ -23,14 +23,19 @@ NexusGradleProjectImporter class >> canHandle: directory [
 
 { #category : 'constants' }
 NexusGradleProjectImporter class >> groovyCodeForDependencies [
-	"Code to insert in a build.gradle file to obtain flat list of dependencies."
+	"Code to insert in a build.gradle file to get flat list of dependencies."
 
 	^ 'tasks.register("' , self taskName , '") {
 	doLast {
 		def rootDirPath = rootDir.canonicalPath
 		allprojects.findAll { it.projectDir.canonicalPath.startsWith(rootDirPath) }.each { project ->
 			println "-${project.group}:${project.name}:${project.version}"
-			println(project.projectDir.canonicalPath)
+			def projectPath = project.projectDir.canonicalPath
+			if (projectPath.equals(rootDirPath)) {
+				println "."
+			} else {
+				println(projectDirPath.substring(rootDirPath.length() + 1))
+			}
 			configurations.findAll { it.canBeResolved }.each { configuration ->
 				def scope = configuration.name
 				configuration.resolvedConfiguration.resolvedArtifacts.each { artifact ->
@@ -49,14 +54,19 @@ NexusGradleProjectImporter class >> groovyCodeForDependencies [
 
 { #category : 'constants' }
 NexusGradleProjectImporter class >> kotlinCodeForDependencies [
-	"Code to insert in a build.gradle.kts file to obtain flat list of dependencies."
+	"Code to insert in a build.gradle.kts file to get flat list of dependencies."
 
 	^ 'tasks.register("' , self taskName , '") {
 	doLast {
 		val rootDirPath = rootDir.canonicalPath
 		allprojects.filter { it.projectDir.canonicalPath.startsWith(rootDirPath) }.forEach { project ->
 			println("-${project.group}:${project.name}:${project.version}")
-			println(project.projectDir.canonicalPath)
+			def projectPath = project.projectDir.canonicalPath
+			if (projectPath.equals(rootDirPath)) {
+				println "."
+			} else {
+				println(projectDirPath.substring(rootDirPath.length + 1))
+			}
 			configurations.filter { it.isCanBeResolved }.forEach { configuration ->
 				val scope = configuration.name
 				configuration.resolvedConfiguration.resolvedArtifacts.forEach { artifact ->
