@@ -58,7 +58,7 @@ NexusMavenProjectImporter >> parseProject: raw startingAt: initialStart [
 	in which case it is still parsed to update the reading position, but not imported.
 	The raw data of each project is formatted as follows:
 [INFO] ---------------------< `group`:`name` >----------------------
-[INFO] Building `projectName` `version`                               [`i`/`n`]
+[INFO] Building `projectName` `version`                               `([i/n])?`
 [INFO]   from `path/`pom.xml
 [INFO] -------------------------------[ `type` ]-------------------------------
 [INFO] 
@@ -77,10 +77,10 @@ NexusMavenProjectImporter >> parseProject: raw startingAt: initialStart [
 	end := raw indexOf: $> startingAt: (start := end + 1) + 1.
 	name := raw copyFrom: start to: end - 2.
 
-	"find the version"
-	start := end := raw indexOfSubCollection: '  ' startingAt: end + 1.
-	[ (raw at: (start := start - 1)) == Character space ] whileFalse.
-	version := raw copyFrom: start + 1 to: end - 1.
+	"find the version which appears after the project name on the next line"
+	end := start := end + name size + 45. "= size of string between name and version"
+	[ (raw at: (end := end + 1)) isSeparator ] whileFalse.
+	version := raw copyFrom: start to: end - 1.
 
 	"read project location relative to the import directory"
 	start := (raw indexOfSubCollection: 'from' startingAt: end + 1) + 5. "= 'from ' size"
@@ -99,8 +99,11 @@ NexusMavenProjectImporter >> parseProject: raw startingAt: initialStart [
 
 	[ "collect and resolve all the dependencies"
 	| dependency |
-	end := raw indexOfAnyOf: String crlf startingAt: start + 1.
+	"with Java >= 9, descriptors can be suffixed with ` -- module XYZ`, ignore it"
+	end := raw indexOfAnyOf: String crlf , ' ' startingAt: start + 1.
 	dependency := raw copyFrom: start to: end - 1. "= none | group:name:type:version:scope"
+	(raw at: end) == Character space ifTrue: [ "skip module description (>= 11 chars)"
+		end := raw indexOfAnyOf: String crlf startingAt: end + 11 ].
 	(skip or: [ dependency = 'none' ]) ifFalse: [
 		| mapping |
 		mapping := self resolve: dependency. "returns group -> (descriptor \ group)"
