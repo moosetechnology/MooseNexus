@@ -77,10 +77,13 @@ NexusMavenProjectImporter >> parseProject: raw startingAt: initialStart [
 	end := raw indexOf: $> startingAt: (start := end + 1) + 1.
 	name := raw copyFrom: start to: end - 2.
 
-	"find the version which appears after the project name on the next line"
-	end := start := end + name size + 45. "= size of string between name and version"
-	[ (raw at: (end := end + 1)) isSeparator ] whileFalse.
-	version := raw copyFrom: start to: end - 1.
+	"find the version which is located after the project name on the next line
+	search before next '[INFO]', or before '[i/n]' if multiple projects"
+	end := raw indexOf: $[ startingAt: end + 42.
+	[ (raw at: (end := end - 1)) isSeparator ] whileTrue.
+	start := end. "there are no separators in version string"
+	[ (raw at: (start := start - 1)) isSeparator ] whileFalse.
+	version := raw copyFrom: start + 1 to: end.
 
 	"read project location relative to the import directory"
 	start := (raw indexOfSubCollection: 'from' startingAt: end + 1) + 5. "= 'from ' size"
