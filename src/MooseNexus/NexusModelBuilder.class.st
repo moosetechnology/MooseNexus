@@ -30,7 +30,8 @@ NexusModelBuilder >> build [
 NexusModelBuilder >> cleanUp [
 	"delete temp directories"
 
-	(project directory asFileReference / 'dependencies') deleteAll
+	(FileLocator home / project directory / 'dependencies')
+		ensureDeleteAll
 ]
 
 { #category : 'accessing' }
@@ -79,15 +80,15 @@ NexusModelBuilder >> project: aNexusProject [
 { #category : 'building' }
 NexusModelBuilder >> setUp [
 
-	| home dependencies |
+	| home projectDirectory dependencies |
 	home := FileLocator home.
-	dependencies := (project directory asFileReference / 'dependencies')
-		                createDirectory.
+	projectDirectory := home / project directory.
+	dependencies := (projectDirectory / 'dependencies') createDirectory.
 	project dependencies do: [ :dependency |
 		| artifact |
 		artifact := home / (dependency at: #path).
 		artifact copyTo: dependencies / artifact basename ].
-	self extractor target: project directory
+	self extractor target: projectDirectory pathString
 ]
 
 { #category : 'accessing' }
