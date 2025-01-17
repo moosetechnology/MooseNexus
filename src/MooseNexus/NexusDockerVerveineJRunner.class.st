@@ -16,16 +16,8 @@ Class {
 { #category : 'running' }
 NexusDockerVerveineJRunner >> run [
 
-	| command returnCode targetFile |
-	command := String streamContents: [ :s |
-		           s << 'docker run --rm -v ' << target
-		           << '/sources:/src -v ' << target
-		           <<
-		           '/dependencies:/dependency ghcr.io/evref-bl/verveinej:'
-		           << self version << ' '.
-		           self printOptionsOn: s ].
-
-	returnCode := LibC runCommand: command.
+	| returnCode directory |
+	returnCode := LibC runCommand: self writeCommand.
 	returnCode == 0 ifFalse: [
 		returnCode == 32000 ifTrue: [
 			Error signal: 'Docker must be running' ].
@@ -33,8 +25,9 @@ NexusDockerVerveineJRunner >> run [
 		Error signal:
 			'Failed to create the model, error code: ' , returnCode asString ].
 
-	(targetFile := target asFileReference) / 'sources/output.json'
-		moveTo: targetFile / 'model.json'
+	(directory := target asFileReference)
+	/ ('sources/' , self class outputFilename , '.' , self format)
+		moveTo: (directory / 'models') ensureCreateDirectory / 'model.json'
 ]
 
 { #category : 'accessing' }
@@ -48,4 +41,15 @@ NexusDockerVerveineJRunner >> version: aString [
 	"The VerveineJ version to use."
 
 	version := aString
+]
+
+{ #category : 'writing' }
+NexusDockerVerveineJRunner >> writeCommand [
+
+	^ String streamContents: [ :s |
+		  s << 'docker run --rm -v ' << target << '/sources:/src -v '
+		  << target
+		  << '/dependencies:/dependency ghcr.io/evref-bl/verveinej:'
+		  << self version << ' '.
+		  self printOptionsOn: s ]
 ]

@@ -36,6 +36,14 @@ NexusVerveineJRunner class >> isAbstract [
 	^ self == NexusVerveineJRunner
 ]
 
+{ #category : 'constants' }
+NexusVerveineJRunner class >> outputFilename [
+	"This is the filename of the VerveineJ output, meant to avoid conflicts with an existing source file.
+	Its final name will be given afterwards."
+
+	^ 'mooseNexusModel'
+]
+
 { #category : 'accessing' }
 NexusVerveineJRunner >> allLocals [
 
@@ -128,7 +136,8 @@ NexusVerveineJRunner >> jvmArgs: aString [
 NexusVerveineJRunner >> printOptionsOn: stream [
 
 	self jvmArgs ifNotNil: [ :args | stream << args << ' ' ].
-	stream << '-format ' << self format.
+	stream << '-o ' << self class outputFilename << '.' << self format
+	<< ' -format ' << self format.
 	self allLocals ifTrue: [ stream << ' -alllocals' ].
 	self anchor ifNotNil: [ :a | stream << ' -anchor ' << a ].
 	self javaVersion ifNotNil: [ :v | stream << ' -' << v ].
