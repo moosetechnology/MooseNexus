@@ -1,11 +1,18 @@
 "
 I am responsible for importing a project that uses Gradle to manage dependencies.
-Gradle has the `dependencies` option to print the full dependency tree, which contains redundancies and is difficult to parse.
-However, it also allows the definition of custom tasks, which are used to efficiently obtain the project description.
+
+Gradle has the `dependencies` option to print the full dependency tree, which contains redundancies and is difficult to parse. However, it also allows the definition of custom tasks, which are used to efficiently obtain the project description.
+
+This freedom also means that the project definition does not follow a strict standard. In particular, the group, name, and version can be omitted or defined in different ways. To overcome this, users can write custom code to retrieve this data.
 "
 Class {
 	#name : 'NexusGradleProjectImporter',
 	#superclass : 'NexusManagedProjectImporter',
+	#instVars : [
+		'groupCode',
+		'nameCode',
+		'versionCode'
+	],
 	#category : 'MooseNexus-Importer',
 	#package : 'MooseNexus',
 	#tag : 'Importer'
@@ -19,68 +26,6 @@ NexusGradleProjectImporter class >> canHandle: directory [
 	directoryReference / 'build.gradle' ifExists: [ ^ true ].
 	directoryReference / 'build.gradle.kts' ifExists: [ ^ true ].
 	^ false
-]
-
-{ #category : 'constants' }
-NexusGradleProjectImporter class >> groovyCodeForDependencies [
-	"Code to insert in a build.gradle file to get flat list of dependencies."
-
-	^ 'tasks.register("' , self taskName , '") {
-	doLast {
-		def rootDirPath = rootDir.canonicalPath
-		allprojects.findAll { it.projectDir.canonicalPath.startsWith(rootDirPath) }.each { project ->
-			println "-${project.group}:${project.name}:${project.version}"
-			def projectPath = project.projectDir.canonicalPath
-			if (projectPath.equals(rootDirPath)) {
-				println "."
-			} else {
-				println(projectDirPath.substring(rootDirPath.length() + 1))
-			}
-			configurations.findAll { it.canBeResolved }.each { configuration ->
-				def scope = configuration.name
-				configuration.resolvedConfiguration.resolvedArtifacts.each { artifact ->
-					def group = artifact.moduleVersion.id.group
-					def name = artifact.name
-					def type = artifact.extension ?: "jar"
-					def version = artifact.moduleVersion.id.version
-					def path = artifact.file.absolutePath // forces artifact download
-					println "$group:$name:$type:$version:$scope:$path"
-				}
-			}
-		}
-	}
-}'
-]
-
-{ #category : 'constants' }
-NexusGradleProjectImporter class >> kotlinCodeForDependencies [
-	"Code to insert in a build.gradle.kts file to get flat list of dependencies."
-
-	^ 'tasks.register("' , self taskName , '") {
-	doLast {
-		val rootDirPath = rootDir.canonicalPath
-		allprojects.filter { it.projectDir.canonicalPath.startsWith(rootDirPath) }.forEach { project ->
-			println("-${project.group}:${project.name}:${project.version}")
-			def projectPath = project.projectDir.canonicalPath
-			if (projectPath.equals(rootDirPath)) {
-				println "."
-			} else {
-				println(projectDirPath.substring(rootDirPath.length + 1))
-			}
-			configurations.filter { it.isCanBeResolved }.forEach { configuration ->
-				val scope = configuration.name
-				configuration.resolvedConfiguration.resolvedArtifacts.forEach { artifact ->
-					val group = artifact.moduleVersion.id.group
-					val name = artifact.name
-					val type = artifact.extension ?: "jar"
-					val version = artifact.moduleVersion.id.version
-					val path = artifact.file.absolutePath // forces artifact download
-					println("$group:$name:$type:$version:$scope:$path")
-				}
-			}
-		}
-	}
-}'
 ]
 
 { #category : 'constants' }
@@ -109,12 +54,86 @@ NexusGradleProjectImporter >> findGradleCommand [
 	^ 'gradle'
 ]
 
+{ #category : 'constants' }
+NexusGradleProjectImporter >> groovyCodeForDependencies [
+	"Code to insert into a build.gradle file to get the flat list of dependencies."
+
+	^ String streamContents: [ :s |
+		  s << 'tasks.register("' << self class taskName << '") {
+	doLast {
+		def rootDirPath = rootDir.canonicalPath
+		allprojects.findAll { it.projectDir.canonicalPath.startsWith(rootDirPath) }.each { project ->
+			println "-${' << self groupCode << '}:${' << self nameCode
+		  << '}:${' << self versionCode << '}"
+			def projectDirPath = project.projectDir.canonicalPath
+			if (projectDirPath.equals(rootDirPath)) {
+				println "."
+			} else {
+				println(projectDirPath.substring(rootDirPath.length() + 1))
+			}
+			configurations.findAll { it.canBeResolved }.each { configuration ->
+				def scope = configuration.name
+				configuration.resolvedConfiguration.resolvedArtifacts.each { artifact ->
+					def group = artifact.moduleVersion.id.group
+					def name = artifact.name
+					def type = artifact.extension ?: "jar"
+					def version = artifact.moduleVersion.id.version
+					def path = artifact.file.absolutePath // forces artifact download
+					println "$group:$name:$type:$version:$scope:$path"
+				}
+			}
+		}
+	}
+}' ]
+]
+
+{ #category : 'accessing' }
+NexusGradleProjectImporter >> groupCode [
+
+	^ groupCode ifNil: [ groupCode := 'project.group' ]
+]
+
+{ #category : 'accessing' }
+NexusGradleProjectImporter >> groupCode: aString [
+	"Define the code that returns the group string of a project."
+
+	groupCode := aString
+]
+
 { #category : 'initialization' }
 NexusGradleProjectImporter >> initialize [
 
 	localRepositories := {
 		                     NexusGradleRepository default.
 		                     NexusMavenRepository default }
+]
+
+{ #category : 'constants' }
+NexusGradleProjectImporter >> kotlinCodeForDependencies [
+	"Code to insert into a build.gradle.kts file to get the flat list of dependencies.
+	Kotlin is sensitive to line endings, so they are removed for convenience."
+
+	^ String streamContents: [ :s |
+		  s << 'tasks.register("' << self class taskName
+		  <<
+		  '") { doLast { val rootDirPath = rootDir.canonicalPath; allprojects.filter { it.projectDir.canonicalPath.startsWith(rootDirPath) }.forEach { project -> println("-${'
+		  << self groupCode << '}:${' << self nameCode << '}:${'
+		  << self versionCode
+		  <<
+		  '}"); val projectDirPath = project.projectDir.canonicalPath; if (projectDirPath.equals(rootDirPath)) { println(".") } else { println(projectDirPath.substring(rootDirPath.length + 1)) }; configurations.filter { it.isCanBeResolved }.forEach { configuration -> val scope = configuration.name; configuration.resolvedConfiguration.resolvedArtifacts.forEach { artifact -> val group = artifact.moduleVersion.id.group; val name = artifact.name; val type = artifact.extension ?: "jar"; val version = artifact.moduleVersion.id.version; val path = artifact.file.absolutePath; /* forces artifact download */ println("$group:$name:$type:$version:$scope:$path") }}}}}' ]
+]
+
+{ #category : 'accessing' }
+NexusGradleProjectImporter >> nameCode [
+
+	^ nameCode ifNil: [ nameCode := 'project.name' ]
+]
+
+{ #category : 'accessing' }
+NexusGradleProjectImporter >> nameCode: aString [
+	"Define the code that returns the name string of a project."
+
+	nameCode := aString
 ]
 
 { #category : 'instance creation' }
@@ -148,11 +167,8 @@ directory
 		descriptor := Dictionary with: #version -> version.
 		project projects at: group at: name put: descriptor.
 
-		"read project location"
-		descriptor
-			at: #path
-			put: ((lines at: (index := index + 1)) asFileReference relativeTo:
-					 FileLocator home) pathString.
+		"read project location, relative to the directory"
+		descriptor at: #path put: (lines at: (index := index + 1)).
 
 		"read dependencies per scope"
 		dependencies := Dictionary new.
@@ -185,8 +201,8 @@ NexusGradleProjectImporter >> read [
 	^ [ "append code to the build file for a task to extract resolved dependencies"
 	  buildFile writeStreamDo: [ :ws |
 		  ws setToEnd crlf << (buildFile extension = 'kts'
-			   ifTrue: [ self class kotlinCodeForDependencies ]
-			   ifFalse: [ self class groovyCodeForDependencies ]) ].
+			   ifTrue: [ self kotlinCodeForDependencies ]
+			   ifFalse: [ self groovyCodeForDependencies ]) ].
 
 	  "execute the task we inserted and return the raw terminal output"
 	  LibC resultOfCommand:
@@ -194,4 +210,17 @@ NexusGradleProjectImporter >> read [
 		  , self class taskName ] ensure: [ "restore the original build file"
 		  (File named: buildFile fullName) writeStreamDo: [ :ws |
 			  ws truncate: originalSize ] ]
+]
+
+{ #category : 'accessing' }
+NexusGradleProjectImporter >> versionCode [
+
+	^ versionCode ifNil: [ versionCode := 'project.version' ]
+]
+
+{ #category : 'accessing' }
+NexusGradleProjectImporter >> versionCode: aString [
+	"Define the code that returns the version string of a project."
+
+	versionCode := aString
 ]
