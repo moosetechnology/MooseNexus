@@ -153,18 +153,17 @@ directory
 
 	| lines line index |
 	lines := raw lines.
-
-	"project info starts at third line at the earliest, after the line '> Task ...'"
 	index := 2.
-	[
-	(line := lines at: (index := index + 1) - 1) isNotEmpty and: [
-		line first == $> ] ] whileFalse.
+
+	[ "project info starts at third line at the earliest, after the line '> Task ...'"
+	(line := lines at: (index := index + 1)) isNotEmpty and: [
+		line first == $- ] ] whileFalse.
 
 	[ (line := lines at: index) isNotEmpty ] whileTrue: [
 		| group name version descriptor dependencies |
 		"read project descriptor"
 		descriptor := $: split: line allButFirst.
-		group := descriptor first.
+		group := descriptor first ifEmpty: [ 'unknown' ].
 		name := descriptor second.
 		version := descriptor third.
 
