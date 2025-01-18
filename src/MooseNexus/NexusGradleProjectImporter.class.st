@@ -153,7 +153,12 @@ directory
 
 	| lines line index |
 	lines := raw lines.
-	index := 3. "relevant info starts at third line"
+
+	"project info starts at third line at the earliest, after the line '> Task ...'"
+	index := 2.
+	[
+	(line := lines at: (index := index + 1) - 1) isNotEmpty and: [
+		line first == $> ] ] whileFalse.
 
 	[ (line := lines at: index) isNotEmpty ] whileTrue: [
 		| group name version descriptor dependencies |
