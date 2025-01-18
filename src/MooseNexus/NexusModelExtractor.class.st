@@ -18,7 +18,7 @@ NexusModelExtractor class >> canHandle: language [
 { #category : 'instance creation' }
 NexusModelExtractor class >> defaultImplementation [
 
-	^ self new
+	self subclassResponsibility
 ]
 
 { #category : 'instance creation' }
@@ -34,6 +34,13 @@ NexusModelExtractor class >> forLanguage: language [
 NexusModelExtractor class >> isAbstract [
 
 	^ self == NexusModelExtractor
+]
+
+{ #category : 'running' }
+NexusModelExtractor >> run [
+	"Execute the extractor and return the generated model file location."
+
+	self subclassResponsibility
 ]
 
 { #category : 'accessing' }

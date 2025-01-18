@@ -53,8 +53,23 @@ NexusProject class >> isAbstract [
 	^ self == NexusProject
 ]
 
+{ #category : 'adding' }
+NexusProject >> addModel: modelDescription [
+	"Add a model to the list of models for this project, overwriting any with the same name"
+
+	| modelName models |
+	modelName := modelDescription at: 'name'.
+	models := self models reject: [ :desc |
+		          (desc at: 'name') = modelName ].
+	models := models copyWith: modelDescription.
+
+	FileLocator home / directory / 'models.json' writeStreamDo: [ :s |
+		STON put: models asJsonOnStream: s ]
+]
+
 { #category : 'building' }
 NexusProject >> buildModel [
+	"Build a model with default attributes. Use the model builder API for more control."
 
 	self modelBuilder build
 ]
@@ -139,9 +154,8 @@ NexusProject >> importModel: modelDescription [
 
 	FamixJSONFileImporter new
 		model: model;
-		inputFile:
-			directory asFileReference / 'models'
-			/ (modelDescription at: 'name');
+		inputFile: FileLocator home / directory / 'models'
+			/ (modelDescription at: 'name') , (modelDescription at: 'format');
 		runFilteredBy: FamixJavaImportingContext new importMaximum.
 
 	model install. "add to MooseModel root"
@@ -171,15 +185,14 @@ NexusProject >> language: aString [
 { #category : 'building' }
 NexusProject >> modelBuilder [
 
-	^ NexusModelBuilder new
-		  project: self;
-		  yourself
+	^ NexusModelBuilder on: self
 ]
 
 { #category : 'enumerating' }
 NexusProject >> models [
 
-	^ STON fromString: FileLocator home / directory / 'models.json'
+	^ FileLocator home / directory / 'models.json' readStreamDo: [ :s |
+		  STON fromStream: s ]
 ]
 
 { #category : 'accessing' }

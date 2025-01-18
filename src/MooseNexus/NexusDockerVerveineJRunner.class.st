@@ -16,7 +16,7 @@ Class {
 { #category : 'running' }
 NexusDockerVerveineJRunner >> run [
 
-	| returnCode directory |
+	| returnCode |
 	returnCode := LibC runCommand: self writeCommand.
 	returnCode == 0 ifFalse: [
 		returnCode == 32000 ifTrue: [
@@ -25,9 +25,8 @@ NexusDockerVerveineJRunner >> run [
 		Error signal:
 			'Failed to create the model, error code: ' , returnCode asString ].
 
-	(directory := target asFileReference)
-	/ ('sources/' , self class outputFilename , '.' , self format)
-		moveTo: (directory / 'models') ensureCreateDirectory / 'model.json'
+	"VerveineJ-Docker outputs the file in the sources directory"
+	^ 'sources/' , self class outputFilename , '.' , self format
 ]
 
 { #category : 'accessing' }

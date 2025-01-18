@@ -10,20 +10,29 @@ Class {
 		'project',
 		'withDependencies',
 		'extractor',
-		'importer'
+		'modelName',
+		'modelComment'
 	],
 	#category : 'MooseNexus-ModelExtraction',
 	#package : 'MooseNexus',
 	#tag : 'ModelExtraction'
 }
 
+{ #category : 'instance creation' }
+NexusModelBuilder class >> on: aNexusProject [
+
+	^ self new project: aNexusProject
+]
+
 { #category : 'building' }
 NexusModelBuilder >> build [
 	"Create the model"
 
 	[
+	| modelPath |
 	self setUp.
-	self extractor run ] ensure: [ self cleanUp ]
+	modelPath := self extractor run.
+	self registerModel: modelPath ] ensure: [ self cleanUp ]
 ]
 
 { #category : 'cleanup' }
@@ -47,22 +56,34 @@ NexusModelBuilder >> extractor: aNexusModelExtractor [
 	extractor := aNexusModelExtractor
 ]
 
-{ #category : 'accessing' }
-NexusModelBuilder >> importer [
-
-	^ importer
-]
-
-{ #category : 'accessing' }
-NexusModelBuilder >> importer: anObject [
-
-	importer := anObject
-]
-
 { #category : 'initialization' }
 NexusModelBuilder >> initialize [
 
 	withDependencies := true
+]
+
+{ #category : 'accessing' }
+NexusModelBuilder >> modelComment [
+
+	^ modelComment ifNil: [ modelComment := '' ]
+]
+
+{ #category : 'accessing' }
+NexusModelBuilder >> modelComment: aString [
+
+	modelComment := aString
+]
+
+{ #category : 'accessing' }
+NexusModelBuilder >> modelName [
+
+	^ modelName ifNil: [ modelName := project name ]
+]
+
+{ #category : 'accessing' }
+NexusModelBuilder >> modelName: aString [
+
+	modelName := aString
 ]
 
 { #category : 'accessing' }
@@ -78,16 +99,38 @@ NexusModelBuilder >> project: aNexusProject [
 ]
 
 { #category : 'building' }
+NexusModelBuilder >> registerModel: modelPath [
+	"Name and move the model file, and register it with the project models."
+
+	| projectDirectory source |
+	projectDirectory := FileLocator home / project directory.
+	source := projectDirectory / modelPath.
+	source moveTo:
+		((projectDirectory / 'models') ensureCreateDirectory
+		 / self modelName , source extension) ensureDelete.
+
+	project addModel: (Dictionary
+			 with: 'name' -> self modelName
+			 with: 'format' -> source extension
+			 with: 'comment' -> self modelComment
+			 with: 'timestamp' -> DateAndTime now asString
+			 with: 'famixVersion' -> 'unknown')
+]
+
+{ #category : 'building' }
 NexusModelBuilder >> setUp [
 
 	| home projectDirectory dependencies |
 	home := FileLocator home.
 	projectDirectory := home / project directory.
-	dependencies := (projectDirectory / 'dependencies') createDirectory.
-	project dependencies do: [ :dependency |
-		| artifact |
-		artifact := home / (dependency at: #path).
-		artifact copyTo: dependencies / artifact basename ].
+
+	withDependencies ifTrue: [
+		dependencies := (projectDirectory / 'dependencies') createDirectory.
+		project dependencies do: [ :dependency |
+			| artifact |
+			artifact := home / (dependency at: #path).
+			artifact copyTo: dependencies / artifact basename ] ].
+
 	self extractor target: projectDirectory pathString
 ]
 
