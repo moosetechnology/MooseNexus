@@ -8,7 +8,8 @@ Class {
 		'#versionRadioButtons',
 		'#lockedVersion => ObservableSlot',
 		'#descriptors',
-		'#conflictId'
+		'#conflictId',
+		'#freezeLock'
 	],
 	#category : 'MooseNexus-UI',
 	#package : 'MooseNexus-UI'
@@ -36,11 +37,17 @@ NexusDependencyConflictPresenter >> defaultLayout [
 		  add: lockButton width: 24
 ]
 
+{ #category : 'accessing' }
+NexusDependencyConflictPresenter >> freezeLock: aBoolean [
+
+	freezeLock := aBoolean
+]
+
 { #category : 'initialization' }
 NexusDependencyConflictPresenter >> initialize [
 
 	super initialize.
-	isLocked := false
+	isLocked := freezeLock := false
 ]
 
 { #category : 'initialization' }
@@ -54,7 +61,7 @@ NexusDependencyConflictPresenter >> initializePresenters [
 		                       self newRadioButton
 			                       label: version;
 			                       whenActivatedDo: [
-				                       self lock.
+				                       freezeLock ifFalse: [ self lock ].
 				                       lockedVersion := version ];
 			                       yourself ].
 	versionRadioButtons first associatedRadioButtons: versionRadioButtons.
@@ -93,7 +100,17 @@ NexusDependencyConflictPresenter >> unlock [
 
 	isLocked ifFalse: [ ^ self ].
 	isLocked := false.
-	lockButton icon: (self iconNamed: #smallQuestion)
+	lockButton icon: (self iconNamed: #smallQuestion).
+	lockedVersion := nil "triggers `NexusDependencySelectionPresenter >> #whenLockedVersionChangedDo:`"
+]
+
+{ #category : 'actions' }
+NexusDependencyConflictPresenter >> updateWithResolverChoice: descriptor [
+
+	self freezeLock: true.
+	(self versionRadioButtons detect: [ :button |
+		 button label = (descriptor at: #version) ]) state: true.
+	self freezeLock: false
 ]
 
 { #category : 'accessing' }

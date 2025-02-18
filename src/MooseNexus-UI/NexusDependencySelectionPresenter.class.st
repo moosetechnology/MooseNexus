@@ -19,10 +19,8 @@ NexusDependencySelectionPresenter >> applyResolver: resolver [
 	lockResolver fallbackResolver: resolver.
 	choices := lockResolver resolveConflicts: conflicts.
 	conflictList items do: [ :conflictPresenter |
-		| descriptor |
-		descriptor := choices at: conflictPresenter conflictId.
-		(conflictPresenter versionRadioButtons detect: [ :button |
-			 button label = (descriptor at: #version) ]) state: true ]
+		conflictPresenter updateWithResolverChoice:
+			(choices at: conflictPresenter conflictId) ]
 ]
 
 { #category : 'layout' }
