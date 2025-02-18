@@ -160,7 +160,7 @@ NexusProject >> importModel: modelDescription [
 
 	model install. "add to MooseModel root"
 	model rootFolder:
-		(FileLocator home / directory / 'sources') absolutePath asString.
+		(FileLocator home / directory / 'sources') absolutePath pathString.
 	^ model
 ]
 
