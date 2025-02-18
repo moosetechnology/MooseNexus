@@ -36,8 +36,8 @@ Import a new project into a Nexus repository:
 ```st
 project := NexusRepository default import: 'projectName' fromDirectory: 'path/to/sources'.
 ```
-This will try to set the project properties automatically: group, version and language.
-If more control over these is needed:
+This will attempt to find the project properties automatically: group, version and language.
+If more control over these properties is required, they must be set before the project is added to the repository:
 ```st
 sourcePath := 'path/to/sources'.
 project := NexusProjectImporter importFromDirectory: sourcePath.
@@ -56,6 +56,11 @@ project := NexusRepository default group: 'group' project: 'name' version: 'vers
 Create a model of the managed project:
 ```st
 project buildModel.
+```
+
+Import a model into the image:
+```st
+project importModel.
 ```
 
 ## Terminology
