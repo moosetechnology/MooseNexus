@@ -12,6 +12,12 @@ Class {
 	#package : 'MooseNexus-UI'
 }
 
+{ #category : 'specs' }
+NexusDependencySelectionPresenter class >> title [
+
+	^ 'Nexus Dependency Conflict Selector'
+]
+
 { #category : 'actions' }
 NexusDependencySelectionPresenter >> applyResolver: resolver [
 
