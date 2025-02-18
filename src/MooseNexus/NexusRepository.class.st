@@ -1,24 +1,32 @@
 "
 I am a repository for `NexusProject`s.
 I have a configurable home directory where the projects are stored.
-By default, it is the `~/.moose` directory.
+The default instance uses the `~/.moose` directory.
 
 My goal is to manage projects to be analyzed with Moose in a reusable, structured, and versioned manner.
 
 ### API
 To manage a new project, use one of the following methods:
 
-#### `NexusRepository >> #record:fromDirectory:`
+#### `NexusRepository >> #import:fromDirectory:`
 The first parameter expects a name that will be given to the project.
 The second parameter expects the path string to a local directory containing the sources of the project to analyze.
 
-#### `NexusRepository >> #recordFromDirectory:`
-Expects the path string to the sources, and Nexus will attempt to find the project name.
+#### `NexusRepository >> #importFromDirectory:`
+Expects the path string to the sources, and Nexus will try to figure out the project name.
 It can only be found if it is a managed project (see `NexusManagedProject`) that declares a single artifact.
 
-#### `NexusRepository >> #recordProject:`
-Expects an existing `NexusProject`.
-This is generally unnecessary unless you need to have finer control over the project analysis, or if you wish to copy a project from another `NexusRepository`.
+#### `NexusRepository >> #recordProject:fromDirectory:`
+Expects an existing `NexusProject` and a path string to a local directory containing the project sources.
+This is useful if you want to have finer control over the project analysis, such as specifying the group or version, or if you want to copy a project from another `NexusRepository`.
+The name, group and version must be specified before the project is added to the repository:
+```
+project := NexusProjectImporter importFromDirectory: pathString.
+project name: name.
+project group: group.
+project version: version.
+NexusRepository default recordProject: project fromDirectory: pathString.
+```
 "
 Class {
 	#name : 'NexusRepository',
@@ -148,27 +156,6 @@ NexusRepository >> projects [
 
 	^ self projectProperties collect: [ :properties |
 		  NexusProject fromProperties: properties ]
-]
-
-{ #category : 'adding' }
-NexusRepository >> recordProject: project [
-	"Add the project to this repository, without including sources."
-
-	| projectDirectory |
-	(projectDirectory := self resolveDirectoryOf: project) ifExists: [
-		Warning signal:
-			'This project already exists in the given repository, proceed to overwrite it'.
-		projectDirectory deleteAll ].
-	project directory:
-		(projectDirectory relativeTo: FileLocator home) pathString.
-
-	"write properties file useful for Nexus"
-	(projectDirectory / 'properties.json') ensureCreateFile
-		writeStreamDo: [ :stream | project writePropertiesOn: stream ].
-
-	"JSON list of models that were created, empty by default"
-	(projectDirectory / 'models.json') ensureCreateFile writeStreamDo: [
-		:stream | stream nextPutAll: '[]' ]
 ]
 
 { #category : 'adding' }
