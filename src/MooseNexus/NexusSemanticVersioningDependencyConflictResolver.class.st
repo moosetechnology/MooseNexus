@@ -63,7 +63,7 @@ NexusSemanticVersioningDependencyConflictResolver >> checkAndSortByVersion: desc
 	"Remove all suffixed versions from the choices,
 	this resolver should never pick one when a suffixless version is available."
 	(indicesToRemove sort: [ :a :b | a > b ]) do: [ :i |
-		listWithVersion removeAtIndex: i ].
+		listWithVersion removeAt: i ].
 
 	"This dependency conflict can be resolved normally"
 	^ listWithVersion sort: [ :a :b | self compare: a key to: b key ]
