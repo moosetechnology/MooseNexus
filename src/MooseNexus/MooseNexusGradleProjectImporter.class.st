@@ -141,9 +141,9 @@ MooseNexusGradleProjectImporter >> newProject [
 
 { #category : 'parsing' }
 MooseNexusGradleProjectImporter >> parse: raw [
-	"Parses result command listing dependencies.
-	Resolves dependency obtain path local location.
-	The result command formatted project:
+	"Parses the result of the command listing the dependencies.
+	Resolves each dependency to obtain the path to its local location.
+	The result of the command is formatted as follows for each project:
 	-group:name:version
 	directory
 	(group:name:type:version:scope:path)*"
@@ -152,7 +152,7 @@ MooseNexusGradleProjectImporter >> parse: raw [
 	lines := raw lines.
 	index := 2.
 
-	[ "project info starts third line earliest, after line '> Task ...'"
+	[ "project info starts at the third line at the earliest, after the line '> Task ...'"
 	(line := lines at: (index := index + 1)) isNotEmpty and: [ line first == $- ] ] whileFalse.
 
 	[ (line := lines at: index) isNotEmpty ] whileTrue: [
@@ -163,23 +163,23 @@ MooseNexusGradleProjectImporter >> parse: raw [
 			name := descriptor second.
 			version := self validateProjectVersion: descriptor third.
 
-			"register project version; project name unique never overwrites"
+			"register the project with its version; project name is unique so this never overwrites"
 			descriptor := Dictionary with: #version -> version.
 			project projects at: group at: name put: descriptor.
 
-			"read project location, relative directory"
+			"read the project location, relative to the directory"
 			descriptor at: #path put: (lines at: (index := index + 1)).
 
 			"read dependencies per scope"
 			dependencies := Dictionary new.
-			[ (line := lines at: (index := index + 1)) isEmpty or: [ line first == $- ] ] whileFalse: [ "resolve descriptor: 'group:name:type:version:scope:path'"
+			[ (line := lines at: (index := index + 1)) isEmpty or: [ line first == $- ] ] whileFalse: [ "resolve the descriptor: 'group:name:type:version:scope:path'"
 					| mapping |
 					mapping := self resolve: line.
 					dependencies
 						at: mapping key
 						ifPresent: [ :descriptors | descriptors add: mapping value ]
 						ifAbsentPut: [ OrderedCollection with: mapping value ] ].
-			"the current project been fully parsed, save dependencies arrays JSON compatibility"
+			"the current project has been fully parsed, save the dependencies as arrays for JSON compatibility"
 			descriptor at: #dependencies put: (dependencies collect: #asArray) ]
 ]
 
