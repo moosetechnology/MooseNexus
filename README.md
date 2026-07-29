@@ -33,7 +33,7 @@ Dependency management support for unmanaged source projects is planned.
 Import a new project into the Nexus repository:
 
 ```st
-project := NexusRepository default
+project := MooseNexusRepository default
 	import: 'projectName'
 	fromDirectory: 'path/to/sources'.
 ```
@@ -43,11 +43,11 @@ If more control over coordinates is required, provide them before the project is
 
 ```st
 sourcePath := 'path/to/sources'.
-coordinates := NexusProjectCoordinates
+coordinates := MooseNexusProjectCoordinates
 	group: 'group'
 	name: 'name'
 	version: 'version'.
-project := NexusRepository default
+project := MooseNexusRepository default
 	importCoordinates: coordinates
 	fromDirectory: sourcePath.
 ```
@@ -55,7 +55,7 @@ project := NexusRepository default
 Retrieve an existing project from a Nexus repository:
 
 ```st
-project := NexusRepository default group: 'group' project: 'name' version: 'version'.
+project := MooseNexusRepository default group: 'group' project: 'name' version: 'version'.
 ```
 
 Create a model of the managed project:
