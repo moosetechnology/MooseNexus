@@ -17,8 +17,8 @@ jobs:
     steps:
       - uses: actions/checkout@v7
 
-      - name: Install Maven
-        run: sudo apt-get update && sudo apt-get install -y maven
+      - name: Install build tools
+        run: sudo apt-get update && sudo apt-get install -y maven gradle
 
       - uses: hpi-swa/setup-smalltalkCI@v1
         with:
@@ -28,6 +28,8 @@ jobs:
         run: smalltalkci -s ${{ matrix.smalltalk }}
         shell: bash
         timeout-minutes: 15
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
 
       - name: Upload coverage
         uses: coverallsapp/github-action@v2
