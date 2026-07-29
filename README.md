@@ -69,7 +69,7 @@ Import a model into the image:
 project importModel.
 ```
 
-## Terminology
+## Glossary
 
 MooseNexus sits one meta layer above source code: it does not build the software itself, it builds Moose models of that software. To avoid ambiguity, these terms are used consistently in code and documentation:
 - **Source project**: The software project being analyzed. This is the codebase that may already be built by Maven, Gradle, or another build tool.

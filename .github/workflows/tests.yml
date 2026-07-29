@@ -1,8 +1,5 @@
 name: Tests
 
-env:
-  GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
 on:
   push:
     branches: [ main ]
@@ -13,11 +10,12 @@ jobs:
   build:
     runs-on: ubuntu-latest
     strategy:
+      fail-fast: false
       matrix:
-        smalltalk: [ Moose64-10, Moose64-11, Moose64-12 ]
+        smalltalk: [ Moose64-11, Moose64-12, Moose64-13 ]
     name: ${{ matrix.smalltalk }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
       - name: Install Maven
         run: sudo apt-get update && sudo apt-get install -y maven
@@ -32,6 +30,20 @@ jobs:
         timeout-minutes: 15
 
       - name: Upload coverage
-        uses: coverallsapp/github-action@master
+        uses: coverallsapp/github-action@v2
         with:
-          github-token: ${{ secrets.GITHUB_TOKEN }}
+          github-token: ${{ github.token }}
+          parallel: true
+          flag-name: ${{ matrix.smalltalk }}
+
+  coverage:
+    name: Finalize coverage
+    needs: build
+    if: ${{ always() }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Close parallel build
+        uses: coverallsapp/github-action@v2
+        with:
+          github-token: ${{ github.token }}
+          parallel-finished: true
