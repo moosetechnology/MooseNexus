@@ -111,6 +111,19 @@ MooseNexusRepository >> importGroup: group name: name version: version fromDirec
 	^ self importCoordinates: (MooseNexusProjectCoordinates group: group name: name version: version) fromDirectory: pathString
 ]
 
+{ #category : 'adding' }
+MooseNexusRepository >> prepareDirectoryOf: project [
+	"Create the repository layout needed before copying sources or writing metadata."
+
+	| projectDirectory |
+	projectDirectory := self resolveDirectoryOf: project.
+	projectDirectory ifExists: [
+			Warning signal: 'This project already exists in given repository, proceed to overwrite it'.
+			projectDirectory deleteAll ].
+	(projectDirectory / 'sources' / 'project') ensureCreateDirectory.
+	^ projectDirectory
+]
+
 { #category : 'printing' }
 MooseNexusRepository >> printOn: stream [
 
@@ -171,13 +184,11 @@ MooseNexusRepository >> recordProject: project fromDirectory: pathString [
 	"Add project to the repository, copying sources from the given directory."
 
 	| projectDirectory |
-	(projectDirectory := self resolveDirectoryOf: project) ifExists: [
-			Warning signal: 'This project already exists in given repository, proceed to overwrite it'.
-			projectDirectory deleteAll ].
+	projectDirectory := self prepareDirectoryOf: project.
 	project directory: (projectDirectory relativeTo: FileLocator home) pathString.
 
 	"copy project directory to repository"
-	pathString asFileReference copyAllTo: (projectDirectory / 'sources/project') ensureCreateDirectory.
+	pathString asFileReference copyAllTo: projectDirectory / 'sources' / 'project'.
 
 	"write properties file useful for Nexus"
 	(projectDirectory / 'properties.json') ensureCreateFile writeStreamDo: [ :stream | project writePropertiesOn: stream ].

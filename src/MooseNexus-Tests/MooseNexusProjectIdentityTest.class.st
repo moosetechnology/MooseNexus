@@ -72,6 +72,25 @@ MooseNexusProjectIdentityTest >> testRecordedProjectRejectsCoordinateChanges [
 ]
 
 { #category : 'tests' }
+MooseNexusProjectIdentityTest >> testRepositoryCreatesLayoutBeforeRecordingProject [
+
+	| project coordinates projectDirectory |
+	project := MooseNexusTestProject new.
+	coordinates := MooseNexusProjectCoordinates group: 'com.example' name: 'demo' version: '1.0.0'.
+	projectDirectory := repository directory / 'repository' / 'com.example' / 'demo' / '1.0.0'.
+
+	self deny: repository directory exists.
+	repository recordProject: project coordinates: coordinates fromDirectory: sourceDirectory pathString.
+
+	self assert: projectDirectory exists.
+	self assert: (projectDirectory / 'sources') exists.
+	self assert: (projectDirectory / 'sources' / 'project') exists.
+	self assert: (projectDirectory / 'sources' / 'project' / 'README.txt') exists.
+	self assert: (projectDirectory / 'properties.json') exists.
+	self assert: (projectDirectory / 'models.json') exists
+]
+
+{ #category : 'tests' }
 MooseNexusProjectIdentityTest >> testRepositoryRecordWithCoordinatesSetsIdentityBeforeRecording [
 
 	| project coordinates recordedProject |
