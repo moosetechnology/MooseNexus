@@ -132,49 +132,63 @@ NexusSemanticVersioningDependencyConflictResolver >> initialize [
 
 { #category : 'parsing' }
 NexusSemanticVersioningDependencyConflictResolver >> parseVersion: aString [
-	"Lenient parsing of a semantic version string into an array of integers.
-	Accepts that minor and patch are omitted, and includes any remaining suffix as the fourth element."
+	"Lenient parsing semantic version string into array integers.
+	Accepts minor patch omitted, includes any remaining suffix fourth element."
 
+	| stream major minor patch |
+	aString ifEmpty: [ ^ '???' ].
 	aString first isDigit ifFalse: [ ^ '???' ].
 
-	aString readStreamDo: [ :s |
-		| parser major minor patch |
-		parser := NumberParser on: s.
-
-		major := parser nextUnsignedIntegerBase: 10 ifFail: [ ^ '???' ].
-		(s atEnd or: [ s next ~~ $. ]) ifTrue: [
+	stream := aString readStream.
+	major := self parseVersionNumberFrom: stream ifAbsent: [ ^ '???' ].
+	(stream atEnd or: [ stream next ~~ $. ]) ifTrue: [
 			^ {
 				  major.
 				  $?.
 				  $? } ].
 
-		minor := parser nextUnsignedIntegerBase: 10 ifFail: [
+	minor := self parseVersionNumberFrom: stream ifAbsent: [
 			         ^ {
 				           major.
 				           $?.
 				           $? } ].
-		(s atEnd or: [ s next ~~ $. ]) ifTrue: [
+	(stream atEnd or: [ stream next ~~ $. ]) ifTrue: [
 			^ {
 				  major.
 				  minor.
 				  $? } ].
 
-		patch := parser nextUnsignedIntegerBase: 10 ifFail: [
+	patch := self parseVersionNumberFrom: stream ifAbsent: [
 			         ^ {
 				           major.
 				           minor.
 				           $? } ].
-		s atEnd ifTrue: [
+	stream atEnd ifTrue: [
 			^ {
 				  major.
 				  minor.
 				  patch } ].
 
-		^ {
-			  major.
-			  minor.
-			  patch.
-			  s upToEnd } ]
+	^ {
+		  major.
+		  minor.
+		  patch.
+		  stream upToEnd }
+]
+
+{ #category : 'parsing' }
+NexusSemanticVersioningDependencyConflictResolver >> parseVersionNumberFrom: aStream ifAbsent: absentBlock [
+	"Read a numeric version component without requiring the following character to be valid Smalltalk number syntax."
+
+	| number |
+	(aStream atEnd or: [ aStream peek isDigit not ]) ifTrue: [
+		^ absentBlock value ].
+
+	number := 0.
+	[ aStream atEnd not and: [ aStream peek isDigit ] ] whileTrue: [
+		number := number * 10 + aStream next digitValue ].
+
+	^ number
 ]
 
 { #category : 'resolving' }
