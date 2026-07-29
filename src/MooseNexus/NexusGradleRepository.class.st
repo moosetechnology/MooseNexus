@@ -15,9 +15,7 @@ Class {
 { #category : 'accessing' }
 NexusGradleRepository class >> default [
 
-	^ default ifNil: [
-		  default := self new directory:
-			             '.gradle/caches/modules-2/files-2.1' ]
+	^ default ifNil: [ default := self new directory: '.gradle/caches/modules-2/files-2.1' ]
 ]
 
 { #category : 'resolving' }
@@ -25,14 +23,12 @@ NexusGradleRepository >> findGroup: group name: name version: version type: type
 	"Search for an artifact (a file) based on its descriptor."
 
 	| artifactDirectory fileName |
-	(artifactDirectory := FileLocator home / directory / group / name
-	                      / version) ifAbsent: [ ^ nil ].
+	(artifactDirectory := FileLocator home / directory / group / name / version) ifAbsent: [ ^ nil ].
 	fileName := name , '-' , version , '.' , type.
 
 	"Gradle can have multiple directories named with a UUID at this level,
 	any will do (make an issue if not!) as long as it contains the artifact."
-	artifactDirectory directories do: [ :dir |
-		dir / fileName ifExists: [ :artifact | ^ artifact ] ].
+	artifactDirectory directories do: [ :dir | dir / fileName ifExists: [ :artifact | ^ artifact ] ].
 	^ nil
 ]
 
@@ -49,11 +45,11 @@ NexusGradleRepository >> resolve: descriptor [
 	path := parts at: 6.
 
 	artifact := path asFileReference ifAbsent: [
-		            (self
-			             findGroup: group
-			             name: name
-			             version: version
-			             type: type) ifNil: [ ^ nil ] ].
+			            (self
+				             findGroup: group
+				             name: name
+				             version: version
+				             type: type) ifNil: [ ^ nil ] ].
 
 	^ group -> (Dictionary
 		   with: #name -> name

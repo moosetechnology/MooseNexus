@@ -50,8 +50,7 @@ NexusModelSelectionPresenter >> initializePresenters [
 	importButton := self newButton
 		                label: 'Import';
 		                disable;
-		                action: [
-			                nexusProject importModel: modelsList selectedItem ].
+		                action: [ nexusProject importModel: modelsList selectedItem ].
 
 	self initializeLabels.
 
@@ -83,16 +82,11 @@ NexusModelSelectionPresenter >> updateForSelectedModel [
 { #category : 'updating' }
 NexusModelSelectionPresenter >> updateLabels [
 
-	commentLabel label:
-		'Comment: ' , (modelsList selectedItem at: 'comment').
-	timestampLabel label:
-		'Timestamp: ' , (modelsList selectedItem at: 'timestamp').
-	famixVersionLabel label:
-		'Famix version: ' , (modelsList selectedItem at: 'famixVersion').
-	fileSizeLabel label:
-		'File size: ' , (nexusProject directory asFileReference / 'models'
-		 / (modelsList selectedItem at: 'name')) size
-			humanReadableByteSizeString
+	commentLabel label: 'Comment: ' , (modelsList selectedItem at: 'comment').
+	timestampLabel label: 'Timestamp: ' , (modelsList selectedItem at: 'timestamp').
+	famixVersionLabel label: 'Famix version: ' , (modelsList selectedItem at: 'famixVersion').
+	fileSizeLabel label: 'File size: '
+		, (nexusProject directory asFileReference / 'models' / (modelsList selectedItem at: 'name')) size humanReadableByteSizeString
 ]
 
 { #category : 'updating' }

@@ -56,8 +56,7 @@ NexusManagedProject class >> knownLanguages [
 { #category : 'querying' }
 NexusManagedProject >> determineGroup [
 
-	projects size == 1 ifFalse: [
-		Error signal: 'Can only determine group if only one is declared' ].
+	projects size == 1 ifFalse: [ Error signal: 'Can only determine group if only one is declared' ].
 	projects keysDo: [ :key | ^ key ]
 ]
 
@@ -66,33 +65,27 @@ NexusManagedProject >> determineLanguage [
 
 	| knownLanguages candidates sourceDirectory |
 	knownLanguages := self class knownLanguages.
-	(projects isEmpty or: [ projects anyOne isEmpty ]) ifTrue: [
-		Error signal: 'Cannot determine language without any project' ].
+	(projects isEmpty or: [ projects anyOne isEmpty ]) ifTrue: [ Error signal: 'Cannot determine language without any project' ].
 	candidates := Set new.
 	sourceDirectory := self projectSourceDirectory.
 
 	"check if this project directory has sources"
 	sourceDirectory / 'src/main' ifExists: [ :mainDirectory |
-		knownLanguages do: [ :lang |
-			mainDirectory / lang ifExists: [ candidates add: lang ] ] ].
+		knownLanguages do: [ :lang | mainDirectory / lang ifExists: [ candidates add: lang ] ] ].
 
 	"check the sources of each project"
 	projects do: [ :projectGroup |
-		projectGroup keysDo: [ :projectName |
-			sourceDirectory / projectName ifExists: [ :projectDirectory |
-				projectDirectory / 'src/main' ifExists: [ :mainDirectory |
-					knownLanguages do: [ :lang |
-						mainDirectory / lang ifExists: [ candidates add: lang ] ] ] ] ] ].
+			projectGroup keysDo: [ :projectName |
+					sourceDirectory / projectName ifExists: [ :projectDirectory |
+							projectDirectory / 'src/main' ifExists: [ :mainDirectory |
+								knownLanguages do: [ :lang | mainDirectory / lang ifExists: [ candidates add: lang ] ] ] ] ] ].
 
-	candidates ifEmpty: [
-		Error signal: 'Could not determine language automatically' ].
+	candidates ifEmpty: [ Error signal: 'Could not determine language automatically' ].
 	candidates size == 1 ifFalse: [
-		Warning signal: (String streamContents: [ :s |
-				 s << 'Multiple languages detected: `'.
-				 candidates
-					 do: [ :candidate | s << candidate ]
-					 separatedBy: [ s << ', ' ].
-				 s << '`, proceed to choose the first one' ]) ].
+			Warning signal: (String streamContents: [ :s |
+						 s << 'Multiple languages detected: `'.
+						 candidates do: [ :candidate | s << candidate ] separatedBy: [ s << ', ' ].
+						 s << '`, proceed to choose the first one' ]) ].
 	^ candidates anyOne
 ]
 
@@ -109,15 +102,13 @@ NexusManagedProject >> determineVersion [
 
 	| theVersion |
 	(projects isNotEmpty and: [ projects anyOne isNotEmpty ]) ifFalse: [
-		Error signal:
-			'Cannot determine version because there are no managed projects' ].
+		Error signal: 'Cannot determine version because there are no managed projects' ].
 	"verify all managed projects declare the same version"
 	theVersion := projects anyOne anyOne at: #version.
 	projects do: [ :projectGroup |
-		projectGroup do: [ :descriptor |
-			(descriptor at: #version) = theVersion ifFalse: [
-				Error signal:
-					'Can only determine version if all managed projects declare the same one' ] ] ].
+			projectGroup do: [ :descriptor |
+					(descriptor at: #version) = theVersion ifFalse: [
+						Error signal: 'Can only determine version if all managed projects declare the same one' ] ] ].
 	^ theVersion
 ]
 
@@ -157,12 +148,9 @@ NexusManagedProject >> projectDependenciesDo: aBlock [
 	"Iterate over the group, name and descriptor of all project dependencies"
 
 	self projects do: [ :projectGroup |
-		projectGroup do: [ :projectDescriptor |
-			(projectDescriptor at: #dependencies) keysAndValuesDo: [
-				:dependencyGroup
-				:descriptors |
-				descriptors do: [ :descriptor |
-					aBlock value: dependencyGroup value: descriptor ] ] ] ]
+			projectGroup do: [ :projectDescriptor |
+					(projectDescriptor at: #dependencies) keysAndValuesDo: [ :dependencyGroup :descriptors |
+						descriptors do: [ :descriptor | aBlock value: dependencyGroup value: descriptor ] ] ] ]
 ]
 
 { #category : 'accessing' }

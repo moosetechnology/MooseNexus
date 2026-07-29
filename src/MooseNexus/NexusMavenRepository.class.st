@@ -31,21 +31,18 @@ NexusMavenRepository >> resolve: descriptor [
 	scope := parts at: 5.
 
 	"search for the directory"
-	pathString := String streamContents: [ :s |
-		              s << (group copyReplaceAll: '.' with: '/') << '/'
-		              << name << '/' << version ].
+	pathString := String streamContents: [ :s | s << (group copyReplaceAll: '.' with: '/') << '/' << name << '/' << version ].
 	homeDirectory := FileLocator home.
-	(theDirectory := homeDirectory / directory / pathString) ifAbsent: [
-		^ nil ].
+	(theDirectory := homeDirectory / directory / pathString) ifAbsent: [ ^ nil ].
 
 	"search for the artifact"
 	^ theDirectory / (name , '-' , version , '.' , type)
 		  ifExists: [ :file |
-			  group -> (Dictionary
-				   with: #name -> name
-				   with: #version -> version
-				   with: #type -> type
-				   with: #scope -> scope
-				   with: #path -> (file relativeTo: homeDirectory) pathString) ]
+				  group -> (Dictionary
+					   with: #name -> name
+					   with: #version -> version
+					   with: #type -> type
+					   with: #scope -> scope
+					   with: #path -> (file relativeTo: homeDirectory) pathString) ]
 		  ifAbsent: [ nil ]
 ]

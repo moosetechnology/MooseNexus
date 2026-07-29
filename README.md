@@ -39,16 +39,17 @@ project := NexusRepository default
 ```
 
 This will attempt to find project properties automatically: group, version, and language.
-If more control over properties is required, set them before the project is added to the repository:
+If more control over coordinates is required, provide them before the project is added to the repository:
 
 ```st
 sourcePath := 'path/to/sources'.
-project := NexusProjectImporter importFromDirectory: sourcePath.
-project name: 'name'.
-project group: 'group'.
-project version: 'version'.
-project language: 'language'. "in lower case"
-NexusRepository default recordProject: project fromDirectory: sourcePath.
+coordinates := NexusProjectCoordinates
+	group: 'group'
+	name: 'name'
+	version: 'version'.
+project := NexusRepository default
+	importCoordinates: coordinates
+	fromDirectory: sourcePath.
 ```
 
 Retrieve an existing project from a Nexus repository:

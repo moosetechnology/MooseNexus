@@ -19,6 +19,5 @@ NexusFirstFoundDependencyConflictResolver >> displayName [
 { #category : 'resolving' }
 NexusFirstFoundDependencyConflictResolver >> resolveConflicts: conflicts on: dependencies [
 
-	conflicts keysAndValuesDo: [ :groupAndName :descriptors |
-		dependencies at: groupAndName put: descriptors first ]
+	conflicts keysAndValuesDo: [ :groupAndName :descriptors | dependencies at: groupAndName put: descriptors first ]
 ]

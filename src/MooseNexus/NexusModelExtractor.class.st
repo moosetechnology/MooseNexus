@@ -24,9 +24,7 @@ NexusModelExtractor class >> defaultImplementation [
 { #category : 'instance creation' }
 NexusModelExtractor class >> forLanguage: language [
 
-	self allSubclassesDo: [ :subclass |
-		(subclass canHandle: language) ifTrue: [
-			^ subclass defaultImplementation ] ].
+	self allSubclassesDo: [ :subclass | (subclass canHandle: language) ifTrue: [ ^ subclass defaultImplementation ] ].
 	Error signal: 'No NexusModelCreator for this language: ' , language
 ]
 

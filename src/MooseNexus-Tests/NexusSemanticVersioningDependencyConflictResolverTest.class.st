@@ -26,11 +26,9 @@ NexusSemanticVersioningDependencyConflictResolverTest >> testCheckAndSortByVersi
 		               (Dictionary with: #version -> '1.0.0').
 		               (Dictionary with: #version -> '1.0.1').
 		               (Dictionary with: #version -> '1.1.0').
-		               (Dictionary with: #version -> '1.1.1') }
-		               asOrderedCollection.
+		               (Dictionary with: #version -> '1.1.1') } asOrderedCollection.
 
-	sorted := (resolver checkAndSortByVersion: descriptors reversed)
-		          collect: #value.
+	sorted := (resolver checkAndSortByVersion: descriptors reversed) collect: #value.
 
 	self assert: sorted equals: descriptors
 ]
@@ -45,15 +43,11 @@ NexusSemanticVersioningDependencyConflictResolverTest >> testCheckAndSortByVersi
 		               (Dictionary with: #version -> '9.5.1').
 		               (Dictionary with: #version -> '9.5.1-rc').
 		               (Dictionary with: #version -> '9.5').
-		               (Dictionary with: #version -> '12e') }
-		               asOrderedCollection.
+		               (Dictionary with: #version -> '12e') } asOrderedCollection.
 
-	sorted := (resolver checkAndSortByVersion: descriptors) collect: [
-		          :descriptor | descriptor value at: #version ].
+	sorted := (resolver checkAndSortByVersion: descriptors) collect: [ :descriptor | descriptor value at: #version ].
 
-	self
-		assert: sorted
-		equals: { '9.5'. '9.5.1'. '12e'. '12.3.0' } asOrderedCollection
+	self assert: sorted equals: { '9.5'. '9.5.1'. '12e'. '12.3.0' } asOrderedCollection
 ]
 
 { #category : 'tests' }
@@ -64,12 +58,9 @@ NexusSemanticVersioningDependencyConflictResolverTest >> testCheckAndSortByVersi
 	descriptors := {
 		               (Dictionary with: #version -> '1.0').
 		               (Dictionary with: #version -> '1.0-alpha').
-		               (Dictionary with: #version -> '1.0-rc') }
-		               asOrderedCollection.
+		               (Dictionary with: #version -> '1.0-rc') } asOrderedCollection.
 
-	self
-		assert: (resolver checkAndSortByVersion: descriptors)
-		equals: nil
+	self assert: (resolver checkAndSortByVersion: descriptors) equals: nil
 ]
 
 { #category : 'tests' }
@@ -80,12 +71,9 @@ NexusSemanticVersioningDependencyConflictResolverTest >> testCheckAndSortByVersi
 	descriptors := {
 		               (Dictionary with: #version -> 'alpha').
 		               (Dictionary with: #version -> 'beta').
-		               (Dictionary with: #version -> 'rc') }
-		               asOrderedCollection.
+		               (Dictionary with: #version -> 'rc') } asOrderedCollection.
 
-	self
-		assert: (resolver checkAndSortByVersion: descriptors)
-		equals: nil
+	self assert: (resolver checkAndSortByVersion: descriptors) equals: nil
 ]
 
 { #category : 'tests' }
@@ -96,12 +84,9 @@ NexusSemanticVersioningDependencyConflictResolverTest >> testCheckAndSortByVersi
 	descriptors := {
 		               (Dictionary with: #version -> '1.0.0-alpha').
 		               (Dictionary with: #version -> '1.0.0-beta').
-		               (Dictionary with: #version -> '1.0.0-rc') }
-		               asOrderedCollection.
+		               (Dictionary with: #version -> '1.0.0-rc') } asOrderedCollection.
 
-	self
-		assert: (resolver checkAndSortByVersion: descriptors)
-		equals: nil
+	self assert: (resolver checkAndSortByVersion: descriptors) equals: nil
 ]
 
 { #category : 'tests' }
@@ -112,11 +97,9 @@ NexusSemanticVersioningDependencyConflictResolverTest >> testCheckAndSortByVersi
 		               (Dictionary with: #version -> '0.1').
 		               (Dictionary with: #version -> '1.0.1').
 		               (Dictionary with: #version -> '1.1.a').
-		               (Dictionary with: #version -> '1.1.0') }
-		               asOrderedCollection.
+		               (Dictionary with: #version -> '1.1.0') } asOrderedCollection.
 
-	sorted := (resolver checkAndSortByVersion: descriptors) collect:
-		          #value.
+	sorted := (resolver checkAndSortByVersion: descriptors) collect: #value.
 
 	self assert: sorted equals: descriptors
 ]
@@ -129,11 +112,9 @@ NexusSemanticVersioningDependencyConflictResolverTest >> testCheckAndSortByVersi
 	descriptors := {
 		               (Dictionary with: #version -> '1.0.0-alpha').
 		               (Dictionary with: #version -> '1.0.0-beta').
-		               (Dictionary with: #version -> '1.0.0') }
-		               asOrderedCollection.
+		               (Dictionary with: #version -> '1.0.0') } asOrderedCollection.
 
-	sorted := (resolver checkAndSortByVersion: descriptors) collect:
-		          #value.
+	sorted := (resolver checkAndSortByVersion: descriptors) collect: #value.
 
 	self assert: sorted equals: { descriptors last } asOrderedCollection
 ]
@@ -191,9 +172,7 @@ NexusSemanticVersioningDependencyConflictResolverTest >> testParseVersion [
 { #category : 'tests' }
 NexusSemanticVersioningDependencyConflictResolverTest >> testParseVersionWithSuffix [
 
-	self
-		assert: (resolver parseVersion: '1.2.3-alpha')
-		equals: { 1. 2. 3. '-alpha' }
+	self assert: (resolver parseVersion: '1.2.3-alpha') equals: { 1. 2. 3. '-alpha' }
 ]
 
 { #category : 'tests' }
@@ -222,26 +201,21 @@ NexusSemanticVersioningDependencyConflictResolverTest >> testResolveConflictsOn 
 		             with: 'net:versioned' -> {
 				             (Dictionary with: #version -> '8.7.5').
 				             (Dictionary with: #version -> '5.3.9').
-				             (Dictionary with: #version -> '10.2.0-rc') }
-				             asOrderedCollection
+				             (Dictionary with: #version -> '10.2.0-rc') } asOrderedCollection
 		             with: 'org:example' -> {
 				             (Dictionary with: #version -> '1.0.0').
 				             (Dictionary with: #version -> '2.0.0').
-				             (Dictionary with: #version -> '1.1.0') }
-				             asOrderedCollection
+				             (Dictionary with: #version -> '1.1.0') } asOrderedCollection
 		             with: 'com:potato' -> {
 				             (Dictionary with: #version -> '2.39.451e-rc').
-				             (Dictionary with: #version -> '2.39.452e-rc') }
-				             asOrderedCollection.
+				             (Dictionary with: #version -> '2.39.452e-rc') } asOrderedCollection.
 
 	resolver resolveConflicts: conflicts on: (resolved := Dictionary new).
 
 	self assert: resolved equals: (Dictionary
-			 with:
-			 'net:versioned' -> (Dictionary with: #version -> '10.2.0-rc')
+			 with: 'net:versioned' -> (Dictionary with: #version -> '10.2.0-rc')
 			 with: 'org:example' -> (Dictionary with: #version -> '2.0.0')
-			 with:
-			 'com:potato' -> (Dictionary with: #version -> '2.39.452e-rc'))
+			 with: 'com:potato' -> (Dictionary with: #version -> '2.39.452e-rc'))
 ]
 
 { #category : 'tests' }
@@ -252,17 +226,14 @@ NexusSemanticVersioningDependencyConflictResolverTest >> testResolveConflictsOnU
 		             with: 'net:versioned' -> {
 				             (Dictionary with: #version -> '8.7.5').
 				             (Dictionary with: #version -> '5.3.9').
-				             (Dictionary with: #version -> '10.2.0-rc') }
-				             asOrderedCollection
+				             (Dictionary with: #version -> '10.2.0-rc') } asOrderedCollection
 		             with: 'org:example' -> {
 				             (Dictionary with: #version -> '1.0.0').
 				             (Dictionary with: #version -> '2.0.0').
-				             (Dictionary with: #version -> '1.1.0') }
-				             asOrderedCollection
+				             (Dictionary with: #version -> '1.1.0') } asOrderedCollection
 		             with: 'com:potato' -> {
 				             (Dictionary with: #version -> '2.39.451e-rc').
-				             (Dictionary with: #version -> '2.39.452e-rc') }
-				             asOrderedCollection.
+				             (Dictionary with: #version -> '2.39.452e-rc') } asOrderedCollection.
 
 	resolver useOldest.
 	resolver resolveConflicts: conflicts on: (resolved := Dictionary new).
@@ -270,8 +241,7 @@ NexusSemanticVersioningDependencyConflictResolverTest >> testResolveConflictsOnU
 	self assert: resolved equals: (Dictionary
 			 with: 'net:versioned' -> (Dictionary with: #version -> '5.3.9')
 			 with: 'org:example' -> (Dictionary with: #version -> '1.0.0')
-			 with:
-			 'com:potato' -> (Dictionary with: #version -> '2.39.451e-rc'))
+			 with: 'com:potato' -> (Dictionary with: #version -> '2.39.451e-rc'))
 ]
 
 { #category : 'tests' }
@@ -282,25 +252,19 @@ NexusSemanticVersioningDependencyConflictResolverTest >> testResolveConflictsOnW
 		             with: 'net:versioned' -> {
 				             (Dictionary with: #version -> '8.7.5').
 				             (Dictionary with: #version -> '5.3.9').
-				             (Dictionary with: #version -> '10.2.0-rc') }
-				             asOrderedCollection
+				             (Dictionary with: #version -> '10.2.0-rc') } asOrderedCollection
 		             with: 'org:example' -> {
 				             (Dictionary with: #version -> 'awfulVersion').
 				             (Dictionary with: #version -> 'awesomeVersion').
-				             (Dictionary with: #version -> 'worstVersion') }
-				             asOrderedCollection
+				             (Dictionary with: #version -> 'worstVersion') } asOrderedCollection
 		             with: 'com:potato' -> {
 				             (Dictionary with: #version -> '2b.39.451e-rc').
-				             (Dictionary with: #version -> '2a.39.451e-rc') }
-				             asOrderedCollection.
+				             (Dictionary with: #version -> '2a.39.451e-rc') } asOrderedCollection.
 
 	resolver resolveConflicts: conflicts on: (resolved := Dictionary new).
 
 	self assert: resolved equals: (Dictionary
-			 with:
-			 'net:versioned' -> (Dictionary with: #version -> '10.2.0-rc')
-			 with:
-			 'org:example' -> (Dictionary with: #version -> 'awfulVersion')
-			 with:
-			 'com:potato' -> (Dictionary with: #version -> '2b.39.451e-rc'))
+			 with: 'net:versioned' -> (Dictionary with: #version -> '10.2.0-rc')
+			 with: 'org:example' -> (Dictionary with: #version -> 'awfulVersion')
+			 with: 'com:potato' -> (Dictionary with: #version -> '2b.39.451e-rc'))
 ]

@@ -29,25 +29,23 @@ NexusModelBuilder >> build [
 	"Create the model"
 
 	[
-	| modelPath |
-	self setUp.
-	modelPath := self extractor run.
-	self registerModel: modelPath ] ensure: [ self cleanUp ]
+		| modelPath |
+		self setUp.
+		modelPath := self extractor run.
+		self registerModel: modelPath ] ensure: [ self cleanUp ]
 ]
 
 { #category : 'cleanup' }
 NexusModelBuilder >> cleanUp [
 	"delete temp directories"
 
-	(FileLocator home / project directory / 'dependencies')
-		ensureDeleteAll
+	(FileLocator home / project directory / 'dependencies') ensureDeleteAll
 ]
 
 { #category : 'accessing' }
 NexusModelBuilder >> extractor [
 
-	^ extractor ifNil: [
-		  extractor := NexusModelExtractor forLanguage: project language ]
+	^ extractor ifNil: [ extractor := NexusModelExtractor forLanguage: project language ]
 ]
 
 { #category : 'accessing' }
@@ -105,9 +103,7 @@ NexusModelBuilder >> registerModel: modelPath [
 	| projectDirectory source |
 	projectDirectory := FileLocator home / project directory.
 	source := projectDirectory / modelPath.
-	source moveTo:
-		((projectDirectory / 'models') ensureCreateDirectory
-		 / self modelName , source extension) ensureDelete.
+	source moveTo: ((projectDirectory / 'models') ensureCreateDirectory / self modelName , source extension) ensureDelete.
 
 	project addModel: (Dictionary
 			 with: 'name' -> self modelName
@@ -125,11 +121,11 @@ NexusModelBuilder >> setUp [
 	projectDirectory := home / project directory.
 
 	withDependencies ifTrue: [
-		dependencies := (projectDirectory / 'dependencies') createDirectory.
-		project dependencies do: [ :dependency |
-			| artifact |
-			artifact := home / (dependency at: #path).
-			artifact copyTo: dependencies / artifact basename ] ].
+			dependencies := (projectDirectory / 'dependencies') createDirectory.
+			project dependencies do: [ :dependency |
+					| artifact |
+					artifact := home / (dependency at: #path).
+					artifact copyTo: dependencies / artifact basename ] ].
 
 	self extractor target: projectDirectory pathString
 ]

@@ -53,16 +53,14 @@ NexusVersionLockingDependencyConflictResolver >> resolveConflicts: conflicts on:
 	remaining := Dictionary new.
 
 	conflicts keysAndValuesDo: [ :groupAndName :descriptors |
-		self locks
-			at: groupAndName
-			ifPresent: [ :version |
-				descriptors
-					detect: [ :descriptor | version = (descriptor at: #version) ]
-					ifFound: [ :descriptor |
-					dependencies at: groupAndName put: descriptor ]
-					ifNone: [ remaining at: groupAndName put: descriptors ] ]
-			ifAbsent: [ remaining at: groupAndName put: descriptors ] ].
+			self locks
+				at: groupAndName
+				ifPresent: [ :version |
+						descriptors
+							detect: [ :descriptor | version = (descriptor at: #version) ]
+							ifFound: [ :descriptor | dependencies at: groupAndName put: descriptor ]
+							ifNone: [ remaining at: groupAndName put: descriptors ] ]
+				ifAbsent: [ remaining at: groupAndName put: descriptors ] ].
 
-	remaining ifNotEmpty: [
-		self resolveRemainingConflicts: remaining on: dependencies ]
+	remaining ifNotEmpty: [ self resolveRemainingConflicts: remaining on: dependencies ]
 ]

@@ -25,8 +25,7 @@ NexusDependencySelectionPresenter >> applyResolver: resolver [
 	lockResolver fallbackResolver: resolver.
 	choices := lockResolver resolveConflicts: conflicts.
 	conflictList items do: [ :conflictPresenter |
-		conflictPresenter updateWithResolverChoice:
-			(choices at: conflictPresenter conflictId) ]
+		conflictPresenter updateWithResolverChoice: (choices at: conflictPresenter conflictId) ]
 ]
 
 { #category : 'layout' }
@@ -52,32 +51,23 @@ NexusDependencySelectionPresenter >> initialize [
 NexusDependencySelectionPresenter >> initializePresenters [
 
 	resolverConfig := self newDropList
-		                  items:
-			                  (NexusDependencyConflictResolver allSubclasses
-				                   reject: [ :class |
-					                   class isAbstract or: [
-							                   class
-							                   ==
-								                   NexusVersionLockingDependencyConflictResolver ] ]
+		                  items: (NexusDependencyConflictResolver allSubclasses
+				                   reject: [ :class | class isAbstract or: [ class == NexusVersionLockingDependencyConflictResolver ] ]
 				                   thenCollect: #new);
 		                  display: [ :item | item displayName ];
-		                  whenSelectedItemChangedDo: [ :item |
-			                  self applyResolver: item ].
+		                  whenSelectedItemChangedDo: [ :item | self applyResolver: item ].
 
-	conflictList := self newComponentList items:
-		                (conflicts associations collect: [ :conflict |
-			                 (self instantiate:
-				                  (NexusDependencyConflictPresenter on: conflict))
-				                 whenLockedVersionChangedDo: [ :version :isLocked |
-					                 isLocked
-						                 ifTrue: [
-						                 lockResolver addLock: conflict key -> version ]
-						                 ifFalse: [
-						                 lockResolver removeLock: conflict key ] ] ]).
+	conflictList := self newComponentList items: (conflicts associations collect: [ :conflict |
+				                 (self instantiate: (NexusDependencyConflictPresenter on: conflict)) whenLockedVersionChangedDo: [
+						                 :version
+						                 :isLocked |
+						                 isLocked
+							                 ifTrue: [ lockResolver addLock: conflict key -> version ]
+							                 ifFalse: [ lockResolver removeLock: conflict key ] ] ]).
 
 	applyButton := self newButton
 		               label: 'Apply';
-		               action: [  ]
+		               action: [ ]
 ]
 
 { #category : 'initialization' }

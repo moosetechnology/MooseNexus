@@ -23,8 +23,7 @@ NexusDependencyConflictResolverWithFallback class >> isAbstract [
 { #category : 'accessing' }
 NexusDependencyConflictResolverWithFallback >> fallbackResolver [
 
-	^ fallbackResolver ifNil: [
-		  fallbackResolver := self class newDefaultResolver ]
+	^ fallbackResolver ifNil: [ fallbackResolver := self class newDefaultResolver ]
 ]
 
 { #category : 'accessing' }

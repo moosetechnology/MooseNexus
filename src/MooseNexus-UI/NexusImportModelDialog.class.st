@@ -36,8 +36,7 @@ NexusImportModelDialog >> defaultLayout [
 				   yourself)
 		  expand: false;
 		  add: foldersList withConstraints: [ :c | c padding: 10 ];
-		  add: ('Java importer:' asPresenter addStyle: 'title2')
-		  expand: false;
+		  add: ('Java importer:' asPresenter addStyle: 'title2') expand: false;
 		  add: (SpGridLayout new
 				   add: importerDropList at: 1 @ 1;
 				   add: importerPathField at: 2 @ 1 span: 2 @ 1;
@@ -59,8 +58,7 @@ NexusImportModelDialog >> initializeAddFolderPresenter [
 	addSubFolders := addFolderPresenter newButton
 		                 label: 'Add subfolders';
 		                 iconName: #add;
-		                 help:
-			                 'Add the direct subfolders of the chosen folder';
+		                 help: 'Add the direct subfolders of the chosen folder';
 		                 action: [ self openSubFoldersSelection ].
 
 	addFolderPresenter layout: (SpBoxLayout newLeftToRight

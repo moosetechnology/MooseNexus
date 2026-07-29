@@ -38,9 +38,8 @@ NexusMavenProjectParameterizedTest class >> case1 [
 [INFO]'.
 
 	projects := Dictionary with:
-		            group -> (Dictionary with: projectName -> (Dictionary
-				              with: #version -> version
-				              with: #dependencies -> Dictionary new)).
+		            group
+		            -> (Dictionary with: projectName -> (Dictionary with: #version -> version with: #dependencies -> Dictionary new)).
 
 	^ self
 		  initializeCase: {
@@ -102,11 +101,8 @@ NexusMavenProjectParameterizedTest class >> case2 [
 			                 with: #scope -> 'provided') }.
 
 	"expected projects to parse"
-	(projects := Dictionary new)
-		at: group
-		put: (Dictionary with: projectName -> (Dictionary
-					  with: #version -> version
-					  with: #dependencies -> (projectDependencies := Dictionary new))).
+	(projects := Dictionary new) at: group put: (Dictionary with:
+			 projectName -> (Dictionary with: #version -> version with: #dependencies -> (projectDependencies := Dictionary new))).
 	projectDependencies
 		at: 'org.moose' put: {
 				(Dictionary
@@ -152,46 +148,34 @@ NexusMavenProjectParameterizedTest class >> initializeCase: aCase withMavenOutpu
 	root := 'pharo-local/nexus/tests' asFileReference.
 
 	"initialize mock Maven repository"
-	repositoryPath := (root / 'mavenRepository') ensureCreateDirectory
-		                  absolutePath pathString.
+	repositoryPath := (root / 'mavenRepository') ensureCreateDirectory absolutePath pathString.
 	dependencies do: [ :dependency |
-		| depName depVersion depPath |
-		depName := dependency at: #name.
-		depVersion := dependency at: #version.
-		depPath := String streamContents: [ :s |
-			           s << repositoryPath << '/'
-			           <<
-			           ((dependency at: #group) copyReplaceAll: '.' with: '/')
-			           << '/' << depName << '/' << depVersion << '/' << depName
-			           << '-' << depVersion << '.' << (dependency at: #type) ].
-		"create mock artifact and set the expected path of the artifact"
-		depPath := (depPath asFileReference ensureCreateFile relativeTo:
-			            FileLocator home) pathString.
-		dependency at: #path put: depPath ].
+			| depName depVersion depPath |
+			depName := dependency at: #name.
+			depVersion := dependency at: #version.
+			depPath := String streamContents: [ :s |
+					           s << repositoryPath << '/' << ((dependency at: #group) copyReplaceAll: '.' with: '/') << '/' << depName << '/'
+					           << depVersion << '/' << depName << '-' << depVersion << '.' << (dependency at: #type) ].
+			"create mock artifact and set the expected path of the artifact"
+			depPath := (depPath asFileReference ensureCreateFile relativeTo: FileLocator home) pathString.
+			dependency at: #path put: depPath ].
 
 	"compute paths of projects and dependencies"
 	projects do: [ :projectGroup |
-		projectGroup do: [ :subProject |
-			subProject at: #path put: '.'.
-			(subProject at: #dependencies) keysAndValuesDo: [
-				:groupName
-				:dependencyGroup |
-				dependencyGroup do: [ :dependency | "'dependency at: #path' is the repository name only, compute the rest of the path"
-					| depName depVersion filename path |
-					depName := dependency at: #name.
-					depVersion := dependency at: #version.
-					filename := String streamContents: [ :s |
-						            s << depName << '-' << depVersion << '.jar' ].
-					path := ((root / (dependency at: #path)
-					          / (groupName copyReplaceAll: '.' with: '/') / depName
-					          / depVersion / filename) absolutePath relativeTo:
-						         FileLocator home) pathString.
-					dependency at: #path put: path ] ] ] ].
+			projectGroup do: [ :subProject |
+					subProject at: #path put: '.'.
+					(subProject at: #dependencies) keysAndValuesDo: [ :groupName :dependencyGroup |
+							dependencyGroup do: [ :dependency | "'dependency at: #path' is the repository name only, compute the rest of the path"
+									| depName depVersion filename path |
+									depName := dependency at: #name.
+									depVersion := dependency at: #version.
+									filename := String streamContents: [ :s | s << depName << '-' << depVersion << '.jar' ].
+									path := ((root / (dependency at: #path) / (groupName copyReplaceAll: '.' with: '/') / depName / depVersion / filename)
+										         absolutePath relativeTo: FileLocator home) pathString.
+									dependency at: #path put: path ] ] ] ].
 
 	"create the project subdirectories, mostly used to determine the language"
-	directories do: [ :path |
-		(root / projectName / 'sources/project' / path)
-			ensureCreateDirectory ].
+	directories do: [ :path | (root / projectName / 'sources/project' / path) ensureCreateDirectory ].
 
 	"initialize the NexusProject and its importer"
 	project := aCase at: #project put: NexusMavenProject new.
@@ -200,8 +184,7 @@ NexusMavenProjectParameterizedTest class >> initializeCase: aCase withMavenOutpu
 	importer := NexusMavenProjectImporter new.
 	importer project: project.
 	importer directory: project directory.
-	importer localRepositories: { (NexusMavenRepository new directory:
-			 (root / 'mavenRepository') pathString) }.
+	importer localRepositories: { (NexusMavenRepository new directory: (root / 'mavenRepository') pathString) }.
 
 	importer parse: mavenOutput.
 	project dependencies: importer flatDependencies.
@@ -281,9 +264,7 @@ NexusMavenProjectParameterizedTest >> testDetermineVersion [
 { #category : 'tests' }
 NexusMavenProjectParameterizedTest >> testFlattenDependencies [
 
-	self
-		assertCollection: project dependencies
-		hasSameElements: dependencies
+	self assertCollection: project dependencies hasSameElements: dependencies
 ]
 
 { #category : 'tests' }
