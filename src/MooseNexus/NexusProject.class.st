@@ -75,6 +75,21 @@ NexusProject >> buildModel [
 ]
 
 { #category : 'accessing' }
+NexusProject >> coordinates [
+
+	^ NexusProjectCoordinates group: self group name: self name version: self version
+]
+
+{ #category : 'accessing' }
+NexusProject >> coordinates: aNexusProjectCoordinates [
+
+	self isRecorded ifTrue: [ Error signal: 'Cannot change project coordinates after recording the project in a repository' ].
+	group := aNexusProjectCoordinates group.
+	name := aNexusProjectCoordinates name.
+	version := aNexusProjectCoordinates version
+]
+
+{ #category : 'accessing' }
 NexusProject >> dependencies [
 
 	^ dependencies ifNil: [ dependencies := #(  ) ]
@@ -127,9 +142,9 @@ NexusProject >> group [
 ]
 
 { #category : 'accessing' }
-NexusProject >> group: aSymbol [
+NexusProject >> group: aString [
 
-	group := aSymbol
+	self coordinates: (NexusProjectCoordinates group: aString name: name version: version)
 ]
 
 { #category : 'setup' }
@@ -170,6 +185,12 @@ NexusProject >> isManagedProject [
 	^ false
 ]
 
+{ #category : 'testing' }
+NexusProject >> isRecorded [
+
+	^ directory notNil
+]
+
 { #category : 'accessing' }
 NexusProject >> language [
 	"Subclasses must return a lowercase string of the project's language name."
@@ -202,9 +223,9 @@ NexusProject >> name [
 ]
 
 { #category : 'accessing' }
-NexusProject >> name: aSymbol [
+NexusProject >> name: aString [
 
-	name := aSymbol
+	self coordinates: (NexusProjectCoordinates group: group name: aString version: version)
 ]
 
 { #category : 'printing' }
@@ -271,7 +292,7 @@ NexusProject >> version [
 { #category : 'accessing' }
 NexusProject >> version: aString [
 
-	version := aString
+	self coordinates: (NexusProjectCoordinates group: group name: name version: aString)
 ]
 
 { #category : 'properties' }

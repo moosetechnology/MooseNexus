@@ -92,6 +92,15 @@ NexusRepository >> import: name fromDirectory: pathString [
 ]
 
 { #category : 'importing' }
+NexusRepository >> importCoordinates: coordinates fromDirectory: pathString [
+	"Import the project within the given directory and record it with explicit coordinates."
+
+	| project |
+	project := NexusProjectImporter importFromDirectory: pathString.
+	^ self recordProject: project coordinates: coordinates fromDirectory: pathString
+]
+
+{ #category : 'importing' }
 NexusRepository >> importFromDirectory: pathString [
 	"Import the project within the given directory and try to determine its name.
 	It is recommended that you specify the project name using `import:fromDirectory:`,
@@ -101,6 +110,13 @@ NexusRepository >> importFromDirectory: pathString [
 	project := NexusProjectImporter importFromDirectory: pathString.
 	self recordProject: project fromDirectory: pathString.
 	^ project
+]
+
+{ #category : 'importing' }
+NexusRepository >> importGroup: group name: name version: version fromDirectory: pathString [
+	"Import the project within the given directory and record it with explicit coordinates."
+
+	^ self importCoordinates: (NexusProjectCoordinates group: group name: name version: version) fromDirectory: pathString
 ]
 
 { #category : 'printing' }
@@ -159,18 +175,26 @@ NexusRepository >> projects [
 ]
 
 { #category : 'adding' }
+NexusRepository >> recordProject: project coordinates: coordinates fromDirectory: pathString [
+	"Set project coordinates before recording it in the repository."
+
+	project coordinates: coordinates.
+	^ self recordProject: project fromDirectory: pathString
+]
+
+{ #category : 'adding' }
 NexusRepository >> recordProject: project fromDirectory: pathString [
-	"Add the project to this repository, copying the sources from the given directory."
+	"Add project to the repository, copying sources from the given directory."
 
 	| projectDirectory |
 	(projectDirectory := self resolveDirectoryOf: project) ifExists: [
-		Warning signal:
-			'This project already exists in the given repository, proceed to overwrite it'.
-		projectDirectory deleteAll ].
+			Warning signal:
+				'This project already exists in given repository, proceed to overwrite it'.
+			projectDirectory deleteAll ].
 	project directory:
 		(projectDirectory relativeTo: FileLocator home) pathString.
 
-	"copy the project directory to the repository"
+	"copy project directory to repository"
 	pathString asFileReference copyAllTo:
 		(projectDirectory / 'sources/project') ensureCreateDirectory.
 
@@ -178,9 +202,21 @@ NexusRepository >> recordProject: project fromDirectory: pathString [
 	(projectDirectory / 'properties.json') ensureCreateFile
 		writeStreamDo: [ :stream | project writePropertiesOn: stream ].
 
-	"JSON list of models that were created, empty by default"
+	"JSON list of models created, empty by default"
 	(projectDirectory / 'models.json') ensureCreateFile writeStreamDo: [
-		:stream | stream nextPutAll: '[]' ]
+		:stream | stream nextPutAll: '[]' ].
+
+	^ project
+]
+
+{ #category : 'adding' }
+NexusRepository >> recordProject: project group: group name: name version: version fromDirectory: pathString [
+	"Set project coordinates before recording it in the repository."
+
+	^ self
+		  recordProject: project
+		  coordinates: (NexusProjectCoordinates group: group name: name version: version)
+		  fromDirectory: pathString
 ]
 
 { #category : 'enumerating' }
