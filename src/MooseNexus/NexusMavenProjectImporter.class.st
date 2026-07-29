@@ -22,8 +22,7 @@ NexusMavenProjectImporter >> findMavenCommand [
 
 	OSPlatform current isWindows
 		ifTrue: [ directory / 'mvnw.cmd' ifExists: [ ^ 'mvnw.cmd' ] ]
-		ifFalse: [ "assume *nix"
-		directory / 'mvnw' ifExists: [ ^ './mvnw' ] ].
+		ifFalse: [ "assume *nix" directory / 'mvnw' ifExists: [ ^ './mvnw' ] ].
 	"assume maven is installed"
 	^ 'mvn'
 ]
@@ -46,8 +45,7 @@ NexusMavenProjectImporter >> parse: raw [
 
 	| start |
 	start := 1.
-	[ (start := raw indexOf: $< startingAt: start) == 0 ] whileFalse: [
-		start := self parseProject: raw startingAt: start ]
+	[ (start := raw indexOf: $< startingAt: start) == 0 ] whileFalse: [ start := self parseProject: raw startingAt: start ]
 ]
 
 { #category : 'parsing' }
@@ -91,41 +89,41 @@ NexusMavenProjectImporter >> parseProject: raw startingAt: initialStart [
 	start == end
 		ifTrue: [ path := '.' ]
 		ifFalse: [
-			path := raw copyFrom: start to: end - 2.
-			"a project path is always relative to the root pom.xml,
-			but they can be from a different file hierarchy: ignore them"
-			skip := (directory / path isContainedBy: directory) not ].
+				path := raw copyFrom: start to: end - 2.
+				"a project path is always relative to the root pom.xml,
+				but they can be from a different file hierarchy: ignore them"
+				skip := (directory / path isContainedBy: directory) not ].
 
 	"find the first line with the dependencies"
 	start := (raw indexOfSubCollection: ']    ' startingAt: end + 1) + 5. "= ']    ' size"
 	projectDependencies := Dictionary new.
 
 	[ "collect and resolve all the dependencies"
-	| dependency |
-	"with Java >= 9, descriptors can be suffixed with ` -- module XYZ`, ignore it"
-	end := raw indexOfAnyOf: String crlf , ' ' startingAt: start + 1.
-	dependency := raw copyFrom: start to: end - 1. "= none | group:name:type:version:scope"
-	(raw at: end) == Character space ifTrue: [ "skip module description (>= 11 chars)"
-		end := raw indexOfAnyOf: String crlf startingAt: end + 11 ].
-	(skip or: [ dependency = 'none' ]) ifFalse: [
-		| mapping |
-		mapping := self resolve: dependency. "returns group -> (descriptor \ group)"
-		projectDependencies
-			at: mapping key
-			ifPresent: [ :descriptors | descriptors add: mapping value ]
-			ifAbsentPut: [ OrderedCollection with: mapping value ] ].
+		| dependency |
+		"with Java >= 9, descriptors can be suffixed with ` -- module XYZ`, ignore it"
+		end := raw indexOfAnyOf: String crlf , ' ' startingAt: start + 1.
+		dependency := raw copyFrom: start to: end - 1. "= none | group:name:type:version:scope"
+		(raw at: end) == Character space ifTrue: [ "skip module description (>= 11 chars)"
+			end := raw indexOfAnyOf: String crlf startingAt: end + 11 ].
+		(skip or: [ dependency = 'none' ]) ifFalse: [
+				| mapping |
+				mapping := self resolve: dependency. "returns group -> (descriptor \ group)"
+				projectDependencies
+					at: mapping key
+					ifPresent: [ :descriptors | descriptors add: mapping value ]
+					ifAbsentPut: [ OrderedCollection with: mapping value ] ].
 
-	"skip over '[INFO] ' (8 chars) and check if new line, indicating the end of the list
-	else start of next dependency descriptor is 3 spaces later"
-	String crlf includes: (raw at: (start := end + 11) - 3) ] whileFalse.
+		"skip over '[INFO] ' (8 chars) and check if new line, indicating the end of the list
+		else start of next dependency descriptor is 3 spaces later"
+		String crlf includes: (raw at: (start := end + 11) - 3) ] whileFalse.
 
 	"register the project with its version; projectName is unique so this never overwrites
 	save dependencies as arrays for JSON compatibility"
 	skip ifFalse: [
-		project projects at: group at: name put: (Dictionary
-				 with: #path -> path
-				 with: #version -> version
-				 with: #dependencies -> (projectDependencies collect: #asArray)) ].
+			project projects
+				at: group
+				at: name
+				put: (Dictionary with: #path -> path with: #version -> version with: #dependencies -> (projectDependencies collect: #asArray)) ].
 
 	"return the updated reading position"
 	^ start
@@ -136,7 +134,5 @@ NexusMavenProjectImporter >> read [
 	"Runs the `mvn` command using the `dependency:resolve` plugin.
 	Requires Maven to be installed."
 
-	^ LibC resultOfCommand:
-		  'cd "' , directory pathString , '" && ' , self findMavenCommand
-		  , ' --batch-mode dependency:resolve'
+	^ LibC resultOfCommand: 'cd "' , directory pathString , '" && ' , self findMavenCommand , ' --batch-mode dependency:resolve'
 ]

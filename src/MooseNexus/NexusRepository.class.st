@@ -45,8 +45,7 @@ Class {
 { #category : 'accessing' }
 NexusRepository class >> default [
 
-	^ default ifNil: [
-		  default := self new directory: FileLocator home / '.moose' ]
+	^ default ifNil: [ default := self new directory: FileLocator home / '.moose' ]
 ]
 
 { #category : 'accessing' }
@@ -66,17 +65,10 @@ NexusRepository >> group: group project: project version: version [
 	"Search the repository for the project with the specified group, project name and version."
 
 	| dir |
-	dir := directory / 'repository' / group ifAbsent: [
-		       NotFound signal:
-			       'Group `' , group , '`, not found in repository' ].
-	dir := dir / project ifAbsent: [
-		       NotFound signal:
-			       'Project `' , project , '` not found in group `' , group
-			       , '`' ].
+	dir := directory / 'repository' / group ifAbsent: [ NotFound signal: 'Group `' , group , '`, not found in repository' ].
+	dir := dir / project ifAbsent: [ NotFound signal: 'Project `' , project , '` not found in group `' , group , '`' ].
 	dir := dir / version ifAbsent: [
-		       NotFound signal:
-			       'Version `' , version , '` not found for project `'
-			       , project , '` in group `' , group , '`' ].
+		       NotFound signal: 'Version `' , version , '` not found for project `' , project , '` in group `' , group , '`' ].
 	^ NexusProject fromNexusDirectory: dir
 ]
 
@@ -132,25 +124,19 @@ NexusRepository >> printOn: stream [
 NexusRepository >> printProjectProperties: propertiesFile on: writeStream [
 
 	propertiesFile readStreamDo: [ :rs |
-		| properties |
-		properties := STON fromStream: rs.
-		writeStream << (properties at: #nature) << '('
-		<< (properties at: #group) << ':' << (properties at: #name) << ':'
-		<< (properties at: #version) << ')' ]
+			| properties |
+			properties := STON fromStream: rs.
+			writeStream << (properties at: #nature) << '(' << (properties at: #group) << ':' << (properties at: #name) << ':'
+			<< (properties at: #version) << ')' ]
 ]
 
 { #category : 'printing' }
 NexusRepository >> printProjects [
 
 	directory ifAbsent: [ ^ 'none' ].
-	^ self projectProperties
-		  ifEmpty: [ ^ 'none' ]
-		  ifNotEmpty: [ :projectProperties |
+	^ self projectProperties ifEmpty: [ ^ 'none' ] ifNotEmpty: [ :projectProperties |
 			  String streamContents: [ :s |
-				  projectProperties
-					  do: [ :properties |
-					  self printProjectProperties: properties on: s ]
-					  separatedBy: [ s cr ] ] ]
+				  projectProperties do: [ :properties | self printProjectProperties: properties on: s ] separatedBy: [ s cr ] ] ]
 ]
 
 { #category : 'enumerating' }
@@ -160,9 +146,8 @@ NexusRepository >> projectProperties [
 	| properties |
 	properties := OrderedCollection new.
 	(directory / 'repository') directories do: [ :groupDirectory |
-		groupDirectory directories do: [ :nameDirectory |
-			nameDirectory directories do: [ :versionDirectory |
-				properties add: versionDirectory / 'properties.json' ] ] ].
+			groupDirectory directories do: [ :nameDirectory |
+				nameDirectory directories do: [ :versionDirectory | properties add: versionDirectory / 'properties.json' ] ] ].
 	^ properties
 ]
 
@@ -170,8 +155,7 @@ NexusRepository >> projectProperties [
 NexusRepository >> projects [
 	"Returns all the projects managed by this repository."
 
-	^ self projectProperties collect: [ :properties |
-		  NexusProject fromProperties: properties ]
+	^ self projectProperties collect: [ :properties | NexusProject fromProperties: properties ]
 ]
 
 { #category : 'adding' }
@@ -188,23 +172,18 @@ NexusRepository >> recordProject: project fromDirectory: pathString [
 
 	| projectDirectory |
 	(projectDirectory := self resolveDirectoryOf: project) ifExists: [
-			Warning signal:
-				'This project already exists in given repository, proceed to overwrite it'.
+			Warning signal: 'This project already exists in given repository, proceed to overwrite it'.
 			projectDirectory deleteAll ].
-	project directory:
-		(projectDirectory relativeTo: FileLocator home) pathString.
+	project directory: (projectDirectory relativeTo: FileLocator home) pathString.
 
 	"copy project directory to repository"
-	pathString asFileReference copyAllTo:
-		(projectDirectory / 'sources/project') ensureCreateDirectory.
+	pathString asFileReference copyAllTo: (projectDirectory / 'sources/project') ensureCreateDirectory.
 
 	"write properties file useful for Nexus"
-	(projectDirectory / 'properties.json') ensureCreateFile
-		writeStreamDo: [ :stream | project writePropertiesOn: stream ].
+	(projectDirectory / 'properties.json') ensureCreateFile writeStreamDo: [ :stream | project writePropertiesOn: stream ].
 
 	"JSON list of models created, empty by default"
-	(projectDirectory / 'models.json') ensureCreateFile writeStreamDo: [
-		:stream | stream nextPutAll: '[]' ].
+	(projectDirectory / 'models.json') ensureCreateFile writeStreamDo: [ :stream | stream nextPutAll: '[]' ].
 
 	^ project
 ]
@@ -222,6 +201,5 @@ NexusRepository >> recordProject: project group: group name: name version: versi
 { #category : 'enumerating' }
 NexusRepository >> resolveDirectoryOf: project [
 
-	^ directory / 'repository' / project group / project name
-	  / project version
+	^ directory / 'repository' / project group / project name / project version
 ]

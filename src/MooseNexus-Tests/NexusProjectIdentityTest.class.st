@@ -14,20 +14,17 @@ Class {
 NexusProjectIdentityTest >> setUp [
 
 	super setUp.
-	rootDirectory := FileLocator temp
-	                 / ('MooseNexus-' , UUID new asString).
+	rootDirectory := FileLocator temp / ('MooseNexus-' , UUID new asString).
 	sourceDirectory := rootDirectory / 'source'.
 	sourceDirectory ensureCreateDirectory.
-	sourceDirectory / 'README.txt' writeStreamDo: [ :stream |
-		stream nextPutAll: 'test source project' ].
+	sourceDirectory / 'README.txt' writeStreamDo: [ :stream | stream nextPutAll: 'test source project' ].
 	repository := NexusRepository new directory: rootDirectory / 'nexus'
 ]
 
 { #category : 'running' }
 NexusProjectIdentityTest >> tearDown [
 
-	rootDirectory ifNotNil: [
-		rootDirectory ifExists: [ rootDirectory deleteAll ] ].
+	rootDirectory ifNotNil: [ rootDirectory ifExists: [ rootDirectory deleteAll ] ].
 	super tearDown
 ]
 

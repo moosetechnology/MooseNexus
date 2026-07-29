@@ -56,14 +56,14 @@ NexusDependencyConflictPresenter >> initializePresenters [
 	idLabel := self newLabel label: conflictId.
 
 	versionRadioButtons := descriptors collect: [ :descriptor |
-		                       | version |
-		                       version := descriptor at: #version.
-		                       self newRadioButton
-			                       label: version;
-			                       whenActivatedDo: [
-				                       freezeLock ifFalse: [ self lock ].
-				                       lockedVersion := version ];
-			                       yourself ].
+			                       | version |
+			                       version := descriptor at: #version.
+			                       self newRadioButton
+				                       label: version;
+				                       whenActivatedDo: [
+						                       freezeLock ifFalse: [ self lock ].
+						                       lockedVersion := version ];
+				                       yourself ].
 	versionRadioButtons first associatedRadioButtons: versionRadioButtons.
 
 	lockButton := self newButton
@@ -108,8 +108,7 @@ NexusDependencyConflictPresenter >> unlock [
 NexusDependencyConflictPresenter >> updateWithResolverChoice: descriptor [
 
 	self freezeLock: true.
-	(self versionRadioButtons detect: [ :button |
-		 button label = (descriptor at: #version) ]) state: true.
+	(self versionRadioButtons detect: [ :button | button label = (descriptor at: #version) ]) state: true.
 	self freezeLock: false
 ]
 
@@ -122,7 +121,5 @@ NexusDependencyConflictPresenter >> versionRadioButtons [
 { #category : 'actions' }
 NexusDependencyConflictPresenter >> whenLockedVersionChangedDo: aBlock [
 
-	self
-		property: #lockedVersion
-		whenChangedDo: [ aBlock value: lockedVersion value: isLocked ]
+	self property: #lockedVersion whenChangedDo: [ aBlock value: lockedVersion value: isLocked ]
 ]

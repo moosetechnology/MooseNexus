@@ -48,8 +48,7 @@ NexusGradleProjectImporter >> findGradleCommand [
 
 	OSPlatform current isWindows
 		ifTrue: [ directory / 'gradlew.bat' ifExists: [ ^ 'gradlew.bat' ] ]
-		ifFalse: [ "assume *nix"
-		directory / 'gradlew' ifExists: [ ^ './gradlew' ] ].
+		ifFalse: [ "assume *nix" directory / 'gradlew' ifExists: [ ^ './gradlew' ] ].
 	"assume gradle is installed"
 	^ 'gradle'
 ]
@@ -59,12 +58,11 @@ NexusGradleProjectImporter >> groovyCodeForDependencies [
 	"Code to insert into a build.gradle file to get the flat list of dependencies."
 
 	^ String streamContents: [ :s |
-		  s << 'tasks.register("' << self class taskName << '") {
+			  s << 'tasks.register("' << self class taskName << '") {
 	doLast {
 		def rootDirPath = rootDir.canonicalPath
 		allprojects.findAll { it.projectDir.canonicalPath.startsWith(rootDirPath) }.each { project ->
-			println "-${' << self groupCode << '}:${' << self nameCode
-		  << '}:${' << self versionCode << '}"
+			println "-${' << self groupCode << '}:${' << self nameCode << '}:${' << self versionCode << '}"
 			def projectDirPath = project.projectDir.canonicalPath
 			if (projectDirPath.equals(rootDirPath)) {
 				println "."
@@ -114,13 +112,12 @@ NexusGradleProjectImporter >> kotlinCodeForDependencies [
 	Kotlin is sensitive to line endings, so they are removed for convenience."
 
 	^ String streamContents: [ :s |
-		  s << 'tasks.register("' << self class taskName
-		  <<
-		  '") { doLast { val rootDirPath = rootDir.canonicalPath; allprojects.filter { it.projectDir.canonicalPath.startsWith(rootDirPath) }.forEach { project -> println("-${'
-		  << self groupCode << '}:${' << self nameCode << '}:${'
-		  << self versionCode
-		  <<
-		  '}"); val projectDirPath = project.projectDir.canonicalPath; if (projectDirPath.equals(rootDirPath)) { println(".") } else { println(projectDirPath.substring(rootDirPath.length + 1)) }; configurations.filter { it.isCanBeResolved }.forEach { configuration -> val scope = configuration.name; configuration.resolvedConfiguration.resolvedArtifacts.forEach { artifact -> val group = artifact.moduleVersion.id.group; val name = artifact.name; val type = artifact.extension ?: "jar"; val version = artifact.moduleVersion.id.version; val path = artifact.file.absolutePath; /* forces artifact download */ println("$group:$name:$type:$version:$scope:$path") }}}}}' ]
+			  s << 'tasks.register("' << self class taskName
+			  <<
+			  '") { doLast { val rootDirPath = rootDir.canonicalPath; allprojects.filter { it.projectDir.canonicalPath.startsWith(rootDirPath) }.forEach { project -> println("-${'
+			  << self groupCode << '}:${' << self nameCode << '}:${' << self versionCode
+			  <<
+			  '}"); val projectDirPath = project.projectDir.canonicalPath; if (projectDirPath.equals(rootDirPath)) { println(".") } else { println(projectDirPath.substring(rootDirPath.length + 1)) }; configurations.filter { it.isCanBeResolved }.forEach { configuration -> val scope = configuration.name; configuration.resolvedConfiguration.resolvedArtifacts.forEach { artifact -> val group = artifact.moduleVersion.id.group; val name = artifact.name; val type = artifact.extension ?: "jar"; val version = artifact.moduleVersion.id.version; val path = artifact.file.absolutePath; /* forces artifact download */ println("$group:$name:$type:$version:$scope:$path") }}}}}' ]
 ]
 
 { #category : 'accessing' }
@@ -156,39 +153,35 @@ directory
 	index := 2.
 
 	[ "project info starts at third line at the earliest, after the line '> Task ...'"
-	(line := lines at: (index := index + 1)) isNotEmpty and: [
-		line first == $- ] ] whileFalse.
+	(line := lines at: (index := index + 1)) isNotEmpty and: [ line first == $- ] ] whileFalse.
 
 	[ (line := lines at: index) isNotEmpty ] whileTrue: [
-		| group name version descriptor dependencies |
-		"read project descriptor"
-		descriptor := $: split: line allButFirst.
-		group := descriptor first ifEmpty: [ 'unknown' ].
-		name := descriptor second.
-		version := descriptor third.
+			| group name version descriptor dependencies |
+			"read project descriptor"
+			descriptor := $: split: line allButFirst.
+			group := descriptor first ifEmpty: [ 'unknown' ].
+			name := descriptor second.
+			version := descriptor third.
 
-		"register the project with its version; project name is unique so this never overwrites"
-		descriptor := Dictionary with: #version -> version.
-		project projects at: group at: name put: descriptor.
+			"register the project with its version; project name is unique so this never overwrites"
+			descriptor := Dictionary with: #version -> version.
+			project projects at: group at: name put: descriptor.
 
-		"read project location, relative to the directory"
-		descriptor at: #path put: (lines at: (index := index + 1)).
+			"read project location, relative to the directory"
+			descriptor at: #path put: (lines at: (index := index + 1)).
 
-		"read dependencies per scope"
-		dependencies := Dictionary new.
-		[
-		(line := lines at: (index := index + 1)) isEmpty or: [
-			line first == $- ] ] whileFalse: [ "resolve the descriptor: 'group:name:type:version:scope:path'"
-			| mapping |
-			mapping := self resolve: line.
-			dependencies
-				at: mapping key
-				ifPresent: [ :descriptors | descriptors add: mapping value ]
-				ifAbsentPut: [ OrderedCollection with: mapping value ] ].
+			"read dependencies per scope"
+			dependencies := Dictionary new.
+			[ (line := lines at: (index := index + 1)) isEmpty or: [ line first == $- ] ] whileFalse: [ "resolve the descriptor: 'group:name:type:version:scope:path'"
+					| mapping |
+					mapping := self resolve: line.
+					dependencies
+						at: mapping key
+						ifPresent: [ :descriptors | descriptors add: mapping value ]
+						ifAbsentPut: [ OrderedCollection with: mapping value ] ].
 
-		"the current project has been fully parsed
-		save the dependencies as arrays for JSON compatibility"
-		descriptor at: #dependencies put: (dependencies collect: #asArray) ]
+			"the current project has been fully parsed, save the dependencies as arrays for JSON compatibility"
+			descriptor at: #dependencies put: (dependencies collect: #asArray) ]
 ]
 
 { #category : 'reading' }
@@ -203,17 +196,14 @@ NexusGradleProjectImporter >> read [
 	originalSize := buildFile size. "to restore it later"
 
 	^ [ "append code to the build file for a task to extract resolved dependencies"
-	  buildFile writeStreamDo: [ :ws |
-		  ws setToEnd crlf << (buildFile extension = 'kts'
-			   ifTrue: [ self kotlinCodeForDependencies ]
-			   ifFalse: [ self groovyCodeForDependencies ]) ].
+		  buildFile writeStreamDo: [ :ws |
+				  ws setToEnd crlf << (buildFile extension = 'kts'
+					   ifTrue: [ self kotlinCodeForDependencies ]
+					   ifFalse: [ self groovyCodeForDependencies ]) ].
 
-	  "execute the task we inserted and return the raw terminal output"
-	  LibC resultOfCommand:
-		  'cd "' , directory pathString , '" && ' , gradleCmd , ' '
-		  , self class taskName ] ensure: [ "restore the original build file"
-		  (File named: buildFile fullName) writeStreamDo: [ :ws |
-			  ws truncate: originalSize ] ]
+		  "execute the task we inserted and return the raw terminal output"
+		  LibC resultOfCommand: 'cd "' , directory pathString , '" && ' , gradleCmd , ' ' , self class taskName ] ensure: [ "restore the original build file"
+		  (File named: buildFile fullName) writeStreamDo: [ :ws | ws truncate: originalSize ] ]
 ]
 
 { #category : 'accessing' }

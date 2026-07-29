@@ -68,9 +68,7 @@ NexusVerveineJRunner >> anchor: aSymbol [
 	| expected |
 	expected := #( none entity default assoc ).
 	(expected includes: aSymbol) ifFalse: [
-		Error signal:
-			'Invalid anchor argument `' , aSymbol , '`, expects one of: '
-			, expected asCommaString ].
+		Error signal: 'Invalid anchor argument `' , aSymbol , '`, expects one of: ' , expected asCommaString ].
 	anchor := aSymbol
 ]
 
@@ -99,9 +97,7 @@ NexusVerveineJRunner >> format: aSymbol [
 	| expected |
 	expected := #( json mse ).
 	(expected includes: aSymbol) ifFalse: [
-		Error signal:
-			'Invalid format argument `' , aSymbol , '`, expects one of: '
-			, expected asCommaString ].
+		Error signal: 'Invalid format argument `' , aSymbol , '`, expects one of: ' , expected asCommaString ].
 	format := aSymbol
 ]
 
@@ -136,14 +132,12 @@ NexusVerveineJRunner >> jvmArgs: aString [
 NexusVerveineJRunner >> printOptionsOn: stream [
 
 	self jvmArgs ifNotNil: [ :args | stream << args << ' ' ].
-	stream << '-o ' << self class outputFilename << '.' << self format
-	<< ' -format ' << self format.
+	stream << '-o ' << self class outputFilename << '.' << self format << ' -format ' << self format.
 	self allLocals ifTrue: [ stream << ' -alllocals' ].
 	self anchor ifNotNil: [ :a | stream << ' -anchor ' << a ].
 	self javaVersion ifNotNil: [ :v | stream << ' -' << v ].
 	self summary ifTrue: [ stream << ' -summary' ].
-	self excludePaths ifNotEmpty: [ :paths |
-		paths do: [ :path | stream << ' -excludepath ' << path ] ]
+	self excludePaths ifNotEmpty: [ :paths | paths do: [ :path | stream << ' -excludepath ' << path ] ]
 ]
 
 { #category : 'accessing' }

@@ -55,23 +55,17 @@ NexusManagedProjectImporter >> flatDependencies [
 	conflicts := Dictionary new.
 
 	project projectDependenciesDo: [ :dependencyGroup :descriptor |
-		| key |
-		key := dependencyGroup , ':' , (descriptor at: #name).
-		conflicts
-			at: key
-			ifPresent: [ :conflictList | conflictList add: descriptor ]
-			ifAbsent: [
-				dependencies
-					at: key
-					ifPresent: [ :exisiting |
-						(exisiting at: #version) = (descriptor at: #version) ifFalse: [ "new conflict"
-							conflicts at: key put: (OrderedCollection
-									 with: (dependencies removeKey: key)
-									 with: descriptor) ] ]
-					ifAbsentPut: [ descriptor copyWith: #group -> dependencyGroup ] ] ].
+			| key |
+			key := dependencyGroup , ':' , (descriptor at: #name).
+			conflicts at: key ifPresent: [ :conflictList | conflictList add: descriptor ] ifAbsent: [
+					dependencies
+						at: key
+						ifPresent: [ :exisiting |
+								(exisiting at: #version) = (descriptor at: #version) ifFalse: [ "new conflict"
+									conflicts at: key put: (OrderedCollection with: (dependencies removeKey: key) with: descriptor) ] ]
+						ifAbsentPut: [ descriptor copyWith: #group -> dependencyGroup ] ] ].
 
-	conflicts ifNotEmpty: [
-		self resolveDependencyConflicts: conflicts on: dependencies ].
+	conflicts ifNotEmpty: [ self resolveDependencyConflicts: conflicts on: dependencies ].
 
 	^ dependencies asArray
 ]
@@ -118,20 +112,14 @@ NexusManagedProjectImporter >> read [
 NexusManagedProjectImporter >> resolve: descriptor [
 	"Attempts to find the local path to an artifact based on the descriptor."
 
-	localRepositories do: [ :repository |
-		(repository resolve: descriptor) ifNotNil: [ :mapping | ^ mapping ] ].
+	localRepositories do: [ :repository | (repository resolve: descriptor) ifNotNil: [ :mapping | ^ mapping ] ].
 	Error signal: 'Could not find dependency: ' , descriptor
 ]
 
 { #category : 'querying' }
 NexusManagedProjectImporter >> resolveDependencyConflicts: conflicts on: dependencies [
 
-	dependencyConflictResolver
-		ifNotNil: [
-			dependencyConflictResolver
-				resolveConflicts: conflicts
-				on: dependencies ]
-		ifNil: [
+	dependencyConflictResolver ifNotNil: [ dependencyConflictResolver resolveConflicts: conflicts on: dependencies ] ifNil: [
 			self shouldBeImplemented.
 			"TODO link presenter choices with actual result"
 			(NexusDependencySelectionPresenter on: conflicts) open ]

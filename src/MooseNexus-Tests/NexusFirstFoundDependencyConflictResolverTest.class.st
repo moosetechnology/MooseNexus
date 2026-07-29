@@ -23,18 +23,14 @@ NexusFirstFoundDependencyConflictResolverTest >> testResolveConflictsOn [
 		             with: 'org:example' -> {
 				             (Dictionary with: #version -> 'awfulVersion').
 				             (Dictionary with: #version -> 'awesomeVersion').
-				             (Dictionary with: #version -> 'worstVersion') }
-				             asOrderedCollection
+				             (Dictionary with: #version -> 'worstVersion') } asOrderedCollection
 		             with: 'com:potato' -> {
 				             (Dictionary with: #version -> '2b.39.451e-rc').
-				             (Dictionary with: #version -> '2a.39.451e-rc') }
-				             asOrderedCollection.
+				             (Dictionary with: #version -> '2a.39.451e-rc') } asOrderedCollection.
 
 	resolver resolveConflicts: conflicts on: (resolved := Dictionary new).
 
 	self assert: resolved equals: (Dictionary
-			 with:
-			 'org:example' -> (Dictionary with: #version -> 'awfulVersion')
-			 with:
-			 'com:potato' -> (Dictionary with: #version -> '2b.39.451e-rc'))
+			 with: 'org:example' -> (Dictionary with: #version -> 'awfulVersion')
+			 with: 'com:potato' -> (Dictionary with: #version -> '2b.39.451e-rc'))
 ]

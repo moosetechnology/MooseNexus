@@ -28,19 +28,18 @@ NexusSemanticVersioningDependencyConflictResolver >> checkAndSortByVersion: desc
 	Versions are added to a set to ensure uniqueness after parsing.
 	Versions with a suffix are added to a bag without the suffix to count them."
 	listWithVersion := descriptors collectWithIndex: [ :descriptor :index |
-		                   | version |
-		                   version := self parseVersion:
-			                              (descriptor at: #version).
-		                   uniqueVersions add: version.
-		                   version size = 4 ifTrue: [ "version has suffix"
-			                   | suffixless |
-			                   suffixless := version allButLast.
-			                   versionsWithSuffix add: suffixless.
-			                   suffixedVersionIndices
-				                   at: suffixless
-				                   ifPresent: [ :list | list add: index ]
-				                   ifAbsentPut: [ OrderedCollection with: index ] ].
-		                   version -> descriptor ].
+			                   | version |
+			                   version := self parseVersion: (descriptor at: #version).
+			                   uniqueVersions add: version.
+			                   version size = 4 ifTrue: [ "version has suffix"
+					                   | suffixless |
+					                   suffixless := version allButLast.
+					                   versionsWithSuffix add: suffixless.
+					                   suffixedVersionIndices
+						                   at: suffixless
+						                   ifPresent: [ :list | list add: index ]
+						                   ifAbsentPut: [ OrderedCollection with: index ] ].
+			                   version -> descriptor ].
 
 	"This resolver considers itself unable to correctly select a version
 	if either of the two following conditions is true:"
@@ -55,15 +54,14 @@ NexusSemanticVersioningDependencyConflictResolver >> checkAndSortByVersion: desc
 	e.g. '1.0.0-alpha' cannot be compared to '1.0.0-beta'
 	this dependency can only be resolved if '1.0.0' also exists"
 	versionsWithSuffix doWithOccurrences: [ :version :count |
-		(uniqueVersions includes: version)
-			ifFalse: [ count > 1 ifTrue: [ ^ nil ] ]
-			ifTrue: [ "Gather the indices of the suffixed versions if the base version exists"
-				indicesToRemove addAll: (suffixedVersionIndices at: version) ] ].
+			(uniqueVersions includes: version)
+				ifFalse: [ count > 1 ifTrue: [ ^ nil ] ]
+				ifTrue: [ "Gather the indices of the suffixed versions if the base version exists"
+					indicesToRemove addAll: (suffixedVersionIndices at: version) ] ].
 
 	"Remove all suffixed versions from the choices,
 	this resolver should never pick one when a suffixless version is available."
-	(indicesToRemove sort: [ :a :b | a > b ]) do: [ :i |
-		listWithVersion removeAt: i ].
+	(indicesToRemove sort: [ :a :b | a > b ]) do: [ :i | listWithVersion removeAt: i ].
 
 	"This dependency conflict can be resolved normally"
 	^ listWithVersion sort: [ :a :b | self compare: a key to: b key ]
@@ -79,30 +77,24 @@ NexusSemanticVersioningDependencyConflictResolver >> compare: leftVersion to: ri
 	"major"
 	leftPart := leftVersion first.
 	rightPart := rightVersion first.
-	(leftPart isCharacter not and: [ rightPart isCharacter ]) ifTrue: [
-		^ false ].
-	(leftPart isCharacter and: [ rightPart isCharacter not ]) ifTrue: [
-		^ true ].
+	(leftPart isCharacter not and: [ rightPart isCharacter ]) ifTrue: [ ^ false ].
+	(leftPart isCharacter and: [ rightPart isCharacter not ]) ifTrue: [ ^ true ].
 	leftVersion first > rightVersion first ifTrue: [ ^ false ].
 	leftVersion first < rightVersion first ifTrue: [ ^ true ].
 
 	"minor"
 	leftPart := leftVersion second.
 	rightPart := rightVersion second.
-	(leftPart isCharacter not and: [ rightPart isCharacter ]) ifTrue: [
-		^ false ].
-	(leftPart isCharacter and: [ rightPart isCharacter not ]) ifTrue: [
-		^ true ].
+	(leftPart isCharacter not and: [ rightPart isCharacter ]) ifTrue: [ ^ false ].
+	(leftPart isCharacter and: [ rightPart isCharacter not ]) ifTrue: [ ^ true ].
 	leftPart > rightPart ifTrue: [ ^ false ].
 	leftPart < rightPart ifTrue: [ ^ true ].
 
 	"patch"
 	leftPart := leftVersion third.
 	rightPart := rightVersion third.
-	(leftPart isCharacter not and: [ rightPart isCharacter ]) ifTrue: [
-		^ false ].
-	(leftPart isCharacter and: [ rightPart isCharacter not ]) ifTrue: [
-		^ true ].
+	(leftPart isCharacter not and: [ rightPart isCharacter ]) ifTrue: [ ^ false ].
+	(leftPart isCharacter and: [ rightPart isCharacter not ]) ifTrue: [ ^ true ].
 	leftPart > rightPart ifTrue: [ ^ false ].
 	leftPart < rightPart ifTrue: [ ^ true ].
 
@@ -181,12 +173,10 @@ NexusSemanticVersioningDependencyConflictResolver >> parseVersionNumberFrom: aSt
 	"Read a numeric version component without requiring the following character to be valid Smalltalk number syntax."
 
 	| number |
-	(aStream atEnd or: [ aStream peek isDigit not ]) ifTrue: [
-		^ absentBlock value ].
+	(aStream atEnd or: [ aStream peek isDigit not ]) ifTrue: [ ^ absentBlock value ].
 
 	number := 0.
-	[ aStream atEnd not and: [ aStream peek isDigit ] ] whileTrue: [
-		number := number * 10 + aStream next digitValue ].
+	[ aStream atEnd not and: [ aStream peek isDigit ] ] whileTrue: [ number := number * 10 + aStream next digitValue ].
 
 	^ number
 ]
@@ -194,11 +184,10 @@ NexusSemanticVersioningDependencyConflictResolver >> parseVersionNumberFrom: aSt
 { #category : 'resolving' }
 NexusSemanticVersioningDependencyConflictResolver >> resolveConflictBetween: descriptors [
 
-	^ (self checkAndSortByVersion: descriptors) ifNotNil: [
-		  :listWithVersion |
-		  (listWithVersion at: (useLatest
-				    ifTrue: [ listWithVersion size ]
-				    ifFalse: [ 1 ])) value ]
+	^ (self checkAndSortByVersion: descriptors) ifNotNil: [ :listWithVersion |
+			  (listWithVersion at: (useLatest
+					    ifTrue: [ listWithVersion size ]
+					    ifFalse: [ 1 ])) value ]
 ]
 
 { #category : 'resolving' }
@@ -209,12 +198,11 @@ NexusSemanticVersioningDependencyConflictResolver >> resolveConflicts: conflicts
 	remaining := Dictionary new.
 
 	conflicts keysAndValuesDo: [ :groupAndName :descriptors |
-		(self resolveConflictBetween: descriptors)
-			ifNotNil: [ :chosen | dependencies at: groupAndName put: chosen ]
-			ifNil: [ remaining at: groupAndName put: descriptors ] ].
+			(self resolveConflictBetween: descriptors)
+				ifNotNil: [ :chosen | dependencies at: groupAndName put: chosen ]
+				ifNil: [ remaining at: groupAndName put: descriptors ] ].
 
-	remaining ifNotEmpty: [
-		self resolveRemainingConflicts: remaining on: dependencies ]
+	remaining ifNotEmpty: [ self resolveRemainingConflicts: remaining on: dependencies ]
 ]
 
 { #category : 'configuring' }

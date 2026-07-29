@@ -33,8 +33,7 @@ Class {
 { #category : 'instance creation' }
 NexusProject class >> fromNexusDirectory: directory [
 
-	^ (self fromProperties: directory / 'properties.json') directory:
-		  (directory relativeTo: FileLocator home) pathString
+	^ (self fromProperties: directory / 'properties.json') directory: (directory relativeTo: FileLocator home) pathString
 ]
 
 { #category : 'instance creation' }
@@ -43,8 +42,7 @@ NexusProject class >> fromProperties: file [
 
 	| properties |
 	properties := file readStreamDo: [ :s | STON fromStream: s ].
-	^ ((properties at: #nature) asClassInEnvironment:
-		   self class environment) new readProperties: properties
+	^ ((properties at: #nature) asClassInEnvironment: self class environment) new readProperties: properties
 ]
 
 { #category : 'testing' }
@@ -59,12 +57,10 @@ NexusProject >> addModel: modelDescription [
 
 	| modelName models |
 	modelName := modelDescription at: 'name'.
-	models := self models reject: [ :desc |
-		          (desc at: 'name') = modelName ].
+	models := self models reject: [ :desc | (desc at: 'name') = modelName ].
 	models := models copyWith: modelDescription.
 
-	FileLocator home / directory / 'models.json' writeStreamDo: [ :s |
-		STON put: models asJsonOnStream: s ]
+	FileLocator home / directory / 'models.json' writeStreamDo: [ :s | STON put: models asJsonOnStream: s ]
 ]
 
 { #category : 'building' }
@@ -104,23 +100,19 @@ NexusProject >> dependencies: aDictionary [
 { #category : 'querying' }
 NexusProject >> determineGroup [
 
-	Error signal: 'Instance of ' , self className
-		, ' ignores how to determine the group'
+	Error signal: 'Instance of ' , self className , ' ignores how to determine the group'
 ]
 
 { #category : 'querying' }
 NexusProject >> determineName [
 
-	Error signal:
-		'Instance of ' , self className
-		, ' ignores how to determine the name'
+	Error signal: 'Instance of ' , self className , ' ignores how to determine the name'
 ]
 
 { #category : 'querying' }
 NexusProject >> determineVersion [
 
-	Error signal: 'Instance of ' , self className
-		, ' ignores how to determine the version'
+	Error signal: 'Instance of ' , self className , ' ignores how to determine the version'
 ]
 
 { #category : 'accessing' }
@@ -151,9 +143,7 @@ NexusProject >> group: aString [
 NexusProject >> importModel [
 	"There can be multiple models with different settings for the same project."
 
-	self models
-		ifEmpty: [ self inform: 'No models to import' ]
-		ifNotEmpty: [ :models |
+	self models ifEmpty: [ self inform: 'No models to import' ] ifNotEmpty: [ :models |
 			models size = 1 ifTrue: [ ^ self importModel: models first ].
 
 			"Open a presenter to choose a model to import."
@@ -169,13 +159,11 @@ NexusProject >> importModel: modelDescription [
 
 	FamixJSONFileImporter new
 		model: model;
-		inputFile: FileLocator home / directory / 'models'
-			/ (modelDescription at: 'name') , (modelDescription at: 'format');
+		inputFile: FileLocator home / directory / 'models' / (modelDescription at: 'name') , (modelDescription at: 'format');
 		runFilteredBy: FamixJavaImportingContext new importMaximum.
 
 	model install. "add to MooseModel root"
-	model rootFolder:
-		(FileLocator home / directory / 'sources') absolutePath pathString.
+	model rootFolder: (FileLocator home / directory / 'sources') absolutePath pathString.
 	^ model
 ]
 
@@ -212,8 +200,7 @@ NexusProject >> modelBuilder [
 { #category : 'enumerating' }
 NexusProject >> models [
 
-	^ FileLocator home / directory / 'models.json' readStreamDo: [ :s |
-		  STON fromStream: s ]
+	^ FileLocator home / directory / 'models.json' readStreamDo: [ :s | STON fromStream: s ]
 ]
 
 { #category : 'accessing' }
@@ -233,17 +220,11 @@ NexusProject >> printOn: stream [
 
 	super printOn: stream.
 	stream nextPut: $(.
-	group
-		ifNil: [ stream nextPutAll: '<group>' ]
-		ifNotNil: [ stream nextPutAll: group ].
+	group ifNil: [ stream nextPutAll: '<group>' ] ifNotNil: [ stream nextPutAll: group ].
 	stream nextPut: $:.
-	name
-		ifNil: [ stream nextPutAll: '<project>' ]
-		ifNotNil: [ stream nextPutAll: name ].
+	name ifNil: [ stream nextPutAll: '<project>' ] ifNotNil: [ stream nextPutAll: name ].
 	stream nextPut: $:.
-	version
-		ifNil: [ stream nextPutAll: '<version>' ]
-		ifNotNil: [ stream nextPutAll: version ].
+	version ifNil: [ stream nextPutAll: '<version>' ] ifNotNil: [ stream nextPutAll: version ].
 	stream nextPut: $)
 ]
 
@@ -270,9 +251,7 @@ NexusProject >> properties [
 { #category : 'properties' }
 NexusProject >> readProperties: properties [
 
-	properties keysAndValuesDo: [ :key :value |
-		key = #nature ifFalse: [
-			self perform: key asSymbol asMutator with: value ] ]
+	properties keysAndValuesDo: [ :key :value | key = #nature ifFalse: [ self perform: key asSymbol asMutator with: value ] ]
 ]
 
 { #category : 'enumerating' }

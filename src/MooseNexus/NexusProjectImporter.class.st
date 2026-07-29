@@ -28,10 +28,8 @@ NexusProjectImporter class >> fromDirectory: directory [
 	Returns an instance of the appropriate class for importing the project."
 
 	self allSubclassesDo: [ :subclass |
-		(subclass isAbstract not and: [ subclass canHandle: directory ])
-			ifTrue: [ ^ subclass new directory: directory ] ].
-	Error signal:
-		'Cannot figure out nature of project in directory: ' , directory
+		(subclass isAbstract not and: [ subclass canHandle: directory ]) ifTrue: [ ^ subclass new directory: directory ] ].
+	Error signal: 'Cannot figure out nature of project in directory: ' , directory
 ]
 
 { #category : 'instance creation' }
