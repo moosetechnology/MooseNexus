@@ -103,11 +103,13 @@ MooseNexusManagedProject >> determineVersion [
 	| theVersion |
 	(projects isNotEmpty and: [ projects anyOne isNotEmpty ]) ifFalse: [
 		Error signal: 'Cannot determine version because there are no managed projects' ].
-	"verify all managed projects declare the same version"
-	theVersion := projects anyOne anyOne at: #version.
+	"verify all managed projects declare same version"
+	theVersion := self validateProjectVersion: (projects anyOne anyOne at: #version ifAbsent: [ nil ]).
 	projects do: [ :projectGroup |
 			projectGroup do: [ :descriptor |
-					(descriptor at: #version) = theVersion ifFalse: [
+					| descriptorVersion |
+					descriptorVersion := self validateProjectVersion: (descriptor at: #version ifAbsent: [ nil ]).
+					descriptorVersion = theVersion ifFalse: [
 						Error signal: 'Can only determine version if all managed projects declare the same one' ] ] ].
 	^ theVersion
 ]
@@ -174,4 +176,12 @@ MooseNexusManagedProject >> properties [
 	^ super properties
 		  add: #projects -> self projects;
 		  yourself
+]
+
+{ #category : 'validating' }
+MooseNexusManagedProject >> validateProjectVersion: aString [
+
+	(aString isNil or: [ aString isEmpty ]) ifTrue: [
+		Error signal: 'Cannot determine version because a managed project does not declare one' ].
+	^ aString
 ]
