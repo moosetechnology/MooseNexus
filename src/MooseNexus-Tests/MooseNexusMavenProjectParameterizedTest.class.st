@@ -3,6 +3,7 @@ Class {
 	#superclass : 'ParametrizedTestCase',
 	#instVars : [
 		'project',
+		'importer',
 		'group',
 		'name',
 		'version',
@@ -140,12 +141,13 @@ MooseNexusMavenProjectParameterizedTest class >> case2 [
 MooseNexusMavenProjectParameterizedTest class >> initializeCase: aCase withMavenOutput: mavenOutput andDirectories: directories [
 	"Some case data is computed here instead of being hard-coded, such as paths."
 
-	| projectName dependencies projects root repositoryPath importer project |
+	| projectName dependencies projects root repositoryPath importer project projectDirectory |
 	projectName := aCase at: #name.
 	dependencies := aCase at: #dependencies.
 	projects := aCase at: #projects.
 
 	root := 'pharo-local/nexus/tests' asFileReference.
+	projectDirectory := (root / projectName) pathString.
 
 	"initialize mock Maven repository"
 	repositoryPath := (root / 'mavenRepository') ensureCreateDirectory absolutePath pathString.
@@ -179,14 +181,15 @@ MooseNexusMavenProjectParameterizedTest class >> initializeCase: aCase withMaven
 
 	"initialize the MooseNexusProject and its importer"
 	project := aCase at: #project put: MooseNexusMavenProject new.
-	project directory: (root / projectName) pathString.
 
-	importer := MooseNexusMavenProjectImporter new.
+	importer := aCase at: #importer put: MooseNexusMavenProjectImporter new.
 	importer project: project.
-	importer directory: project directory.
+	importer directory: projectDirectory.
 	importer localRepositories: { (MooseNexusMavenRepository new directory: (root / 'mavenRepository') pathString) }.
 
 	importer parse: mavenOutput.
+	project initializeCoordinates: importer determineCoordinates.
+	project directory: projectDirectory.
 	project dependencies: importer flatDependencies.
 
 	^ aCase associations
@@ -211,6 +214,12 @@ MooseNexusMavenProjectParameterizedTest >> dependencies: aCollection [
 MooseNexusMavenProjectParameterizedTest >> group: aString [
 
 	group := aString
+]
+
+{ #category : 'accessing' }
+MooseNexusMavenProjectParameterizedTest >> importer: aMooseNexusMavenProjectImporter [
+
+	importer := aMooseNexusMavenProjectImporter
 ]
 
 { #category : 'accessing' }
@@ -240,7 +249,7 @@ MooseNexusMavenProjectParameterizedTest >> projects: aCollection [
 { #category : 'tests' }
 MooseNexusMavenProjectParameterizedTest >> testDetermineGroup [
 
-	self assert: project determineGroup equals: group
+	self assert: importer determineGroup equals: group
 ]
 
 { #category : 'tests' }
@@ -252,13 +261,13 @@ MooseNexusMavenProjectParameterizedTest >> testDetermineLanguage [
 { #category : 'tests' }
 MooseNexusMavenProjectParameterizedTest >> testDetermineName [
 
-	self assert: project determineName equals: name
+	self assert: importer determineName equals: name
 ]
 
 { #category : 'tests' }
 MooseNexusMavenProjectParameterizedTest >> testDetermineVersion [
 
-	self assert: project determineVersion equals: version
+	self assert: importer determineVersion equals: version
 ]
 
 { #category : 'tests' }

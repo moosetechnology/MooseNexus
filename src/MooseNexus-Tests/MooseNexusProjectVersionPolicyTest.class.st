@@ -6,45 +6,49 @@ Class {
 }
 
 { #category : 'helpers' }
-MooseNexusProjectVersionPolicyTest >> projectWithVersion: version [
+MooseNexusProjectVersionPolicyTest >> importerWithProjectVersion: version [
 
-	| project |
+	| importer project |
 	project := MooseNexusMavenProject new.
 	project projects: (Dictionary with: 'com.example' -> (Dictionary with: 'demo' -> (Dictionary with: #version -> version))).
-	^ project
+	importer := MooseNexusMavenProjectImporter new.
+	importer project: project.
+	^ importer
 ]
 
 { #category : 'helpers' }
-MooseNexusProjectVersionPolicyTest >> projectWithoutVersion [
+MooseNexusProjectVersionPolicyTest >> importerWithProjectWithoutVersion [
 
-	| project |
+	| importer project |
 	project := MooseNexusMavenProject new.
 	project projects: (Dictionary with: 'com.example' -> (Dictionary with: 'demo' -> Dictionary new)).
-	^ project
+	importer := MooseNexusMavenProjectImporter new.
+	importer project: project.
+	^ importer
 ]
 
 { #category : 'tests' }
 MooseNexusProjectVersionPolicyTest >> testDetermineVersionAnswersDeclaredVersion [
 
-	self assert: (self projectWithVersion: '1.0.0') determineVersion equals: '1.0.0'
+	self assert: (self importerWithProjectVersion: '1.0.0') determineVersion equals: '1.0.0'
 ]
 
 { #category : 'tests' }
 MooseNexusProjectVersionPolicyTest >> testDetermineVersionAnswersLiteralUnspecifiedVersion [
 
-	self assert: (self projectWithVersion: 'unspecified') determineVersion equals: 'unspecified'
+	self assert: (self importerWithProjectVersion: 'unspecified') determineVersion equals: 'unspecified'
 ]
 
 { #category : 'tests' }
 MooseNexusProjectVersionPolicyTest >> testDetermineVersionFailsWhenVersionIsEmpty [
 
-	self should: [ (self projectWithVersion: '') determineVersion ] raise: Error
+	self should: [ (self importerWithProjectVersion: '') determineVersion ] raise: Error
 ]
 
 { #category : 'tests' }
 MooseNexusProjectVersionPolicyTest >> testDetermineVersionFailsWhenVersionIsMissing [
 
-	self should: [ self projectWithoutVersion determineVersion ] raise: Error
+	self should: [ self importerWithProjectWithoutVersion determineVersion ] raise: Error
 ]
 
 { #category : 'tests' }

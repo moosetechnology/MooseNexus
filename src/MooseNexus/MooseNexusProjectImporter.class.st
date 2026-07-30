@@ -69,6 +69,12 @@ MooseNexusProjectImporter >> import [
 	self subclassResponsibility
 ]
 
+{ #category : 'importing' }
+MooseNexusProjectImporter >> importWithCoordinates: aMooseNexusProjectCoordinates [
+
+	self subclassResponsibility
+]
+
 { #category : 'instance creation' }
 MooseNexusProjectImporter >> newProject [
 

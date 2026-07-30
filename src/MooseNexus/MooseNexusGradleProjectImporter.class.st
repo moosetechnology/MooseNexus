@@ -208,9 +208,11 @@ MooseNexusGradleProjectImporter >> read [
 { #category : 'validating' }
 MooseNexusGradleProjectImporter >> validateProjectVersion: version [
 
-	version = 'unspecified' ifTrue: [
+	| validatedVersion |
+	validatedVersion := super validateProjectVersion: version.
+	validatedVersion = 'unspecified' ifTrue: [
 		Error signal: 'Cannot infer MooseNexus project version from Gradle unspecified project version' ].
-	^ version
+	^ validatedVersion
 ]
 
 { #category : 'accessing' }

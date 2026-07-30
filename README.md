@@ -33,24 +33,20 @@ Dependency management support for unmanaged source projects is planned.
 Import a new project into the Nexus repository:
 
 ```st
-project := MooseNexusRepository default
-	import: 'projectName'
-	fromDirectory: 'path/to/sources'.
-```
-
-This will attempt to find project properties automatically: group, version, and language.
-If more control over coordinates is required, provide them before the project is added to the repository:
-
-```st
 sourcePath := 'path/to/sources'.
 coordinates := MooseNexusProjectCoordinates
 	group: 'group'
 	name: 'name'
 	version: 'version'.
+spec := MooseNexusProjectSpec
+	coordinates: coordinates
+	sourceDirectory: sourcePath.
 project := MooseNexusRepository default
-	importCoordinates: coordinates
-	fromDirectory: sourcePath.
+	record: spec.
 ```
+
+The project spec describes the source directory and coordinates before repository recording starts.
+The recorded MooseNexus project then represents the loaded project stored in the repository.
 
 Retrieve an existing project from a Nexus repository:
 
@@ -75,6 +71,7 @@ project importModel.
 MooseNexus sits one meta layer above source code: it does not build the software itself, it builds Moose models of that software. To avoid ambiguity, these terms are used consistently in code and documentation:
 - **Source project**: The software project being analyzed. This is the codebase that may already be built by Maven, Gradle, or another build tool.
 - **MooseNexus project**: The MooseNexus representation of a source project as a model-building unit. It records the source project identity, nature, dependencies, and produced models.
+- **Project spec**: The recording intent for a MooseNexus project before it exists in a repository. It contains the selected project coordinates and source directory.
 - **Project coordinates**: The stable identity of a MooseNexus project, composed of group, name, and version. These coordinates identify the source project as modeled by MooseNexus, not necessarily a published software package.
 - **Repository**: A MooseNexus storage location for MooseNexus projects and produced model artifacts. The current implementation is a local filesystem repository.
 - **Model**: A Moose/Famix representation of a source project, or of a selected set of source projects and dependencies.

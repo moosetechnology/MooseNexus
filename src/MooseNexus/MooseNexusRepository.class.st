@@ -1,32 +1,12 @@
 "
-I am a repository for `MooseNexusProject`s.
-I have a configurable home directory where the projects are stored.
-The default instance uses the `~/.moose` directory.
+I am a repository for MooseNexusProject instances.
+I have a configurable home directory where recorded projects are stored. The default instance uses the ~/.moose directory.
 
 My goal is to manage projects to be analyzed with Moose in a reusable, structured, and versioned manner.
 
-### API
-To manage a new project, use one of the following methods:
+A MooseNexusProjectSpec describes the intent to create or record a project. A MooseNexusProject represents a project loaded from a source project or from this repository.
 
-#### `MooseNexusRepository >> #import:fromDirectory:`
-The first parameter expects a name that will be given to the project.
-The second parameter expects the path string to a local directory containing the sources of the project to analyze.
-
-#### `MooseNexusRepository >> #importFromDirectory:`
-Expects the path string to the sources, and Nexus will try to figure out the project name.
-It can only be found if it is a managed project (see `MooseNexusManagedProject`) that declares a single artifact.
-
-#### `MooseNexusRepository >> #recordProject:fromDirectory:`
-Expects an existing `MooseNexusProject` and a path string to a local directory containing the project sources.
-This is useful if you want to have finer control over the project analysis, such as specifying the group or version, or if you want to copy a project from another `MooseNexusRepository`.
-The name, group and version must be specified before the project is added to the repository:
-```
-project := MooseNexusProjectImporter importFromDirectory: pathString.
-project name: name.
-project group: group.
-project version: version.
-MooseNexusRepository default recordProject: project fromDirectory: pathString.
-```
+Use record: to import and record a project from a spec. Use recordLoadedProject:describedBy: only at the boundary where a project has already been loaded in memory and must be recorded with the coordinates and source directory from a spec.
 "
 Class {
 	#name : 'MooseNexusRepository',
@@ -72,51 +52,12 @@ MooseNexusRepository >> group: group project: project version: version [
 	^ MooseNexusProject fromNexusDirectory: dir
 ]
 
-{ #category : 'importing' }
-MooseNexusRepository >> import: name fromDirectory: pathString [
-	"Import the project within the given directory and name it."
-
-	| project |
-	project := MooseNexusProjectImporter importFromDirectory: pathString.
-	project name: name.
-	self recordProject: project fromDirectory: pathString.
-	^ project
-]
-
-{ #category : 'importing' }
-MooseNexusRepository >> importCoordinates: coordinates fromDirectory: pathString [
-	"Import the project within the given directory and record it with explicit coordinates."
-
-	| project |
-	project := MooseNexusProjectImporter importFromDirectory: pathString.
-	^ self recordProject: project coordinates: coordinates fromDirectory: pathString
-]
-
-{ #category : 'importing' }
-MooseNexusRepository >> importFromDirectory: pathString [
-	"Import the project within the given directory and try to determine its name.
-	It is recommended that you specify the project name using `import:fromDirectory:`,
-	unless you are sure that there is only one managed project in the directory."
-
-	| project |
-	project := MooseNexusProjectImporter importFromDirectory: pathString.
-	self recordProject: project fromDirectory: pathString.
-	^ project
-]
-
-{ #category : 'importing' }
-MooseNexusRepository >> importGroup: group name: name version: version fromDirectory: pathString [
-	"Import the project within the given directory and record it with explicit coordinates."
-
-	^ self importCoordinates: (MooseNexusProjectCoordinates group: group name: name version: version) fromDirectory: pathString
-]
-
 { #category : 'adding' }
-MooseNexusRepository >> prepareDirectoryOf: project [
+MooseNexusRepository >> prepareDirectoryFor: aMooseNexusProjectSpec [
 	"Create the repository layout needed before copying sources or writing metadata."
 
 	| projectDirectory |
-	projectDirectory := self resolveDirectoryOf: project.
+	projectDirectory := self resolveDirectoryFor: aMooseNexusProjectSpec.
 	projectDirectory ifExists: [
 			Warning signal: 'This project already exists in given repository, proceed to overwrite it'.
 			projectDirectory deleteAll ].
@@ -172,23 +113,24 @@ MooseNexusRepository >> projects [
 ]
 
 { #category : 'adding' }
-MooseNexusRepository >> recordProject: project coordinates: coordinates fromDirectory: pathString [
-	"Set project coordinates before recording it in the repository."
+MooseNexusRepository >> record: aMooseNexusProjectSpec [
+	"Import and record a source project described by a spec."
 
-	project coordinates: coordinates.
-	^ self recordProject: project fromDirectory: pathString
+	^ self recordLoadedProject: aMooseNexusProjectSpec importProject describedBy: aMooseNexusProjectSpec
 ]
 
 { #category : 'adding' }
-MooseNexusRepository >> recordProject: project fromDirectory: pathString [
-	"Add project to the repository, copying sources from the given directory."
+MooseNexusRepository >> recordLoadedProject: project describedBy: aMooseNexusProjectSpec [
+	"Add an already loaded project to the repository using the spec that describes recording intent."
 
 	| projectDirectory |
-	projectDirectory := self prepareDirectoryOf: project.
+	aMooseNexusProjectSpec validateForRecording.
+	project initializeCoordinates: aMooseNexusProjectSpec coordinates.
+	projectDirectory := self prepareDirectoryFor: aMooseNexusProjectSpec.
 	project directory: (projectDirectory relativeTo: FileLocator home) pathString.
 
 	"copy project directory to repository"
-	pathString asFileReference copyAllTo: projectDirectory / 'sources' / 'project'.
+	aMooseNexusProjectSpec sourceDirectory copyAllTo: projectDirectory / 'sources' / 'project'.
 
 	"write properties file useful for Nexus"
 	(projectDirectory / 'properties.json') ensureCreateFile writeStreamDo: [ :stream | project writePropertiesOn: stream ].
@@ -199,18 +141,8 @@ MooseNexusRepository >> recordProject: project fromDirectory: pathString [
 	^ project
 ]
 
-{ #category : 'adding' }
-MooseNexusRepository >> recordProject: project group: group name: name version: version fromDirectory: pathString [
-	"Set project coordinates before recording it in the repository."
-
-	^ self
-		  recordProject: project
-		  coordinates: (MooseNexusProjectCoordinates group: group name: name version: version)
-		  fromDirectory: pathString
-]
-
 { #category : 'enumerating' }
-MooseNexusRepository >> resolveDirectoryOf: project [
+MooseNexusRepository >> resolveDirectoryFor: aMooseNexusProjectSpec [
 
-	^ directory / 'repository' / project group / project name / project version
+	^ directory / 'repository' / aMooseNexusProjectSpec group / aMooseNexusProjectSpec name / aMooseNexusProjectSpec version
 ]
