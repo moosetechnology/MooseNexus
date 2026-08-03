@@ -1,30 +1,9 @@
 Class {
 	#name : 'MooseNexusVersionLockingDependencyConflictResolverTest',
-	#superclass : 'TestCase',
-	#instVars : [
-		'resolver'
-	],
+	#superclass : 'MooseNexusDependencyConflictResolverTest',
 	#category : 'MooseNexus-Tests',
 	#package : 'MooseNexus-Tests'
 }
-
-{ #category : 'helpers' }
-MooseNexusVersionLockingDependencyConflictResolverTest >> descriptorVersion: version [
-
-	^ MooseNexusDependencyDescriptor
-		  group: 'test'
-		  name: 'dependency'
-		  version: version
-		  type: 'jar'
-		  scopes: #( 'compile' )
-		  path: 'repository/dependency-' , version , '.jar'
-]
-
-{ #category : 'helpers' }
-MooseNexusVersionLockingDependencyConflictResolverTest >> descriptorsWithVersions: versions [
-
-	^ versions collect: [ :version | self descriptorVersion: version ] as: OrderedCollection
-]
 
 { #category : 'running' }
 MooseNexusVersionLockingDependencyConflictResolverTest >> setUp [
