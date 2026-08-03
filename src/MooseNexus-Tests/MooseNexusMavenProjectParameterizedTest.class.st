@@ -142,7 +142,7 @@ MooseNexusMavenProjectParameterizedTest class >> case2 [
 MooseNexusMavenProjectParameterizedTest class >> initializeCase: aCase withMavenOutput: mavenOutput andDirectories: directories [
 	"Some case data is computed here instead of being hard-coded, such as paths."
 
-	| projectName dependencies projects root repositoryPath importer project projectDirectory |
+	| projectName dependencies projects root repositoryPath importer project projectDirectory dependencyResolutionResult |
 	projectName := aCase at: #name.
 	dependencies := aCase at: #dependencies.
 	projects := aCase at: #projects.
@@ -191,7 +191,8 @@ MooseNexusMavenProjectParameterizedTest class >> initializeCase: aCase withMaven
 	importer parse: mavenOutput.
 	project initializeCoordinates: importer determineCoordinates.
 	project directory: projectDirectory.
-	project dependencies: importer flatDependencies.
+	dependencyResolutionResult := importer resolveDependencies.
+	project dependencies: dependencyResolutionResult dependencies.
 
 	^ aCase associations
 ]

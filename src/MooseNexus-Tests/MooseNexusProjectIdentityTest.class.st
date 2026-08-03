@@ -29,6 +29,88 @@ MooseNexusProjectIdentityTest >> tearDown [
 ]
 
 { #category : 'tests' }
+MooseNexusProjectIdentityTest >> testBuildPlanRecordsProjectAndCapturesDependencyResolution [
+
+	| project buildSpec plan dependencyResult |
+	project := MooseNexusTestProject new.
+	buildSpec := MooseNexusBuildSpec
+		             coordinates: (MooseNexusCoordinates group: 'com.example' name: 'demo' version: '1.0.0')
+		             sourceDirectory: sourceDirectory.
+	plan := buildSpec planIn: repository.
+
+	plan recordProject: project.
+	dependencyResult := plan resolveDependencies.
+
+	self assert: plan project identicalTo: project.
+	self assert: project isRecorded.
+	self assert: dependencyResult project identicalTo: project.
+	self assert: dependencyResult dependencies equals: project dependencies.
+	self assert: dependencyResult warnings isEmpty.
+	self assert: dependencyResult decisions isEmpty
+]
+
+{ #category : 'tests' }
+MooseNexusProjectIdentityTest >> testBuildSpecCanBeCreatedFromCoordinatesAndSourceDirectory [
+
+	| coordinates buildSpec |
+	coordinates := MooseNexusCoordinates group: 'com.example' name: 'demo' version: '1.0.0'.
+	buildSpec := MooseNexusBuildSpec coordinates: coordinates sourceDirectory: sourceDirectory.
+
+	self assert: buildSpec coordinates equals: coordinates.
+	self assert: buildSpec sourceDirectory pathString equals: sourceDirectory pathString
+]
+
+{ #category : 'tests' }
+MooseNexusProjectIdentityTest >> testBuildSpecComposesProjectSpec [
+
+	| coordinates projectSpec buildSpec |
+	coordinates := MooseNexusCoordinates group: 'com.example' name: 'demo' version: '1.0.0'.
+	projectSpec := MooseNexusProjectSpec coordinates: coordinates sourceDirectory: sourceDirectory.
+	buildSpec := MooseNexusBuildSpec projectSpec: projectSpec.
+
+	self assert: buildSpec projectSpec equals: projectSpec.
+	self assert: buildSpec coordinates equals: coordinates.
+	self assert: buildSpec group equals: 'com.example'.
+	self assert: buildSpec name equals: 'demo'.
+	self assert: buildSpec version equals: '1.0.0'.
+	self assert: buildSpec sourceDirectory pathString equals: sourceDirectory pathString
+]
+
+{ #category : 'tests' }
+MooseNexusProjectIdentityTest >> testBuildSpecConfiguresManagedImporter [
+
+	| buildSpec importer localRepositories resolver |
+	localRepositories := { (MooseNexusMavenRepository new directory: 'custom-maven-repository') }.
+	resolver := MooseNexusFirstFoundDependencyConflictResolver new.
+	buildSpec := MooseNexusBuildSpec
+		             coordinates: (MooseNexusCoordinates group: 'com.example' name: 'demo' version: '1.0.0')
+		             sourceDirectory: sourceDirectory.
+	buildSpec
+		localRepositories: localRepositories;
+		dependencyConflictResolver: resolver.
+	importer := MooseNexusMavenProjectImporter new.
+
+	buildSpec configureImporter: importer.
+
+	self assert: importer localRepositories equals: localRepositories.
+	self assert: importer dependencyConflictResolver identicalTo: resolver
+]
+
+{ #category : 'tests' }
+MooseNexusProjectIdentityTest >> testBuildSpecCreatesBuildPlan [
+
+	| buildSpec plan |
+	buildSpec := MooseNexusBuildSpec
+		             coordinates: (MooseNexusCoordinates group: 'com.example' name: 'demo' version: '1.0.0')
+		             sourceDirectory: sourceDirectory.
+
+	plan := buildSpec planIn: repository.
+
+	self assert: plan buildSpec identicalTo: buildSpec.
+	self assert: plan repository identicalTo: repository
+]
+
+{ #category : 'tests' }
 MooseNexusProjectIdentityTest >> testCoordinatesAreInitializedOnce [
 
 	| project coordinates |
@@ -55,6 +137,43 @@ MooseNexusProjectIdentityTest >> testCoordinatesAreValueObjects [
 	self assert: coordinates equals: sameCoordinates.
 	self deny: coordinates equals: otherCoordinates.
 	self assert: coordinates printString equals: 'com.example:demo:1.0.0'
+]
+
+{ #category : 'tests' }
+MooseNexusProjectIdentityTest >> testManagedImporterCapturesDependencyConflictDecisions [
+
+	| project importer dependencies projectDescriptor otherProjectDescriptor result decision |
+	dependencies := Dictionary with: 'org.example' -> { (MooseNexusDependencyDescriptor
+			                 coordinates: (MooseNexusCoordinates group: nil name: 'dep' version: '1.0.0')
+			                 type: 'jar'
+			                 scopes: #( 'compile' )
+			                 path: 'repository/dep-1.0.0.jar') }.
+	projectDescriptor := MooseNexusManagedProjectDescriptor version: '1.0.0' path: '.' dependencies: dependencies.
+	otherProjectDescriptor := MooseNexusManagedProjectDescriptor
+		                          version: '1.0.0'
+		                          path: 'other'
+		                          dependencies: (Dictionary with: 'org.example' -> { (MooseNexusDependencyDescriptor
+					                            coordinates: (MooseNexusCoordinates group: nil name: 'dep' version: '2.0.0')
+					                            type: 'jar'
+					                            scopes: #( 'runtime' )
+					                            path: 'repository/dep-2.0.0.jar') }).
+	project := MooseNexusMavenProject coordinates: (MooseNexusCoordinates group: 'com.example' name: 'demo' version: '1.0.0').
+	project projects:
+		(Dictionary with: 'com.example' -> (Dictionary with: 'demo' -> projectDescriptor with: 'other' -> otherProjectDescriptor)).
+	importer := MooseNexusMavenProjectImporter new.
+	importer project: project.
+
+	result := importer resolveDependencies.
+	decision := result decisions first.
+
+	self assert: result project identicalTo: project.
+	self assert: result dependencies size equals: 1.
+	self assert: result dependencies first version equals: '1.0.0'.
+	self assert: result warnings isEmpty.
+	self assert: result decisions size equals: 1.
+	self assert: decision conflictId equals: 'org.example:dep'.
+	self assert: decision candidates size equals: 2.
+	self assert: decision selectedDependency equals: result dependencies first
 ]
 
 { #category : 'tests' }
@@ -271,4 +390,16 @@ MooseNexusProjectIdentityTest >> testRepositoryRecordFromSpecSetsIdentityBeforeR
 	self assert: project coordinates equals: coordinates.
 	self assert: project isRecorded.
 	self assert: (repository directory / 'repository' / 'com.example' / 'demo' / '1.0.0' / 'properties.json') exists
+]
+
+{ #category : 'tests' }
+MooseNexusProjectIdentityTest >> testRepositoryRejectsLoadedProjectWithDifferentCoordinatesThanBuildSpec [
+
+	| project buildSpec |
+	project := MooseNexusTestProject coordinates: (MooseNexusCoordinates group: 'com.example' name: 'demo' version: '2.0.0').
+	buildSpec := MooseNexusBuildSpec
+		             coordinates: (MooseNexusCoordinates group: 'com.example' name: 'demo' version: '1.0.0')
+		             sourceDirectory: sourceDirectory.
+
+	self should: [ repository recordLoadedProject: project describedBy: buildSpec ] raise: Error
 ]

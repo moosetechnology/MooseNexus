@@ -4,9 +4,9 @@ I have a configurable home directory where recorded projects are stored. The def
 
 My goal is to manage projects to be analyzed with Moose in a reusable, structured, and versioned manner.
 
-A MooseNexusProjectSpec describes the intent to create or record a project. A MooseNexusProject represents a project loaded from a source project or from this repository.
+A MooseNexusBuildSpec describes the client-side intent to import, build, and record. A MooseNexusBuildPlan executes that intent against me. A MooseNexusProjectSpec is the narrower source-project recording intent used inside a build spec. A MooseNexusProject represents a project loaded from a source project or from this repository.
 
-Use record: to import and record a project from a spec. Use recordLoadedProject:describedBy: only at the boundary where a project has already been loaded in memory and must be recorded with the coordinates and source directory from a spec.
+Use MooseNexusBuildSpec for full client builds. Use recordLoadedProject:describedBy: only at the boundary where a project has already been loaded in memory and must be recorded with the coordinates and source directory from a spec.
 "
 Class {
 	#name : 'MooseNexusRepository',
@@ -113,19 +113,14 @@ MooseNexusRepository >> projects [
 ]
 
 { #category : 'adding' }
-MooseNexusRepository >> record: aMooseNexusProjectSpec [
-	"Import and record a source project described by a spec."
-
-	^ self recordLoadedProject: aMooseNexusProjectSpec importProject describedBy: aMooseNexusProjectSpec
-]
-
-{ #category : 'adding' }
 MooseNexusRepository >> recordLoadedProject: project describedBy: aMooseNexusProjectSpec [
 	"Add an already loaded project to the repository using the spec that describes recording intent."
 
 	| projectDirectory |
 	aMooseNexusProjectSpec validateForRecording.
-	project initializeCoordinates: aMooseNexusProjectSpec coordinates.
+	project coordinates ifNil: [ project initializeCoordinates: aMooseNexusProjectSpec coordinates ] ifNotNil: [ :coordinates |
+			coordinates = aMooseNexusProjectSpec coordinates ifFalse: [
+				Error signal: 'Cannot record a MooseNexus project with coordinates different from its spec' ] ].
 	projectDirectory := self prepareDirectoryFor: aMooseNexusProjectSpec.
 	project directory: (projectDirectory relativeTo: FileLocator home) pathString.
 

@@ -1,6 +1,7 @@
 "
-I am responsible for importing a project to analyze with Moose from a local directory.
-A new `MooseNexusProject` is created unless an existing one is given to update.
+I import a source project from a local directory.
+
+A new MooseNexusProject is created unless an existing one is given to update. MooseNexusBuildSpec creates and configures importers through MooseNexusBuildPlan.
 "
 Class {
 	#name : 'MooseNexusProjectImporter',
@@ -32,17 +33,23 @@ MooseNexusProjectImporter class >> fromDirectory: directory [
 	Error signal: 'Cannot figure out nature of project in directory: ' , directory
 ]
 
-{ #category : 'instance creation' }
-MooseNexusProjectImporter class >> importFromDirectory: directory [
-	"Expects the path string of a directory containing the sources of a project, imports it and returns it."
-
-	^ (self fromDirectory: directory) import
-]
-
 { #category : 'testing' }
 MooseNexusProjectImporter class >> isAbstract [
 
 	^ self == MooseNexusProjectImporter
+]
+
+{ #category : 'configuring' }
+MooseNexusProjectImporter >> configureFromBuildSpec: aMooseNexusBuildSpec [
+	"Default importers do not need build-spec configuration."
+
+	
+]
+
+{ #category : 'querying' }
+MooseNexusProjectImporter >> dependencyResolutionResult [
+
+	^ MooseNexusDependencyResolutionResult forProject: project
 ]
 
 { #category : 'accessing' }
@@ -55,12 +62,6 @@ MooseNexusProjectImporter >> directory [
 MooseNexusProjectImporter >> directory: fileReference [
 
 	directory := fileReference asFileReference
-]
-
-{ #category : 'querying' }
-MooseNexusProjectImporter >> flatDependencies [
-
-	^ #(  )
 ]
 
 { #category : 'importing' }

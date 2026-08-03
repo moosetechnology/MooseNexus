@@ -7,7 +7,8 @@ Class {
 	#superclass : 'MooseNexusProjectImporter',
 	#instVars : [
 		'localRepositories',
-		'dependencyConflictResolver'
+		'dependencyConflictResolver',
+		'dependencyResolutionResult'
 	],
 	#category : 'MooseNexus-Importer',
 	#package : 'MooseNexus',
@@ -51,6 +52,25 @@ MooseNexusManagedProjectImporter >> analyze [
 	self parse: self read
 ]
 
+{ #category : 'configuring' }
+MooseNexusManagedProjectImporter >> configureFromBuildSpec: aMooseNexusBuildSpec [
+
+	aMooseNexusBuildSpec localRepositories ifNotNil: [ :repositories | self localRepositories: repositories ].
+	aMooseNexusBuildSpec dependencyConflictResolver ifNotNil: [ :resolver | self dependencyConflictResolver: resolver ]
+]
+
+{ #category : 'private' }
+MooseNexusManagedProjectImporter >> dependencyConflictDecisionsFrom: conflicts resolvedOn: dependencies [
+
+	^ conflicts associations
+		  collect: [ :association |
+				  MooseNexusDependencyConflictDecision
+					  conflictId: association key
+					  candidates: association value asArray
+					  selectedDependency: (dependencies at: association key) ]
+		  as: Array
+]
+
 { #category : 'accessing' }
 MooseNexusManagedProjectImporter >> dependencyConflictResolver [
 
@@ -67,6 +87,12 @@ MooseNexusManagedProjectImporter >> dependencyConflictResolver: aMooseNexusDepen
 MooseNexusManagedProjectImporter >> dependencyGroupsFrom: dependenciesByGroup [
 
 	^ dependenciesByGroup collect: [ :descriptorsByArtifact | descriptorsByArtifact values asArray ]
+]
+
+{ #category : 'accessing' }
+MooseNexusManagedProjectImporter >> dependencyResolutionResult [
+
+	^ dependencyResolutionResult
 ]
 
 { #category : 'querying' }
@@ -107,31 +133,10 @@ MooseNexusManagedProjectImporter >> determineVersion [
 	^ theVersion
 ]
 
-{ #category : 'querying' }
-MooseNexusManagedProjectImporter >> flatDependencies [
-	"Resolve all dependencies of this project into a flat list.
-	A conflict can occur if two projects define the same dependency with different versions."
+{ #category : 'private' }
+MooseNexusManagedProjectImporter >> effectiveDependencyConflictResolver [
 
-	| dependencies conflicts |
-	dependencies := Dictionary new.
-	conflicts := Dictionary new.
-
-	project projectDependenciesDo: [ :dependencyGroup :descriptor |
-			| dependency key |
-			dependency := project dependencyDescriptorFrom: descriptor group: dependencyGroup.
-			key := dependency group , ':' , dependency name.
-			conflicts at: key ifPresent: [ :conflictList | conflictList add: dependency ] ifAbsent: [
-					dependencies
-						at: key
-						ifPresent: [ :existing |
-								(existing hasSameArtifactAs: dependency)
-									ifTrue: [ dependencies at: key put: (existing mergedWith: dependency) ]
-									ifFalse: [ conflicts at: key put: (OrderedCollection with: (dependencies removeKey: key) with: dependency) ] ]
-						ifAbsentPut: [ dependency ] ] ].
-
-	conflicts ifNotEmpty: [ self resolveDependencyConflicts: conflicts on: dependencies ].
-
-	^ dependencies asArray
+	^ dependencyConflictResolver ifNil: [ MooseNexusDependencyConflictResolver newDefaultResolver ]
 ]
 
 { #category : 'importing' }
@@ -148,7 +153,8 @@ MooseNexusManagedProjectImporter >> importWithCoordinates: aMooseNexusCoordinate
 	self analyze.
 	projectCoordinates := aMooseNexusCoordinates ifNil: [ self determineCoordinates ].
 	project initializeCoordinates: projectCoordinates.
-	project dependencies: self flatDependencies.
+	dependencyResolutionResult := self resolveDependencies.
+	project dependencies: dependencyResolutionResult dependencies.
 	^ project
 ]
 
@@ -190,12 +196,41 @@ MooseNexusManagedProjectImporter >> resolve: descriptor [
 ]
 
 { #category : 'querying' }
+MooseNexusManagedProjectImporter >> resolveDependencies [
+	"Resolve all dependencies of this project into a flat list.
+	A conflict can occur if two projects define the same dependency with different versions."
+
+	| dependencies conflicts decisions |
+	dependencies := Dictionary new.
+	conflicts := Dictionary new.
+
+	project projectDependenciesDo: [ :dependencyGroup :descriptor |
+			| dependency key |
+			dependency := project dependencyDescriptorFrom: descriptor group: dependencyGroup.
+			key := dependency group , ':' , dependency name.
+			conflicts at: key ifPresent: [ :conflictList | conflictList add: dependency ] ifAbsent: [
+					dependencies
+						at: key
+						ifPresent: [ :existing |
+								(existing hasSameArtifactAs: dependency)
+									ifTrue: [ dependencies at: key put: (existing mergedWith: dependency) ]
+									ifFalse: [ conflicts at: key put: (OrderedCollection with: (dependencies removeKey: key) with: dependency) ] ]
+						ifAbsentPut: [ dependency ] ] ].
+
+	decisions := conflicts ifEmpty: [ #(  ) ] ifNotEmpty: [ self resolveDependencyConflicts: conflicts on: dependencies ].
+	dependencyResolutionResult := MooseNexusDependencyResolutionResult
+		                              project: project
+		                              dependencies: dependencies asArray
+		                              warnings: #(  )
+		                              decisions: decisions.
+	^ dependencyResolutionResult
+]
+
+{ #category : 'querying' }
 MooseNexusManagedProjectImporter >> resolveDependencyConflicts: conflicts on: dependencies [
 
-	dependencyConflictResolver ifNotNil: [ dependencyConflictResolver resolveConflicts: conflicts on: dependencies ] ifNil: [
-			self shouldBeImplemented.
-			"TODO link presenter choices with actual result"
-			(MooseNexusDependencySelectionPresenter on: conflicts) open ]
+	self effectiveDependencyConflictResolver resolveConflicts: conflicts on: dependencies.
+	^ self dependencyConflictDecisionsFrom: conflicts resolvedOn: dependencies
 ]
 
 { #category : 'validating' }
