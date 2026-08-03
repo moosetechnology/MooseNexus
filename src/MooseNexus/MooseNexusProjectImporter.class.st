@@ -70,7 +70,7 @@ MooseNexusProjectImporter >> import [
 ]
 
 { #category : 'importing' }
-MooseNexusProjectImporter >> importWithCoordinates: aMooseNexusProjectCoordinates [
+MooseNexusProjectImporter >> importWithCoordinates: aMooseNexusCoordinates [
 
 	self subclassResponsibility
 ]

@@ -23,9 +23,7 @@ MooseNexusDependencyConflictResolverTest class >> isAbstract [
 MooseNexusDependencyConflictResolverTest >> descriptorVersion: version [
 
 	^ MooseNexusDependencyDescriptor
-		  group: 'test'
-		  name: 'dependency'
-		  version: version
+		  coordinates: (MooseNexusCoordinates group: 'test' name: 'dependency' version: version)
 		  type: 'jar'
 		  scopes: #( 'compile' )
 		  path: 'repository/dependency-' , version , '.jar'

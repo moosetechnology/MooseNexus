@@ -25,8 +25,7 @@ MooseNexusManagedProjectImporter >> addDependency: descriptor to: dependencies g
 
 	| key |
 	key := {
-		       descriptor name.
-		       descriptor version.
+		       descriptor coordinates.
 		       descriptor type.
 		       descriptor path }.
 	dependencies
@@ -73,7 +72,7 @@ MooseNexusManagedProjectImporter >> dependencyGroupsFrom: dependenciesByGroup [
 { #category : 'querying' }
 MooseNexusManagedProjectImporter >> determineCoordinates [
 
-	^ MooseNexusProjectCoordinates group: self determineGroup name: self determineName version: self determineVersion
+	^ MooseNexusCoordinates group: self determineGroup name: self determineName version: self determineVersion
 ]
 
 { #category : 'querying' }
@@ -142,12 +141,12 @@ MooseNexusManagedProjectImporter >> import [
 ]
 
 { #category : 'importing' }
-MooseNexusManagedProjectImporter >> importWithCoordinates: aMooseNexusProjectCoordinates [
+MooseNexusManagedProjectImporter >> importWithCoordinates: aMooseNexusCoordinates [
 
 	| projectCoordinates |
 	project ifNil: [ project := self newProject ].
 	self analyze.
-	projectCoordinates := aMooseNexusProjectCoordinates ifNil: [ self determineCoordinates ].
+	projectCoordinates := aMooseNexusCoordinates ifNil: [ self determineCoordinates ].
 	project initializeCoordinates: projectCoordinates.
 	project dependencies: self flatDependencies.
 	^ project

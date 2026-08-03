@@ -20,7 +20,7 @@ MooseNexusModelBuilderTest >> setUp [
 	(rootDirectory / 'sources') ensureCreateDirectory.
 	(rootDirectory / 'models') ensureCreateDirectory.
 	rootDirectory / 'models.json' writeStreamDo: [ :stream | stream nextPutAll: '[]' ].
-	project := MooseNexusTestProject coordinates: (MooseNexusProjectCoordinates group: 'com.example' name: 'demo' version: '1.0.0').
+	project := MooseNexusTestProject coordinates: (MooseNexusCoordinates group: 'com.example' name: 'demo' version: '1.0.0').
 	project directory: (rootDirectory relativeTo: FileLocator home) pathString
 ]
 

@@ -30,10 +30,10 @@ Class {
 }
 
 { #category : 'instance creation' }
-MooseNexusProject class >> coordinates: aMooseNexusProjectCoordinates [
+MooseNexusProject class >> coordinates: aMooseNexusCoordinates [
 
 	^ self new
-		  initializeCoordinates: aMooseNexusProjectCoordinates;
+		  initializeCoordinates: aMooseNexusCoordinates;
 		  yourself
 ]
 
@@ -145,11 +145,11 @@ MooseNexusProject >> importModel: modelDescription [
 ]
 
 { #category : 'initialization' }
-MooseNexusProject >> initializeCoordinates: aMooseNexusProjectCoordinates [
+MooseNexusProject >> initializeCoordinates: aMooseNexusCoordinates [
 
 	self isRecorded ifTrue: [ Error signal: 'Cannot change project coordinates after recording the project in a repository' ].
 	coordinates ifNotNil: [ Error signal: 'Cannot change project coordinates after initialization' ].
-	coordinates := aMooseNexusProjectCoordinates
+	coordinates := aMooseNexusCoordinates
 ]
 
 { #category : 'testing' }
@@ -222,7 +222,7 @@ MooseNexusProject >> properties [
 MooseNexusProject >> readProperties: properties [
 
 	self initializeCoordinates:
-		(MooseNexusProjectCoordinates group: (properties at: #group) name: (properties at: #name) version: (properties at: #version)).
+		(MooseNexusCoordinates group: (properties at: #group) name: (properties at: #name) version: (properties at: #version)).
 	properties at: #dependencies ifPresent: [ :deps | self dependencies: deps ]
 ]
 

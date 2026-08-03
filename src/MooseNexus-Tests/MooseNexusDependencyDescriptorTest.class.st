@@ -9,31 +9,27 @@ Class {
 { #category : 'tests' }
 MooseNexusDependencyDescriptorTest >> testDescriptorIsValueObject [
 
-	| descriptor sameDescriptor otherDescriptor |
+	| coordinates descriptor sameDescriptor otherDescriptor |
+	coordinates := MooseNexusCoordinates group: 'org.example' name: 'lib' version: '1.0.0'.
 	descriptor := MooseNexusDependencyDescriptor
-		              group: 'org.example'
-		              name: 'lib'
-		              version: '1.0.0'
+		              coordinates: coordinates
 		              type: 'jar'
 		              scopes: #( 'compile' )
 		              path: '.m2/repository/org/example/lib/1.0.0/lib-1.0.0.jar'.
 	sameDescriptor := MooseNexusDependencyDescriptor
-		                  group: 'org.example'
-		                  name: 'lib'
-		                  version: '1.0.0'
+		                  coordinates: coordinates
 		                  type: 'jar'
 		                  scopes: #( 'compile' )
 		                  path: '.m2/repository/org/example/lib/1.0.0/lib-1.0.0.jar'.
 	otherDescriptor := MooseNexusDependencyDescriptor
-		                   group: 'org.example'
-		                   name: 'lib'
-		                   version: '2.0.0'
+		                   coordinates: (MooseNexusCoordinates group: 'org.example' name: 'lib' version: '2.0.0')
 		                   type: 'jar'
 		                   scopes: #( 'compile' )
 		                   path: '.m2/repository/org/example/lib/2.0.0/lib-2.0.0.jar'.
 
 	self assert: descriptor equals: sameDescriptor.
 	self deny: descriptor equals: otherDescriptor.
+	self assert: descriptor coordinates equals: coordinates.
 	self assert: descriptor printString equals: 'org.example:lib:1.0.0'
 ]
 
@@ -56,24 +52,22 @@ MooseNexusDependencyDescriptorTest >> testDictionaryRoundTrip [
 { #category : 'tests' }
 MooseNexusDependencyDescriptorTest >> testMergeAggregatesScopes [
 
-	| compile runtime mergedDescriptor |
+	| coordinates compile runtime mergedDescriptor |
+	coordinates := MooseNexusCoordinates group: 'org.example' name: 'lib' version: '1.0.0'.
 	compile := MooseNexusDependencyDescriptor
-		           group: 'org.example'
-		           name: 'lib'
-		           version: '1.0.0'
+		           coordinates: coordinates
 		           type: 'jar'
 		           scopes: #( 'compile' )
 		           path: '.m2/repository/org/example/lib/1.0.0/lib-1.0.0.jar'.
 	runtime := MooseNexusDependencyDescriptor
-		           group: 'org.example'
-		           name: 'lib'
-		           version: '1.0.0'
+		           coordinates: coordinates
 		           type: 'jar'
 		           scopes: #( 'runtime' )
 		           path: '.m2/repository/org/example/lib/1.0.0/lib-1.0.0.jar'.
 
 	mergedDescriptor := compile mergedWith: runtime.
 
+	self assert: mergedDescriptor coordinates equals: coordinates.
 	self assert: mergedDescriptor scopes equals: #( 'compile' 'runtime' )
 ]
 
@@ -82,9 +76,7 @@ MooseNexusDependencyDescriptorTest >> testWithGroupAnswersCopy [
 
 	| descriptor groupedDescriptor |
 	descriptor := MooseNexusDependencyDescriptor
-		              group: nil
-		              name: 'lib'
-		              version: '1.0.0'
+		              coordinates: (MooseNexusCoordinates group: nil name: 'lib' version: '1.0.0')
 		              type: 'jar'
 		              scopes: #( 'compile' )
 		              path: 'repository/lib-1.0.0.jar'.
