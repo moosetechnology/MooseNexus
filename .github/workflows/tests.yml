@@ -12,7 +12,16 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        smalltalk: [ Moose64-11, Moose64-12, Moose64-13 ]
+        include:
+          - smalltalk: Moose64-11
+            spec: .smalltalk.ston
+            coverage: false
+          - smalltalk: Moose64-12
+            spec: .smalltalk.ston
+            coverage: false
+          - smalltalk: Moose64-13
+            spec: .smalltalk.coverage.ston
+            coverage: true
     name: ${{ matrix.smalltalk }}
     steps:
       - uses: actions/checkout@v7
@@ -27,27 +36,15 @@ jobs:
           smalltalk-image: ${{ matrix.smalltalk }}
 
       - name: Run tests
-        run: smalltalkci -s ${{ matrix.smalltalk }}
+        run: smalltalkci -s ${{ matrix.smalltalk }} ${{ matrix.spec }}
         shell: bash
         timeout-minutes: 15
         env:
           GITHUB_TOKEN: ${{ github.token }}
 
-      - name: Upload coverage
+      - name: Coveralls
+        if: ${{ matrix.coverage }}
         uses: coverallsapp/github-action@v2
         with:
           github-token: ${{ github.token }}
-          parallel: true
-          flag-name: ${{ matrix.smalltalk }}
-
-  coverage:
-    name: Finalize coverage
-    needs: build
-    if: ${{ always() }}
-    runs-on: ubuntu-latest
-    steps:
-      - name: Close parallel build
-        uses: coverallsapp/github-action@v2
-        with:
-          github-token: ${{ github.token }}
-          parallel-finished: true
+          file: coverage/lcov.info
