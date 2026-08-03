@@ -20,6 +20,24 @@ MooseNexusManagedProjectImporter class >> isAbstract [
 	^ self == MooseNexusManagedProjectImporter
 ]
 
+{ #category : 'private' }
+MooseNexusManagedProjectImporter >> addDependency: descriptor to: dependencies group: dependencyGroup [
+
+	| key |
+	key := {
+		       descriptor coordinates.
+		       descriptor type.
+		       descriptor path }.
+	dependencies
+		at: dependencyGroup
+		ifPresent: [ :descriptorsByArtifact |
+				descriptorsByArtifact
+					at: key
+					ifPresent: [ :existing | descriptorsByArtifact at: key put: (existing mergedWith: descriptor) ]
+					ifAbsentPut: [ descriptor ] ]
+		ifAbsentPut: [ OrderedDictionary with: key -> descriptor ]
+]
+
 { #category : 'adding' }
 MooseNexusManagedProjectImporter >> addLocalRepository: pathString [
 
@@ -45,10 +63,16 @@ MooseNexusManagedProjectImporter >> dependencyConflictResolver: aMooseNexusDepen
 	dependencyConflictResolver := aMooseNexusDependencyConflictResolver
 ]
 
+{ #category : 'private' }
+MooseNexusManagedProjectImporter >> dependencyGroupsFrom: dependenciesByGroup [
+
+	^ dependenciesByGroup collect: [ :descriptorsByArtifact | descriptorsByArtifact values asArray ]
+]
+
 { #category : 'querying' }
 MooseNexusManagedProjectImporter >> determineCoordinates [
 
-	^ MooseNexusProjectCoordinates group: self determineGroup name: self determineName version: self determineVersion
+	^ MooseNexusCoordinates group: self determineGroup name: self determineName version: self determineVersion
 ]
 
 { #category : 'querying' }
@@ -93,15 +117,17 @@ MooseNexusManagedProjectImporter >> flatDependencies [
 	conflicts := Dictionary new.
 
 	project projectDependenciesDo: [ :dependencyGroup :descriptor |
-			| key |
-			key := dependencyGroup , ':' , (descriptor at: #name).
-			conflicts at: key ifPresent: [ :conflictList | conflictList add: descriptor ] ifAbsent: [
+			| dependency key |
+			dependency := project dependencyDescriptorFrom: descriptor group: dependencyGroup.
+			key := dependency group , ':' , dependency name.
+			conflicts at: key ifPresent: [ :conflictList | conflictList add: dependency ] ifAbsent: [
 					dependencies
 						at: key
-						ifPresent: [ :exisiting |
-								(exisiting at: #version) = (descriptor at: #version) ifFalse: [ "new conflict"
-									conflicts at: key put: (OrderedCollection with: (dependencies removeKey: key) with: descriptor) ] ]
-						ifAbsentPut: [ descriptor copyWith: #group -> dependencyGroup ] ] ].
+						ifPresent: [ :existing |
+								(existing hasSameArtifactAs: dependency)
+									ifTrue: [ dependencies at: key put: (existing mergedWith: dependency) ]
+									ifFalse: [ conflicts at: key put: (OrderedCollection with: (dependencies removeKey: key) with: dependency) ] ]
+						ifAbsentPut: [ dependency ] ] ].
 
 	conflicts ifNotEmpty: [ self resolveDependencyConflicts: conflicts on: dependencies ].
 
@@ -115,12 +141,12 @@ MooseNexusManagedProjectImporter >> import [
 ]
 
 { #category : 'importing' }
-MooseNexusManagedProjectImporter >> importWithCoordinates: aMooseNexusProjectCoordinates [
+MooseNexusManagedProjectImporter >> importWithCoordinates: aMooseNexusCoordinates [
 
 	| projectCoordinates |
 	project ifNil: [ project := self newProject ].
 	self analyze.
-	projectCoordinates := aMooseNexusProjectCoordinates ifNil: [ self determineCoordinates ].
+	projectCoordinates := aMooseNexusCoordinates ifNil: [ self determineCoordinates ].
 	project initializeCoordinates: projectCoordinates.
 	project dependencies: self flatDependencies.
 	^ project

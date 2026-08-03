@@ -28,7 +28,7 @@ MooseNexusProjectSpec class >> coordinates: coordinates sourceDirectory: sourceD
 MooseNexusProjectSpec class >> group: group projectName: projectName version: version sourceDirectory: sourceDirectory [
 
 	^ self
-		  coordinates: (MooseNexusProjectCoordinates group: group name: projectName version: version)
+		  coordinates: (MooseNexusCoordinates group: group name: projectName version: version)
 		  sourceDirectory: sourceDirectory
 ]
 
@@ -39,9 +39,9 @@ MooseNexusProjectSpec >> coordinates [
 ]
 
 { #category : 'accessing' }
-MooseNexusProjectSpec >> coordinates: aMooseNexusProjectCoordinates [
+MooseNexusProjectSpec >> coordinates: aMooseNexusCoordinates [
 
-	coordinates := aMooseNexusProjectCoordinates
+	coordinates := aMooseNexusCoordinates
 ]
 
 { #category : 'accessing' }

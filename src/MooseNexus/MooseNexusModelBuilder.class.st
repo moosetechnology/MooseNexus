@@ -127,7 +127,7 @@ MooseNexusModelBuilder >> setUp [
 			dependencies := (projectDirectory / 'dependencies') createDirectory.
 			project dependencies do: [ :dependency |
 					| artifact |
-					artifact := home / (dependency at: #path).
+					artifact := home / dependency path.
 					artifact copyTo: dependencies / artifact basename ] ].
 
 	self extractor target: projectDirectory pathString

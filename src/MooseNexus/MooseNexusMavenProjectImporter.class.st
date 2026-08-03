@@ -107,23 +107,23 @@ MooseNexusMavenProjectImporter >> parseProject: raw startingAt: initialStart [
 			end := raw indexOfAnyOf: String crlf startingAt: end + 11 ].
 		(skip or: [ dependency = 'none' ]) ifFalse: [
 				| mapping |
-				mapping := self resolve: dependency. "returns group -> (descriptor \ group)"
-				projectDependencies
-					at: mapping key
-					ifPresent: [ :descriptors | descriptors add: mapping value ]
-					ifAbsentPut: [ OrderedCollection with: mapping value ] ].
+				mapping := self resolve: dependency.
+				self addDependency: mapping value to: projectDependencies group: mapping key ].
 
 		"skip over '[INFO] ' (8 chars) and check if new line, indicating the end of the list
 		else start of next dependency descriptor is 3 spaces later"
 		String crlf includes: (raw at: (start := end + 11) - 3) ] whileFalse.
 
-	"register the project with its version; projectName is unique so this never overwrites
-	save dependencies as arrays for JSON compatibility"
+	"register the project with its version; projectName is unique so this never overwrites"
 	skip ifFalse: [
 			project projects
 				at: group
 				at: name
-				put: (Dictionary with: #path -> path with: #version -> version with: #dependencies -> (projectDependencies collect: #asArray)) ].
+				put:
+				(Dictionary
+					 with: #path -> path
+					 with: #version -> version
+					 with: #dependencies -> (self dependencyGroupsFrom: projectDependencies)) ].
 
 	"return the updated reading position"
 	^ start

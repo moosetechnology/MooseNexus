@@ -35,7 +35,7 @@ MooseNexusGradleRepository >> findGroup: group name: name version: version type:
 { #category : 'resolving' }
 MooseNexusGradleRepository >> resolve: descriptor [
 
-	| parts group name type version scope path artifact |
+	| parts group name type version scope path artifact coordinates |
 	parts := $: split: descriptor.
 	group := parts at: 1.
 	name := parts at: 2.
@@ -43,6 +43,7 @@ MooseNexusGradleRepository >> resolve: descriptor [
 	version := parts at: 4.
 	scope := parts at: 5.
 	path := parts at: 6.
+	coordinates := MooseNexusCoordinates group: group name: name version: version.
 
 	artifact := path asFileReference ifAbsent: [
 			            (self
@@ -51,10 +52,9 @@ MooseNexusGradleRepository >> resolve: descriptor [
 				             version: version
 				             type: type) ifNil: [ ^ nil ] ].
 
-	^ group -> (Dictionary
-		   with: #name -> name
-		   with: #version -> version
-		   with: #type -> type
-		   with: #scope -> scope
-		   with: #path -> (artifact relativeTo: FileLocator home) pathString)
+	^ group -> (MooseNexusDependencyDescriptor
+		   coordinates: coordinates
+		   type: type
+		   scopes: { scope }
+		   path: (artifact relativeTo: FileLocator home) pathString)
 ]

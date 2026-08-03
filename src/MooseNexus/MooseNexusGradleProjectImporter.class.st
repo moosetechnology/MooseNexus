@@ -175,12 +175,9 @@ MooseNexusGradleProjectImporter >> parse: raw [
 			[ (line := lines at: (index := index + 1)) isEmpty or: [ line first == $- ] ] whileFalse: [ "resolve the descriptor: 'group:name:type:version:scope:path'"
 					| mapping |
 					mapping := self resolve: line.
-					dependencies
-						at: mapping key
-						ifPresent: [ :descriptors | descriptors add: mapping value ]
-						ifAbsentPut: [ OrderedCollection with: mapping value ] ].
-			"the current project has been fully parsed, save the dependencies as arrays for JSON compatibility"
-			descriptor at: #dependencies put: (dependencies collect: #asArray) ]
+					self addDependency: mapping value to: dependencies group: mapping key ].
+			"the current project has been fully parsed"
+			descriptor at: #dependencies put: (self dependencyGroupsFrom: dependencies) ]
 ]
 
 { #category : 'reading' }

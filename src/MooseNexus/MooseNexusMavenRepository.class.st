@@ -22,13 +22,14 @@ MooseNexusMavenRepository class >> default [
 MooseNexusMavenRepository >> resolve: descriptor [
 	"Attempts to find the local path to an artifact based on the descriptor."
 
-	| parts group name type version scope homeDirectory theDirectory pathString |
+	| parts group name type version scope homeDirectory theDirectory pathString coordinates |
 	parts := $: split: descriptor.
 	group := parts at: 1.
 	name := parts at: 2.
 	type := parts at: 3.
 	version := parts at: 4.
 	scope := parts at: 5.
+	coordinates := MooseNexusCoordinates group: group name: name version: version.
 
 	"search for the directory"
 	pathString := String streamContents: [ :s | s << (group copyReplaceAll: '.' with: '/') << '/' << name << '/' << version ].
@@ -38,11 +39,10 @@ MooseNexusMavenRepository >> resolve: descriptor [
 	"search for the artifact"
 	^ theDirectory / (name , '-' , version , '.' , type)
 		  ifExists: [ :file |
-				  group -> (Dictionary
-					   with: #name -> name
-					   with: #version -> version
-					   with: #type -> type
-					   with: #scope -> scope
-					   with: #path -> (file relativeTo: homeDirectory) pathString) ]
+				  group -> (MooseNexusDependencyDescriptor
+					   coordinates: coordinates
+					   type: type
+					   scopes: { scope }
+					   path: (file relativeTo: homeDirectory) pathString) ]
 		  ifAbsent: [ nil ]
 ]

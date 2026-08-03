@@ -1,5 +1,5 @@
 "
-A project with managed dependencies, such as using Maven or Gradle.
+A project with managed dependencies, such as one using Maven or Gradle.
 
 My properties define the additional mapping:
 ```text
@@ -8,13 +8,12 @@ dependencies:
 	- group:   <dependencyGroup>
 	  name:    <dependencyName>
 	  version: <dependencyVersion>
-	  scope:   <dependencyScope>
+	  scopes:  <dependencyScopes>
 	  type:    <dependencyType>
 ```
-The home is the path to the home directory of the project manager (e.g. `~/.m2` is the default Maven home).
-The dependencies contain additional mappings for their own group, artifact, and version, as well as their type and scope.
-The type is the file format of the dependency (e.g. usually `jar` for Java).
-The scope is the application lifecycle that requires the dependency (e.g. `compile` or `runtime`).
+The dependencies contain additional mappings for their own group, artifact, and version, as well as their type and scopes.
+The type is the file format of the dependency (usually `jar` for Java).
+The scopes are the application lifecycles that require the dependency, such as `compile` or `runtime`.
 
 A managed project can encompass multiple projects and subprojects.
 The `projects` property has the following mapping:
@@ -24,9 +23,10 @@ The `projects` property has the following mapping:
 		version: <projectVersion>
 		dependencies:
 			<dependencyGroup>:
-				- name:      <dependencyName>
-				  version:   <dependencyVersion>
-				  directory: <localPath>
+				- name:    <dependencyName>
+				  version: <dependencyVersion>
+				  scopes:  <dependencyScopes>
+				  path:    <localPath>
 ```
 "
 Class {
@@ -51,6 +51,25 @@ MooseNexusManagedProject class >> isAbstract [
 MooseNexusManagedProject class >> knownLanguages [
 
 	^ #( java )
+]
+
+{ #category : 'private' }
+MooseNexusManagedProject >> dependencyDescriptorFrom: descriptor group: dependencyGroup [
+
+	^ descriptor group ifNil: [ descriptor withGroup: dependencyGroup ] ifNotNil: [ descriptor ]
+]
+
+{ #category : 'private' }
+MooseNexusManagedProject >> dependencyDescriptorsFrom: descriptors group: dependencyGroup [
+
+	^ descriptors collect: [ :descriptor | self dependencyDescriptorFrom: descriptor group: dependencyGroup ]
+]
+
+{ #category : 'properties' }
+MooseNexusManagedProject >> dependencyGroupsFromProperties: dependencyGroups [
+
+	^ dependencyGroups collect: [ :dependencyDictionaries |
+		  dependencyDictionaries collect: [ :dependency | MooseNexusDependencyDescriptor fromDictionary: dependency ] ]
 ]
 
 { #category : 'querying' }
@@ -115,12 +134,25 @@ MooseNexusManagedProject >> language: aString [
 
 { #category : 'enumerating' }
 MooseNexusManagedProject >> projectDependenciesDo: aBlock [
-	"Iterate over the group, name and descriptor of all project dependencies"
+	"Iterate over dependency descriptors declared by managed projects."
 
 	self projects do: [ :projectGroup |
 			projectGroup do: [ :projectDescriptor |
 					(projectDescriptor at: #dependencies) keysAndValuesDo: [ :dependencyGroup :descriptors |
-						descriptors do: [ :descriptor | aBlock value: dependencyGroup value: descriptor ] ] ] ]
+							(self dependencyDescriptorsFrom: descriptors group: dependencyGroup) do: [ :descriptor |
+								aBlock value: dependencyGroup value: descriptor ] ] ] ]
+]
+
+{ #category : 'properties' }
+MooseNexusManagedProject >> projectDescriptorFromProperties: projectDescriptor [
+
+	| loadedDescriptor |
+	loadedDescriptor := projectDescriptor copy.
+	loadedDescriptor
+		at: #dependencies
+		ifPresent: [ :dependencyGroups |
+		loadedDescriptor at: #dependencies put: (self dependencyGroupsFromProperties: dependencyGroups) ].
+	^ loadedDescriptor
 ]
 
 { #category : 'accessing' }
@@ -138,11 +170,18 @@ MooseNexusManagedProject >> projects: aDictionary [
 	projects := aDictionary
 ]
 
+{ #category : 'properties' }
+MooseNexusManagedProject >> projectsFromProperties: projectGroups [
+
+	^ projectGroups collect: [ :projectGroup |
+		  projectGroup collect: [ :projectDescriptor | self projectDescriptorFromProperties: projectDescriptor ] ]
+]
+
 { #category : 'enumerating' }
 MooseNexusManagedProject >> properties [
 
 	^ super properties
-		  add: #projects -> self projects;
+		  add: #projects -> self serializedProjects;
 		  yourself
 ]
 
@@ -151,5 +190,33 @@ MooseNexusManagedProject >> readProperties: properties [
 
 	super readProperties: properties.
 	properties at: #language ifPresent: [ :lang | self language: lang ].
-	properties at: #projects ifPresent: [ :data | self projects: data ]
+	properties at: #projects ifPresent: [ :data | self projects: (self projectsFromProperties: data) ]
+]
+
+{ #category : 'enumerating' }
+MooseNexusManagedProject >> serializedDependenciesFrom: descriptors group: dependencyGroup [
+
+	^ (self dependencyDescriptorsFrom: descriptors group: dependencyGroup) collect: [ :descriptor |
+			  descriptor asDictionary
+				  removeKey: #group ifAbsent: [ nil ];
+				  yourself ]
+]
+
+{ #category : 'enumerating' }
+MooseNexusManagedProject >> serializedProjectDescriptor: projectDescriptor [
+
+	| serializedDescriptor serializedDependencies |
+	serializedDescriptor := projectDescriptor copy.
+	serializedDependencies := Dictionary new.
+	(projectDescriptor at: #dependencies ifAbsent: [ Dictionary new ]) keysAndValuesDo: [ :dependencyGroup :descriptors |
+		serializedDependencies at: dependencyGroup put: (self serializedDependenciesFrom: descriptors group: dependencyGroup) asArray ].
+	serializedDescriptor at: #dependencies put: serializedDependencies.
+	^ serializedDescriptor
+]
+
+{ #category : 'enumerating' }
+MooseNexusManagedProject >> serializedProjects [
+
+	^ self projects collect: [ :projectGroup |
+		  projectGroup collect: [ :projectDescriptor | self serializedProjectDescriptor: projectDescriptor ] ]
 ]
