@@ -3,14 +3,16 @@ I represent a MooseNexus project loaded in memory or recorded in a repository.
 
 My properties follow this mapping:
 ```text
-language: <language>
-nature:   <subclassOfMooseNexusProject>
-group:    <group>
-name:     <name>
-version:  <version>
+schemaVersion: <propertiesSchemaVersion>
+language:      <language>
+nature:        <subclassOfMooseNexusProject>
+group:         <group>
+name:          <name>
+version:       <version>
 dependencies:
 	- path: <localPath>
 ```
+The schema version identifies the persisted properties format.
 The nature corresponds to the concrete subclass of MooseNexusProject that handles the source project.
 The group, name, and version are the coordinates that identify the source project as modeled by MooseNexus.
 
@@ -56,6 +58,18 @@ MooseNexusProject class >> fromProperties: file [
 MooseNexusProject class >> isAbstract [
 
 	^ self == MooseNexusProject
+]
+
+{ #category : 'properties' }
+MooseNexusProject class >> propertiesSchemaVersion [
+
+	^ 'alpha'
+]
+
+{ #category : 'properties' }
+MooseNexusProject class >> supportsPropertiesSchemaVersion: schemaVersion [
+
+	^ schemaVersion = self propertiesSchemaVersion
 ]
 
 { #category : 'adding' }
@@ -212,18 +226,27 @@ MooseNexusProject >> projectSourceDirectory [
 MooseNexusProject >> properties [
 	"Gather all of the properties of this project in a dictionary"
 
-	^ Dictionary
-		  with: #language -> self language
-		  with: #nature -> self className
-		  with: #group -> self group
-		  with: #name -> self name
-		  with: #version -> self version
-		  with: #dependencies -> self serializedDependencies
+	^ Dictionary new
+		  add: #schemaVersion -> self propertiesSchemaVersion;
+		  add: #language -> self language;
+		  add: #nature -> self className;
+		  add: #group -> self group;
+		  add: #name -> self name;
+		  add: #version -> self version;
+		  add: #dependencies -> self serializedDependencies;
+		  yourself
+]
+
+{ #category : 'properties' }
+MooseNexusProject >> propertiesSchemaVersion [
+
+	^ self class propertiesSchemaVersion
 ]
 
 { #category : 'properties' }
 MooseNexusProject >> readProperties: properties [
 
+	self validatePropertiesSchemaVersion: properties.
 	self initializeCoordinates:
 		(MooseNexusCoordinates group: (properties at: #group) name: (properties at: #name) version: (properties at: #version)).
 	properties at: #dependencies ifPresent: [ :deps | self dependencies: (self dependencyDescriptorsFromProperties: deps) ]
@@ -241,6 +264,21 @@ MooseNexusProject >> sourceDirectory [
 	This includes the original project sources, and additional sources from dependencies."
 
 	^ FileLocator home / directory / 'sources'
+]
+
+{ #category : 'properties' }
+MooseNexusProject >> supportsPropertiesSchemaVersion: schemaVersion [
+
+	^ self class supportsPropertiesSchemaVersion: schemaVersion
+]
+
+{ #category : 'properties' }
+MooseNexusProject >> validatePropertiesSchemaVersion: properties [
+
+	| schemaVersion |
+	schemaVersion := properties at: #schemaVersion ifAbsent: [ self propertiesSchemaVersion ].
+	(self supportsPropertiesSchemaVersion: schemaVersion) ifFalse: [
+		Error signal: 'Unsupported MooseNexus project properties schema version: ' , schemaVersion asString ]
 ]
 
 { #category : 'accessing' }

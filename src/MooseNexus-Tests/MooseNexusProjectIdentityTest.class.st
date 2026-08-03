@@ -150,6 +150,46 @@ MooseNexusProjectIdentityTest >> testProjectPropertiesFlattenCoordinates [
 ]
 
 { #category : 'tests' }
+MooseNexusProjectIdentityTest >> testProjectPropertiesIncludeSchemaVersion [
+
+	| project properties |
+	project := MooseNexusTestProject coordinates: (MooseNexusCoordinates group: 'com.example' name: 'demo' version: '1.0.0').
+	project dependencies: #(  ).
+	properties := project properties.
+
+	self assert: (properties at: #schemaVersion) equals: MooseNexusProject propertiesSchemaVersion
+]
+
+{ #category : 'tests' }
+MooseNexusProjectIdentityTest >> testProjectPropertiesReadUnversionedDataAsCurrentSchema [
+
+	| project properties |
+	properties := Dictionary new
+		              add: #group -> 'com.example';
+		              add: #name -> 'demo';
+		              add: #version -> '1.0.0';
+		              yourself.
+
+	project := MooseNexusTestProject new readProperties: properties.
+
+	self assert: project coordinates equals: (MooseNexusCoordinates group: 'com.example' name: 'demo' version: '1.0.0')
+]
+
+{ #category : 'tests' }
+MooseNexusProjectIdentityTest >> testProjectPropertiesRejectUnsupportedSchemaVersion [
+
+	| properties |
+	properties := Dictionary new
+		              add: #schemaVersion -> 'unsupported';
+		              add: #group -> 'com.example';
+		              add: #name -> 'demo';
+		              add: #version -> '1.0.0';
+		              yourself.
+
+	self should: [ MooseNexusTestProject new readProperties: properties ] raise: Error
+]
+
+{ #category : 'tests' }
 MooseNexusProjectIdentityTest >> testProjectPropertiesRoundTripFromFile [
 
 	| project loadedProject propertiesFile dependency |
