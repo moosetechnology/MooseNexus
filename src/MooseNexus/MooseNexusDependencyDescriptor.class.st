@@ -31,16 +31,6 @@ MooseNexusDependencyDescriptor class >> coordinates: aMooseNexusCoordinates type
 ]
 
 { #category : 'instance creation' }
-MooseNexusDependencyDescriptor class >> fromArray: anArray [
-
-	^ self
-		  coordinates: (MooseNexusCoordinates group: (anArray at: 1 ifAbsent: [ nil ]) name: (anArray at: 2) version: (anArray at: 3))
-		  type: (anArray at: 4 ifAbsent: [ nil ])
-		  scopes: (anArray at: 5 ifAbsent: [ #(  ) ])
-		  path: (anArray at: 6 ifAbsent: [ nil ])
-]
-
-{ #category : 'instance creation' }
 MooseNexusDependencyDescriptor class >> fromDictionary: aDictionary [
 
 	^ self
@@ -124,13 +114,16 @@ MooseNexusDependencyDescriptor >> name [
 { #category : 'private' }
 MooseNexusDependencyDescriptor >> normalizeScopes: aCollection [
 
-	| normalizedScopes |
+	| normalizedScopes seenScopes |
 	aCollection ifNil: [ ^ #(  ) ].
 	normalizedScopes := OrderedCollection new.
+	seenScopes := Set new.
 	(aCollection isString
 		 ifTrue: [ { aCollection } ]
 		 ifFalse: [ aCollection ]) do: [ :scope |
-		(scope notNil and: [ (normalizedScopes includes: scope) not ]) ifTrue: [ normalizedScopes add: scope ] ].
+			(scope notNil and: [ (seenScopes includes: scope) not ]) ifTrue: [
+					seenScopes add: scope.
+					normalizedScopes add: scope ] ].
 	^ normalizedScopes asArray
 ]
 

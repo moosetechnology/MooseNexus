@@ -60,10 +60,16 @@ MooseNexusProjectIdentityTest >> testCoordinatesAreValueObjects [
 { #category : 'tests' }
 MooseNexusProjectIdentityTest >> testManagedProjectPropertiesRoundTripFromFile [
 
-	| project loadedProject propertiesFile projects |
+	| project loadedProject propertiesFile projects projectDependencies dependency |
+	dependency := MooseNexusDependencyDescriptor
+		              coordinates: (MooseNexusCoordinates group: nil name: 'dep' version: '2.0.0')
+		              type: 'jar'
+		              scopes: #( 'compile' )
+		              path: 'repository/dep-2.0.0.jar'.
+	projectDependencies := Dictionary with: 'org.example' -> { dependency }.
 	projects := Dictionary with:
 		            'com.example'
-		            -> (Dictionary with: 'demo' -> (Dictionary with: #version -> '1.0.0' with: #dependencies -> Dictionary new)).
+		            -> (Dictionary with: 'demo' -> (Dictionary with: #version -> '1.0.0' with: #dependencies -> projectDependencies)).
 	project := MooseNexusMavenProject coordinates: (MooseNexusCoordinates group: 'com.example' name: 'demo' version: '1.0.0').
 	project
 		language: 'java';
@@ -77,7 +83,8 @@ MooseNexusProjectIdentityTest >> testManagedProjectPropertiesRoundTripFromFile [
 	self assert: loadedProject class equals: MooseNexusMavenProject.
 	self assert: loadedProject coordinates equals: project coordinates.
 	self assert: loadedProject language equals: 'java'.
-	self assert: loadedProject projects equals: projects
+	self assert: loadedProject projects equals: project projects.
+	self assert: loadedProject serializedProjects equals: project serializedProjects
 ]
 
 { #category : 'tests' }
@@ -97,15 +104,14 @@ MooseNexusProjectIdentityTest >> testProjectPropertiesFlattenCoordinates [
 { #category : 'tests' }
 MooseNexusProjectIdentityTest >> testProjectPropertiesRoundTripFromFile [
 
-	| project loadedProject propertiesFile |
+	| project loadedProject propertiesFile dependency |
 	project := MooseNexusTestProject coordinates: (MooseNexusCoordinates group: 'com.example' name: 'demo' version: '1.0.0').
-	project dependencies: { (Dictionary
-			 with: #group -> 'org.example'
-			 with: #name -> 'dep'
-			 with: #version -> '2.0.0'
-			 with: #type -> 'jar'
-			 with: #scopes -> #( 'compile' )
-			 with: #path -> 'repository/dep-2.0.0.jar') }.
+	dependency := MooseNexusDependencyDescriptor
+		              coordinates: (MooseNexusCoordinates group: 'org.example' name: 'dep' version: '2.0.0')
+		              type: 'jar'
+		              scopes: #( 'compile' )
+		              path: 'repository/dep-2.0.0.jar'.
+	project dependencies: { dependency }.
 	propertiesFile := rootDirectory / 'properties.json'.
 	propertiesFile writeStreamDo: [ :stream | project writePropertiesOn: stream ].
 

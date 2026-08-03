@@ -92,10 +92,13 @@ MooseNexusProject >> dependencies [
 { #category : 'accessing' }
 MooseNexusProject >> dependencies: aCollection [
 
-	dependencies := aCollection collect: [ :dependency |
-			                dependency isDictionary
-				                ifTrue: [ MooseNexusDependencyDescriptor fromDictionary: dependency ]
-				                ifFalse: [ dependency ] ]
+	dependencies := aCollection
+]
+
+{ #category : 'properties' }
+MooseNexusProject >> dependencyDescriptorsFromProperties: dependencyDictionaries [
+
+	^ dependencyDictionaries collect: [ :dependency | MooseNexusDependencyDescriptor fromDictionary: dependency ]
 ]
 
 { #category : 'accessing' }
@@ -223,7 +226,7 @@ MooseNexusProject >> readProperties: properties [
 
 	self initializeCoordinates:
 		(MooseNexusCoordinates group: (properties at: #group) name: (properties at: #name) version: (properties at: #version)).
-	properties at: #dependencies ifPresent: [ :deps | self dependencies: deps ]
+	properties at: #dependencies ifPresent: [ :deps | self dependencies: (self dependencyDescriptorsFromProperties: deps) ]
 ]
 
 { #category : 'enumerating' }

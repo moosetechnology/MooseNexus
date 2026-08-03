@@ -54,27 +54,22 @@ MooseNexusManagedProject class >> knownLanguages [
 ]
 
 { #category : 'private' }
-MooseNexusManagedProject >> dependencyDescriptorFrom: aDescriptor group: dependencyGroup [
+MooseNexusManagedProject >> dependencyDescriptorFrom: descriptor group: dependencyGroup [
 
-	| descriptor |
-	aDescriptor isString ifTrue: [
-		Error signal: 'Invalid dependency descriptor for ' , dependencyGroup , ': ' , aDescriptor printString ].
-	descriptor := aDescriptor isDictionary
-		              ifTrue: [ MooseNexusDependencyDescriptor fromDictionary: aDescriptor ]
-		              ifFalse: [
-				              (self isArrayEncodedDependencyDescriptor: aDescriptor)
-					              ifTrue: [ MooseNexusDependencyDescriptor fromArray: aDescriptor ]
-					              ifFalse: [ aDescriptor ] ].
 	^ descriptor group ifNil: [ descriptor withGroup: dependencyGroup ] ifNotNil: [ descriptor ]
 ]
 
 { #category : 'private' }
 MooseNexusManagedProject >> dependencyDescriptorsFrom: descriptors group: dependencyGroup [
 
-	(self isArrayEncodedDependencyDescriptor: descriptors) ifTrue: [
-		^ { (self dependencyDescriptorFrom: descriptors group: dependencyGroup) } ].
-	descriptors isDictionary ifTrue: [ ^ { (self dependencyDescriptorFrom: descriptors group: dependencyGroup) } ].
 	^ descriptors collect: [ :descriptor | self dependencyDescriptorFrom: descriptor group: dependencyGroup ]
+]
+
+{ #category : 'properties' }
+MooseNexusManagedProject >> dependencyGroupsFromProperties: dependencyGroups [
+
+	^ dependencyGroups collect: [ :dependencyDictionaries |
+		  dependencyDictionaries collect: [ :dependency | MooseNexusDependencyDescriptor fromDictionary: dependency ] ]
 ]
 
 { #category : 'querying' }
@@ -104,12 +99,6 @@ MooseNexusManagedProject >> determineLanguage [
 						 candidates do: [ :candidate | s << candidate ] separatedBy: [ s << ', ' ].
 						 s << '`, proceed to choose the first one' ]) ].
 	^ candidates anyOne
-]
-
-{ #category : 'testing' }
-MooseNexusManagedProject >> isArrayEncodedDependencyDescriptor: anObject [
-
-	^ anObject isString not and: [ anObject isCollection and: [ anObject isNotEmpty and: [ anObject first isString ] ] ]
 ]
 
 { #category : 'testing' }
@@ -154,6 +143,18 @@ MooseNexusManagedProject >> projectDependenciesDo: aBlock [
 								aBlock value: dependencyGroup value: descriptor ] ] ] ]
 ]
 
+{ #category : 'properties' }
+MooseNexusManagedProject >> projectDescriptorFromProperties: projectDescriptor [
+
+	| loadedDescriptor |
+	loadedDescriptor := projectDescriptor copy.
+	loadedDescriptor
+		at: #dependencies
+		ifPresent: [ :dependencyGroups |
+		loadedDescriptor at: #dependencies put: (self dependencyGroupsFromProperties: dependencyGroups) ].
+	^ loadedDescriptor
+]
+
 { #category : 'accessing' }
 MooseNexusManagedProject >> projects [
 	"Returns the dictionary of the projects that were analyzed.
@@ -169,6 +170,13 @@ MooseNexusManagedProject >> projects: aDictionary [
 	projects := aDictionary
 ]
 
+{ #category : 'properties' }
+MooseNexusManagedProject >> projectsFromProperties: projectGroups [
+
+	^ projectGroups collect: [ :projectGroup |
+		  projectGroup collect: [ :projectDescriptor | self projectDescriptorFromProperties: projectDescriptor ] ]
+]
+
 { #category : 'enumerating' }
 MooseNexusManagedProject >> properties [
 
@@ -182,7 +190,7 @@ MooseNexusManagedProject >> readProperties: properties [
 
 	super readProperties: properties.
 	properties at: #language ifPresent: [ :lang | self language: lang ].
-	properties at: #projects ifPresent: [ :data | self projects: data ]
+	properties at: #projects ifPresent: [ :data | self projects: (self projectsFromProperties: data) ]
 ]
 
 { #category : 'enumerating' }
