@@ -1,5 +1,5 @@
 "
-A project with managed dependencies, such as using Maven or Gradle.
+A project with managed dependencies, such as one using Maven or Gradle.
 
 My properties define the additional mapping:
 ```text
@@ -8,13 +8,12 @@ dependencies:
 	- group:   <dependencyGroup>
 	  name:    <dependencyName>
 	  version: <dependencyVersion>
-	  scope:   <dependencyScope>
+	  scopes:  <dependencyScopes>
 	  type:    <dependencyType>
 ```
-The home is the path to the home directory of the project manager (e.g. `~/.m2` is the default Maven home).
-The dependencies contain additional mappings for their own group, artifact, and version, as well as their type and scope.
-The type is the file format of the dependency (e.g. usually `jar` for Java).
-The scope is the application lifecycle that requires the dependency (e.g. `compile` or `runtime`).
+The dependencies contain additional mappings for their own group, artifact, and version, as well as their type and scopes.
+The type is the file format of the dependency (usually `jar` for Java).
+The scopes are the application lifecycles that require the dependency, such as `compile` or `runtime`.
 
 A managed project can encompass multiple projects and subprojects.
 The `projects` property has the following mapping:
@@ -24,9 +23,10 @@ The `projects` property has the following mapping:
 		version: <projectVersion>
 		dependencies:
 			<dependencyGroup>:
-				- name:      <dependencyName>
-				  version:   <dependencyVersion>
-				  directory: <localPath>
+				- name:    <dependencyName>
+				  version: <dependencyVersion>
+				  scopes:  <dependencyScopes>
+				  path:    <localPath>
 ```
 "
 Class {

@@ -15,21 +15,21 @@ MooseNexusDependencyDescriptorTest >> testDescriptorIsValueObject [
 		              name: 'lib'
 		              version: '1.0.0'
 		              type: 'jar'
-		              scope: 'compile'
+		              scopes: #( 'compile' )
 		              path: '.m2/repository/org/example/lib/1.0.0/lib-1.0.0.jar'.
 	sameDescriptor := MooseNexusDependencyDescriptor
 		                  group: 'org.example'
 		                  name: 'lib'
 		                  version: '1.0.0'
 		                  type: 'jar'
-		                  scope: 'compile'
+		                  scopes: #( 'compile' )
 		                  path: '.m2/repository/org/example/lib/1.0.0/lib-1.0.0.jar'.
 	otherDescriptor := MooseNexusDependencyDescriptor
 		                   group: 'org.example'
 		                   name: 'lib'
 		                   version: '2.0.0'
 		                   type: 'jar'
-		                   scope: 'compile'
+		                   scopes: #( 'compile' )
 		                   path: '.m2/repository/org/example/lib/2.0.0/lib-2.0.0.jar'.
 
 	self assert: descriptor equals: sameDescriptor.
@@ -46,11 +46,35 @@ MooseNexusDependencyDescriptorTest >> testDictionaryRoundTrip [
 		              with: #name -> 'lib'
 		              with: #version -> '1.0.0'
 		              with: #type -> 'jar'
-		              with: #scope -> 'compile'
+		              with: #scopes -> #( 'compile' )
 		              with: #path -> '.m2/repository/org/example/lib/1.0.0/lib-1.0.0.jar'.
 	descriptor := MooseNexusDependencyDescriptor fromDictionary: dictionary.
 
 	self assert: descriptor asDictionary equals: dictionary
+]
+
+{ #category : 'tests' }
+MooseNexusDependencyDescriptorTest >> testMergeAggregatesScopes [
+
+	| compile runtime mergedDescriptor |
+	compile := MooseNexusDependencyDescriptor
+		           group: 'org.example'
+		           name: 'lib'
+		           version: '1.0.0'
+		           type: 'jar'
+		           scopes: #( 'compile' )
+		           path: '.m2/repository/org/example/lib/1.0.0/lib-1.0.0.jar'.
+	runtime := MooseNexusDependencyDescriptor
+		           group: 'org.example'
+		           name: 'lib'
+		           version: '1.0.0'
+		           type: 'jar'
+		           scopes: #( 'runtime' )
+		           path: '.m2/repository/org/example/lib/1.0.0/lib-1.0.0.jar'.
+
+	mergedDescriptor := compile mergedWith: runtime.
+
+	self assert: mergedDescriptor scopes equals: #( 'compile' 'runtime' )
 ]
 
 { #category : 'tests' }
@@ -62,7 +86,7 @@ MooseNexusDependencyDescriptorTest >> testWithGroupAnswersCopy [
 		              name: 'lib'
 		              version: '1.0.0'
 		              type: 'jar'
-		              scope: 'compile'
+		              scopes: #( 'compile' )
 		              path: 'repository/lib-1.0.0.jar'.
 	groupedDescriptor := descriptor withGroup: 'org.example'.
 

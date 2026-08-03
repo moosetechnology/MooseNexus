@@ -108,10 +108,7 @@ MooseNexusMavenProjectImporter >> parseProject: raw startingAt: initialStart [
 		(skip or: [ dependency = 'none' ]) ifFalse: [
 				| mapping |
 				mapping := self resolve: dependency.
-				projectDependencies
-					at: mapping key
-					ifPresent: [ :descriptors | descriptors add: mapping value ]
-					ifAbsentPut: [ OrderedCollection with: mapping value ] ].
+				self addDependency: mapping value to: projectDependencies group: mapping key ].
 
 		"skip over '[INFO] ' (8 chars) and check if new line, indicating the end of the list
 		else start of next dependency descriptor is 3 spaces later"
@@ -119,10 +116,14 @@ MooseNexusMavenProjectImporter >> parseProject: raw startingAt: initialStart [
 
 	"register the project with its version; projectName is unique so this never overwrites"
 	skip ifFalse: [
-			project projects at: group at: name put: (Dictionary
+			project projects
+				at: group
+				at: name
+				put:
+				(Dictionary
 					 with: #path -> path
 					 with: #version -> version
-					 with: #dependencies -> (projectDependencies collect: [ :descriptors | descriptors asArray ])) ].
+					 with: #dependencies -> (self dependencyGroupsFrom: projectDependencies)) ].
 
 	"return the updated reading position"
 	^ start

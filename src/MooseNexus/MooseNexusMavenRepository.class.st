@@ -43,7 +43,7 @@ MooseNexusMavenRepository >> resolve: descriptor [
 					   name: name
 					   version: version
 					   type: type
-					   scope: scope
+					   scopes: { scope }
 					   path: (file relativeTo: homeDirectory) pathString) ]
 		  ifAbsent: [ nil ]
 ]

@@ -99,7 +99,13 @@ MooseNexusProjectIdentityTest >> testProjectPropertiesRoundTripFromFile [
 
 	| project loadedProject propertiesFile |
 	project := MooseNexusTestProject coordinates: (MooseNexusProjectCoordinates group: 'com.example' name: 'demo' version: '1.0.0').
-	project dependencies: { (Dictionary with: #group -> 'org.example' with: #name -> 'dep' with: #version -> '2.0.0') }.
+	project dependencies: { (Dictionary
+			 with: #group -> 'org.example'
+			 with: #name -> 'dep'
+			 with: #version -> '2.0.0'
+			 with: #type -> 'jar'
+			 with: #scopes -> #( 'compile' )
+			 with: #path -> 'repository/dep-2.0.0.jar') }.
 	propertiesFile := rootDirectory / 'properties.json'.
 	propertiesFile writeStreamDo: [ :stream | project writePropertiesOn: stream ].
 

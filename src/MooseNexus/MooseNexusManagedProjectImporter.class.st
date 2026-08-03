@@ -20,6 +20,25 @@ MooseNexusManagedProjectImporter class >> isAbstract [
 	^ self == MooseNexusManagedProjectImporter
 ]
 
+{ #category : 'private' }
+MooseNexusManagedProjectImporter >> addDependency: descriptor to: dependencies group: dependencyGroup [
+
+	| key |
+	key := {
+		       descriptor name.
+		       descriptor version.
+		       descriptor type.
+		       descriptor path }.
+	dependencies
+		at: dependencyGroup
+		ifPresent: [ :descriptorsByArtifact |
+				descriptorsByArtifact
+					at: key
+					ifPresent: [ :existing | descriptorsByArtifact at: key put: (existing mergedWith: descriptor) ]
+					ifAbsentPut: [ descriptor ] ]
+		ifAbsentPut: [ OrderedDictionary with: key -> descriptor ]
+]
+
 { #category : 'adding' }
 MooseNexusManagedProjectImporter >> addLocalRepository: pathString [
 
@@ -43,6 +62,12 @@ MooseNexusManagedProjectImporter >> dependencyConflictResolver [
 MooseNexusManagedProjectImporter >> dependencyConflictResolver: aMooseNexusDependencyConflictResolver [
 
 	dependencyConflictResolver := aMooseNexusDependencyConflictResolver
+]
+
+{ #category : 'private' }
+MooseNexusManagedProjectImporter >> dependencyGroupsFrom: dependenciesByGroup [
+
+	^ dependenciesByGroup collect: [ :descriptorsByArtifact | descriptorsByArtifact values asArray ]
 ]
 
 { #category : 'querying' }
@@ -100,8 +125,9 @@ MooseNexusManagedProjectImporter >> flatDependencies [
 					dependencies
 						at: key
 						ifPresent: [ :existing |
-								existing version = dependency version ifFalse: [ "new conflict"
-									conflicts at: key put: (OrderedCollection with: (dependencies removeKey: key) with: dependency) ] ]
+								(existing hasSameArtifactAs: dependency)
+									ifTrue: [ dependencies at: key put: (existing mergedWith: dependency) ]
+									ifFalse: [ conflicts at: key put: (OrderedCollection with: (dependencies removeKey: key) with: dependency) ] ]
 						ifAbsentPut: [ dependency ] ] ].
 
 	conflicts ifNotEmpty: [ self resolveDependencyConflicts: conflicts on: dependencies ].

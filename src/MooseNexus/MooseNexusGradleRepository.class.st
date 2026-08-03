@@ -56,6 +56,6 @@ MooseNexusGradleRepository >> resolve: descriptor [
 		   name: name
 		   version: version
 		   type: type
-		   scope: scope
+		   scopes: { scope }
 		   path: (artifact relativeTo: FileLocator home) pathString)
 ]

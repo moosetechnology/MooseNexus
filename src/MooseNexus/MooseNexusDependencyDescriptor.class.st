@@ -1,9 +1,9 @@
 "
 I describe a resolved dependency used by MooseNexus when building models.
 
-I carry the dependency coordinates and artifact metadata that used to be passed around as dictionaries: group, name, version, type, scope, and the local artifact path.
+I carry the dependency coordinates and artifact metadata that used to be passed around as dictionaries: group, name, version, type, scopes, and the local artifact path.
 
-MooseNexus uses me internally as a value-like object. Repository serialization still writes dictionaries at the boundary so existing properties files keep their current shape.
+MooseNexus uses me internally as a value-like object. Repository serialization writes dictionaries at the boundary with a #scopes collection so the same dependency can belong to multiple scopes without becoming multiple dependencies.
 "
 Class {
 	#name : 'MooseNexusDependencyDescriptor',
@@ -13,8 +13,8 @@ Class {
 		'name',
 		'version',
 		'type',
-		'scope',
-		'path'
+		'path',
+		'scopes'
 	],
 	#category : 'MooseNexus-Dependency',
 	#package : 'MooseNexus',
@@ -29,7 +29,7 @@ MooseNexusDependencyDescriptor class >> fromArray: anArray [
 		  name: (anArray at: 2)
 		  version: (anArray at: 3)
 		  type: (anArray at: 4 ifAbsent: [ nil ])
-		  scope: (anArray at: 5 ifAbsent: [ nil ])
+		  scopes: (anArray at: 5 ifAbsent: [ #(  ) ])
 		  path: (anArray at: 6 ifAbsent: [ nil ])
 ]
 
@@ -41,19 +41,19 @@ MooseNexusDependencyDescriptor class >> fromDictionary: aDictionary [
 		  name: (aDictionary at: #name ifAbsent: [ aDictionary at: 'name' ])
 		  version: (aDictionary at: #version ifAbsent: [ aDictionary at: 'version' ])
 		  type: (aDictionary at: #type ifAbsent: [ aDictionary at: 'type' ifAbsent: [ nil ] ])
-		  scope: (aDictionary at: #scope ifAbsent: [ aDictionary at: 'scope' ifAbsent: [ nil ] ])
+		  scopes: (aDictionary at: #scopes ifAbsent: [ aDictionary at: 'scopes' ])
 		  path: (aDictionary at: #path ifAbsent: [ aDictionary at: 'path' ifAbsent: [ nil ] ])
 ]
 
 { #category : 'instance creation' }
-MooseNexusDependencyDescriptor class >> group: aGroup name: aName version: aVersion type: aType scope: aScope path: aPath [
+MooseNexusDependencyDescriptor class >> group: aGroup name: aName version: aVersion type: aType scopes: aCollection path: aPath [
 
 	^ self new
 		  initializeGroup: aGroup
 		  name: aName
 		  version: aVersion
 		  type: aType
-		  scope: aScope
+		  scopes: aCollection
 		  path: aPath;
 		  yourself
 ]
@@ -65,7 +65,7 @@ MooseNexusDependencyDescriptor >> = anObject [
 	anObject class == self class ifFalse: [ ^ false ].
 	^ anObject group = group and: [
 			  anObject name = name and: [
-				  anObject version = version and: [ anObject type = type and: [ anObject scope = scope and: [ anObject path = path ] ] ] ] ]
+				  anObject version = version and: [ anObject type = type and: [ anObject scopes = scopes and: [ anObject path = path ] ] ] ] ]
 ]
 
 { #category : 'converting' }
@@ -76,7 +76,7 @@ MooseNexusDependencyDescriptor >> asDictionary [
 		              with: #name -> name
 		              with: #version -> version
 		              with: #type -> type
-		              with: #scope -> scope
+		              with: #scopes -> scopes
 		              with: #path -> path.
 	group ifNotNil: [ dictionary at: #group put: group ].
 	^ dictionary
@@ -89,26 +89,54 @@ MooseNexusDependencyDescriptor >> group [
 ]
 
 { #category : 'comparing' }
+MooseNexusDependencyDescriptor >> hasSameArtifactAs: anotherDescriptor [
+
+	^ anotherDescriptor group = group and: [
+			  anotherDescriptor name = name and: [
+				  anotherDescriptor version = version and: [ anotherDescriptor type = type and: [ anotherDescriptor path = path ] ] ] ]
+]
+
+{ #category : 'comparing' }
 MooseNexusDependencyDescriptor >> hash [
 
-	^ group hash bitXor: (name hash bitXor: (version hash bitXor: (type hash bitXor: (scope hash bitXor: path hash))))
+	^ group hash bitXor: (name hash bitXor: (version hash bitXor: (type hash bitXor: (scopes hash bitXor: path hash))))
 ]
 
 { #category : 'initialization' }
-MooseNexusDependencyDescriptor >> initializeGroup: aGroup name: aName version: aVersion type: aType scope: aScope path: aPath [
+MooseNexusDependencyDescriptor >> initializeGroup: aGroup name: aName version: aVersion type: aType scopes: aCollection path: aPath [
 
 	group := aGroup.
 	name := aName.
 	version := aVersion.
 	type := aType.
-	scope := aScope.
+	scopes := self normalizeScopes: aCollection.
 	path := aPath
+]
+
+{ #category : 'copying' }
+MooseNexusDependencyDescriptor >> mergedWith: anotherDescriptor [
+
+	(self hasSameArtifactAs: anotherDescriptor) ifFalse: [ Error signal: 'Cannot merge different dependency artifacts' ].
+	^ self withScopes: scopes , anotherDescriptor scopes
 ]
 
 { #category : 'accessing' }
 MooseNexusDependencyDescriptor >> name [
 
 	^ name
+]
+
+{ #category : 'private' }
+MooseNexusDependencyDescriptor >> normalizeScopes: aCollection [
+
+	| normalizedScopes |
+	aCollection ifNil: [ ^ #(  ) ].
+	normalizedScopes := OrderedCollection new.
+	(aCollection isString
+		 ifTrue: [ { aCollection } ]
+		 ifFalse: [ aCollection ]) do: [ :scope |
+		(scope notNil and: [ (normalizedScopes includes: scope) not ]) ifTrue: [ normalizedScopes add: scope ] ].
+	^ normalizedScopes asArray
 ]
 
 { #category : 'accessing' }
@@ -131,9 +159,9 @@ MooseNexusDependencyDescriptor >> printOn: aStream [
 ]
 
 { #category : 'accessing' }
-MooseNexusDependencyDescriptor >> scope [
+MooseNexusDependencyDescriptor >> scopes [
 
-	^ scope
+	^ scopes
 ]
 
 { #category : 'accessing' }
@@ -156,6 +184,18 @@ MooseNexusDependencyDescriptor >> withGroup: aGroup [
 		  name: name
 		  version: version
 		  type: type
-		  scope: scope
+		  scopes: scopes
+		  path: path
+]
+
+{ #category : 'copying' }
+MooseNexusDependencyDescriptor >> withScopes: aCollection [
+
+	^ self class
+		  group: group
+		  name: name
+		  version: version
+		  type: type
+		  scopes: aCollection
 		  path: path
 ]

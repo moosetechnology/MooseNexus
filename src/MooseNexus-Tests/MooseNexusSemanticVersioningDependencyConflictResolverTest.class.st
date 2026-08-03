@@ -16,7 +16,7 @@ MooseNexusSemanticVersioningDependencyConflictResolverTest >> descriptorVersion:
 		  name: 'dependency'
 		  version: version
 		  type: 'jar'
-		  scope: 'compile'
+		  scopes: #( 'compile' )
 		  path: 'repository/dependency-' , version , '.jar'
 ]
 

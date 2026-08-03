@@ -75,6 +75,7 @@ MooseNexusMavenProjectParameterizedTest class >> case2 [
 [INFO] 
 [INFO] The following files have been resolved:
 [INFO]    org.moose:fame:jar:1.1:compile
+[INFO]    org.moose:fame:jar:1.1:runtime
 [INFO]    org.moose:famix:jar:2.0:runtime
 [INFO]    com.example:logger:jar:3.14.0:provided
 [INFO] 
@@ -87,19 +88,19 @@ MooseNexusMavenProjectParameterizedTest class >> case2 [
 			                 with: #name -> 'fame'
 			                 with: #version -> '1.1'
 			                 with: #type -> 'jar'
-			                 with: #scope -> 'compile').
+			                 with: #scopes -> #( 'compile' 'runtime' )).
 		                (Dictionary
 			                 with: #group -> group
 			                 with: #name -> 'famix'
 			                 with: #version -> '2.0'
 			                 with: #type -> 'jar'
-			                 with: #scope -> 'runtime').
+			                 with: #scopes -> #( 'runtime' )).
 		                (Dictionary
 			                 with: #group -> 'com.example'
 			                 with: #name -> 'logger'
 			                 with: #version -> '3.14.0'
 			                 with: #type -> 'jar'
-			                 with: #scope -> 'provided') }.
+			                 with: #scopes -> #( 'provided' )) }.
 
 	"expected projects to parse"
 	(projects := Dictionary new) at: group put: (Dictionary with:
@@ -110,19 +111,19 @@ MooseNexusMavenProjectParameterizedTest class >> case2 [
 					 with: #name -> 'fame'
 					 with: #version -> '1.1'
 					 with: #type -> 'jar'
-					 with: #scope -> 'compile'
+					 with: #scopes -> #( 'compile' 'runtime' )
 					 with: #path -> 'mavenRepository').
 				(Dictionary
 					 with: #name -> 'famix'
 					 with: #version -> '2.0'
 					 with: #type -> 'jar'
-					 with: #scope -> 'runtime'
+					 with: #scopes -> #( 'runtime' )
 					 with: #path -> 'mavenRepository') };
 		at: 'com.example' put: { (Dictionary
 				 with: #name -> 'logger'
 				 with: #version -> '3.14.0'
 				 with: #type -> 'jar'
-				 with: #scope -> 'provided'
+				 with: #scopes -> #( 'provided' )
 				 with: #path -> 'mavenRepository') }.
 
 	^ self
