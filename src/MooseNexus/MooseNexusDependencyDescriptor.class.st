@@ -35,12 +35,12 @@ MooseNexusDependencyDescriptor class >> fromDictionary: aDictionary [
 
 	^ self
 		  coordinates: (MooseNexusCoordinates
-				   group: (aDictionary at: #group ifAbsent: [ aDictionary at: 'group' ifAbsent: [ nil ] ])
-				   name: (aDictionary at: #name ifAbsent: [ aDictionary at: 'name' ])
-				   version: (aDictionary at: #version ifAbsent: [ aDictionary at: 'version' ]))
-		  type: (aDictionary at: #type ifAbsent: [ aDictionary at: 'type' ifAbsent: [ nil ] ])
-		  scopes: (aDictionary at: #scopes ifAbsent: [ aDictionary at: 'scopes' ])
-		  path: (aDictionary at: #path ifAbsent: [ aDictionary at: 'path' ifAbsent: [ nil ] ])
+				   group: (aDictionary at: #group ifAbsent: [ nil ])
+				   name: (aDictionary at: #name)
+				   version: (aDictionary at: #version))
+		  type: (aDictionary at: #type ifAbsent: [ nil ])
+		  scopes: (aDictionary at: #scopes)
+		  path: (aDictionary at: #path ifAbsent: [ nil ])
 ]
 
 { #category : 'comparing' }

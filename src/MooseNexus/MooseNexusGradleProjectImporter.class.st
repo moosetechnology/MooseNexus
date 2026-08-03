@@ -156,19 +156,15 @@ MooseNexusGradleProjectImporter >> parse: raw [
 	(line := lines at: (index := index + 1)) isNotEmpty and: [ line first == $- ] ] whileFalse.
 
 	[ (line := lines at: index) isNotEmpty ] whileTrue: [
-			| group name version descriptor dependencies |
+			| projectData group name version path dependencies |
 			"read project descriptor"
-			descriptor := $: split: line allButFirst.
-			group := descriptor first ifEmpty: [ 'unknown' ].
-			name := descriptor second.
-			version := self validateProjectVersion: descriptor third.
-
-			"register the project with its version; project name is unique so this never overwrites"
-			descriptor := Dictionary with: #version -> version.
-			project projects at: group at: name put: descriptor.
+			projectData := $: split: line allButFirst.
+			group := projectData first ifEmpty: [ 'unknown' ].
+			name := projectData second.
+			version := self validateProjectVersion: projectData third.
 
 			"read the project location, relative to the directory"
-			descriptor at: #path put: (lines at: (index := index + 1)).
+			path := lines at: (index := index + 1).
 
 			"read dependencies per scope"
 			dependencies := Dictionary new.
@@ -176,8 +172,12 @@ MooseNexusGradleProjectImporter >> parse: raw [
 					| mapping |
 					mapping := self resolve: line.
 					self addDependency: mapping value to: dependencies group: mapping key ].
-			"the current project has been fully parsed"
-			descriptor at: #dependencies put: (self dependencyGroupsFrom: dependencies) ]
+
+			"register the parsed project; project name is unique so this never overwrites"
+			project projects
+				at: group
+				at: name
+				put: (MooseNexusManagedProjectDescriptor version: version path: path dependencies: (self dependencyGroupsFrom: dependencies)) ]
 ]
 
 { #category : 'reading' }
