@@ -273,13 +273,13 @@ MooseNexusMavenProjectParameterizedTest >> testDetermineVersion [
 { #category : 'tests' }
 MooseNexusMavenProjectParameterizedTest >> testFlattenDependencies [
 
-	self assertCollection: project dependencies hasSameElements: dependencies
+	self assertCollection: (project dependencies collect: [ :dependency | dependency asDictionary ]) hasSameElements: dependencies
 ]
 
 { #category : 'tests' }
 MooseNexusMavenProjectParameterizedTest >> testProjects [
 
-	self assert: project projects equals: projects
+	self assert: project serializedProjects equals: projects
 ]
 
 { #category : 'accessing' }

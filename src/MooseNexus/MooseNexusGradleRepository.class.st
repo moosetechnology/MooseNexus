@@ -51,10 +51,11 @@ MooseNexusGradleRepository >> resolve: descriptor [
 				             version: version
 				             type: type) ifNil: [ ^ nil ] ].
 
-	^ group -> (Dictionary
-		   with: #name -> name
-		   with: #version -> version
-		   with: #type -> type
-		   with: #scope -> scope
-		   with: #path -> (artifact relativeTo: FileLocator home) pathString)
+	^ group -> (MooseNexusDependencyDescriptor
+		   group: group
+		   name: name
+		   version: version
+		   type: type
+		   scope: scope
+		   path: (artifact relativeTo: FileLocator home) pathString)
 ]

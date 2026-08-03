@@ -53,6 +53,30 @@ MooseNexusManagedProject class >> knownLanguages [
 	^ #( java )
 ]
 
+{ #category : 'private' }
+MooseNexusManagedProject >> dependencyDescriptorFrom: aDescriptor group: dependencyGroup [
+
+	| descriptor |
+	aDescriptor isString ifTrue: [
+		Error signal: 'Invalid dependency descriptor for ' , dependencyGroup , ': ' , aDescriptor printString ].
+	descriptor := aDescriptor isDictionary
+		              ifTrue: [ MooseNexusDependencyDescriptor fromDictionary: aDescriptor ]
+		              ifFalse: [
+				              (self isArrayEncodedDependencyDescriptor: aDescriptor)
+					              ifTrue: [ MooseNexusDependencyDescriptor fromArray: aDescriptor ]
+					              ifFalse: [ aDescriptor ] ].
+	^ descriptor group ifNil: [ descriptor withGroup: dependencyGroup ] ifNotNil: [ descriptor ]
+]
+
+{ #category : 'private' }
+MooseNexusManagedProject >> dependencyDescriptorsFrom: descriptors group: dependencyGroup [
+
+	(self isArrayEncodedDependencyDescriptor: descriptors) ifTrue: [
+		^ { (self dependencyDescriptorFrom: descriptors group: dependencyGroup) } ].
+	descriptors isDictionary ifTrue: [ ^ { (self dependencyDescriptorFrom: descriptors group: dependencyGroup) } ].
+	^ descriptors collect: [ :descriptor | self dependencyDescriptorFrom: descriptor group: dependencyGroup ]
+]
+
 { #category : 'querying' }
 MooseNexusManagedProject >> determineLanguage [
 
@@ -80,6 +104,12 @@ MooseNexusManagedProject >> determineLanguage [
 						 candidates do: [ :candidate | s << candidate ] separatedBy: [ s << ', ' ].
 						 s << '`, proceed to choose the first one' ]) ].
 	^ candidates anyOne
+]
+
+{ #category : 'testing' }
+MooseNexusManagedProject >> isArrayEncodedDependencyDescriptor: anObject [
+
+	^ anObject isString not and: [ anObject isCollection and: [ anObject isNotEmpty and: [ anObject first isString ] ] ]
 ]
 
 { #category : 'testing' }
@@ -115,12 +145,13 @@ MooseNexusManagedProject >> language: aString [
 
 { #category : 'enumerating' }
 MooseNexusManagedProject >> projectDependenciesDo: aBlock [
-	"Iterate over the group, name and descriptor of all project dependencies"
+	"Iterate over dependency descriptors declared by managed projects."
 
 	self projects do: [ :projectGroup |
 			projectGroup do: [ :projectDescriptor |
 					(projectDescriptor at: #dependencies) keysAndValuesDo: [ :dependencyGroup :descriptors |
-						descriptors do: [ :descriptor | aBlock value: dependencyGroup value: descriptor ] ] ] ]
+							(self dependencyDescriptorsFrom: descriptors group: dependencyGroup) do: [ :descriptor |
+								aBlock value: dependencyGroup value: descriptor ] ] ] ]
 ]
 
 { #category : 'accessing' }
@@ -142,7 +173,7 @@ MooseNexusManagedProject >> projects: aDictionary [
 MooseNexusManagedProject >> properties [
 
 	^ super properties
-		  add: #projects -> self projects;
+		  add: #projects -> self serializedProjects;
 		  yourself
 ]
 
@@ -152,4 +183,32 @@ MooseNexusManagedProject >> readProperties: properties [
 	super readProperties: properties.
 	properties at: #language ifPresent: [ :lang | self language: lang ].
 	properties at: #projects ifPresent: [ :data | self projects: data ]
+]
+
+{ #category : 'enumerating' }
+MooseNexusManagedProject >> serializedDependenciesFrom: descriptors group: dependencyGroup [
+
+	^ (self dependencyDescriptorsFrom: descriptors group: dependencyGroup) collect: [ :descriptor |
+			  descriptor asDictionary
+				  removeKey: #group ifAbsent: [ nil ];
+				  yourself ]
+]
+
+{ #category : 'enumerating' }
+MooseNexusManagedProject >> serializedProjectDescriptor: projectDescriptor [
+
+	| serializedDescriptor serializedDependencies |
+	serializedDescriptor := projectDescriptor copy.
+	serializedDependencies := Dictionary new.
+	(projectDescriptor at: #dependencies ifAbsent: [ Dictionary new ]) keysAndValuesDo: [ :dependencyGroup :descriptors |
+		serializedDependencies at: dependencyGroup put: (self serializedDependenciesFrom: descriptors group: dependencyGroup) asArray ].
+	serializedDescriptor at: #dependencies put: serializedDependencies.
+	^ serializedDescriptor
+]
+
+{ #category : 'enumerating' }
+MooseNexusManagedProject >> serializedProjects [
+
+	^ self projects collect: [ :projectGroup |
+		  projectGroup collect: [ :projectDescriptor | self serializedProjectDescriptor: projectDescriptor ] ]
 ]

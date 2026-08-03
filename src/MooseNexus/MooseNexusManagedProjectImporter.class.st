@@ -93,15 +93,16 @@ MooseNexusManagedProjectImporter >> flatDependencies [
 	conflicts := Dictionary new.
 
 	project projectDependenciesDo: [ :dependencyGroup :descriptor |
-			| key |
-			key := dependencyGroup , ':' , (descriptor at: #name).
-			conflicts at: key ifPresent: [ :conflictList | conflictList add: descriptor ] ifAbsent: [
+			| dependency key |
+			dependency := project dependencyDescriptorFrom: descriptor group: dependencyGroup.
+			key := dependency group , ':' , dependency name.
+			conflicts at: key ifPresent: [ :conflictList | conflictList add: dependency ] ifAbsent: [
 					dependencies
 						at: key
-						ifPresent: [ :exisiting |
-								(exisiting at: #version) = (descriptor at: #version) ifFalse: [ "new conflict"
-									conflicts at: key put: (OrderedCollection with: (dependencies removeKey: key) with: descriptor) ] ]
-						ifAbsentPut: [ descriptor copyWith: #group -> dependencyGroup ] ] ].
+						ifPresent: [ :existing |
+								existing version = dependency version ifFalse: [ "new conflict"
+									conflicts at: key put: (OrderedCollection with: (dependencies removeKey: key) with: dependency) ] ]
+						ifAbsentPut: [ dependency ] ] ].
 
 	conflicts ifNotEmpty: [ self resolveDependencyConflicts: conflicts on: dependencies ].
 

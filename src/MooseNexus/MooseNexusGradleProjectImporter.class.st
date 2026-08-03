@@ -179,8 +179,8 @@ MooseNexusGradleProjectImporter >> parse: raw [
 						at: mapping key
 						ifPresent: [ :descriptors | descriptors add: mapping value ]
 						ifAbsentPut: [ OrderedCollection with: mapping value ] ].
-			"the current project has been fully parsed, save the dependencies as arrays for JSON compatibility"
-			descriptor at: #dependencies put: (dependencies collect: #asArray) ]
+			"the current project has been fully parsed, save dependency groups as arrays for JSON compatibility"
+			descriptor at: #dependencies put: (dependencies collect: [ :descriptors | descriptors asArray ]) ]
 ]
 
 { #category : 'reading' }

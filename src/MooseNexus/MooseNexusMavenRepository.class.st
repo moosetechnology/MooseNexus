@@ -38,11 +38,12 @@ MooseNexusMavenRepository >> resolve: descriptor [
 	"search for the artifact"
 	^ theDirectory / (name , '-' , version , '.' , type)
 		  ifExists: [ :file |
-				  group -> (Dictionary
-					   with: #name -> name
-					   with: #version -> version
-					   with: #type -> type
-					   with: #scope -> scope
-					   with: #path -> (file relativeTo: homeDirectory) pathString) ]
+				  group -> (MooseNexusDependencyDescriptor
+					   group: group
+					   name: name
+					   version: version
+					   type: type
+					   scope: scope
+					   path: (file relativeTo: homeDirectory) pathString) ]
 		  ifAbsent: [ nil ]
 ]
