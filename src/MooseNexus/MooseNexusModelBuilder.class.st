@@ -98,12 +98,15 @@ MooseNexusModelBuilder >> project: aMooseNexusProject [
 
 { #category : 'building' }
 MooseNexusModelBuilder >> registerModel: modelPath [
-	"Name and move the model file, and register it with the project models."
+	"Name and record the model file produced by the extractor."
 
-	| projectDirectory source |
+	| projectDirectory source target |
 	projectDirectory := FileLocator home / project directory.
 	source := projectDirectory / modelPath.
-	source moveTo: ((projectDirectory / 'models') ensureCreateDirectory / self modelName , source extension) ensureDelete.
+	target := ((projectDirectory / 'models') ensureCreateDirectory / self modelName , source extension) ensureDelete.
+	"Copy before deleting so files produced by external tools are recreated with the image user's ownership."
+	source copyTo: target.
+	source ensureDelete.
 
 	project addModel: (Dictionary
 			 with: 'name' -> self modelName
