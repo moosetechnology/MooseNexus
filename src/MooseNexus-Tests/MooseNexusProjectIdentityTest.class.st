@@ -29,17 +29,42 @@ MooseNexusProjectIdentityTest >> tearDown [
 ]
 
 { #category : 'tests' }
-MooseNexusProjectIdentityTest >> testCoordinatesCanChangeBeforeRecording [
+MooseNexusProjectIdentityTest >> testManagedProjectPropertiesRoundTripFromFile [
+
+	| project loadedProject propertiesFile projects |
+	projects := Dictionary with:
+		            'com.example'
+		            -> (Dictionary with: 'demo' -> (Dictionary with: #version -> '1.0.0' with: #dependencies -> Dictionary new)).
+	project := MooseNexusMavenProject coordinates: (MooseNexusProjectCoordinates group: 'com.example' name: 'demo' version: '1.0.0').
+	project
+		language: 'java';
+		projects: projects;
+		dependencies: #(  ).
+	propertiesFile := rootDirectory / 'managed-properties.json'.
+	propertiesFile writeStreamDo: [ :stream | project writePropertiesOn: stream ].
+
+	loadedProject := MooseNexusProject fromProperties: propertiesFile.
+
+	self assert: loadedProject class equals: MooseNexusMavenProject.
+	self assert: loadedProject coordinates equals: project coordinates.
+	self assert: loadedProject language equals: 'java'.
+	self assert: loadedProject projects equals: projects
+]
+
+{ #category : 'tests' }
+MooseNexusProjectIdentityTest >> testProjectCoordinatesAreInitializedOnce [
 
 	| project coordinates |
-	project := MooseNexusTestProject new.
 	coordinates := MooseNexusProjectCoordinates group: 'com.example' name: 'demo' version: '1.0.0'.
-	project coordinates: coordinates.
+	project := MooseNexusTestProject coordinates: coordinates.
 
 	self assert: project coordinates equals: coordinates.
 	self assert: project group equals: 'com.example'.
 	self assert: project name equals: 'demo'.
-	self assert: project version equals: '1.0.0'
+	self assert: project version equals: '1.0.0'.
+	self
+		should: [ project initializeCoordinates: (MooseNexusProjectCoordinates group: 'org.example' name: 'demo' version: '1.0.0') ]
+		raise: Error
 ]
 
 { #category : 'tests' }
@@ -56,31 +81,74 @@ MooseNexusProjectIdentityTest >> testProjectCoordinatesAreValueObjects [
 ]
 
 { #category : 'tests' }
+MooseNexusProjectIdentityTest >> testProjectPropertiesFlattenCoordinates [
+
+	| project properties |
+	project := MooseNexusTestProject coordinates: (MooseNexusProjectCoordinates group: 'com.example' name: 'demo' version: '1.0.0').
+	project dependencies: #(  ).
+	properties := project properties.
+
+	self assert: (properties at: #group) equals: 'com.example'.
+	self assert: (properties at: #name) equals: 'demo'.
+	self assert: (properties at: #version) equals: '1.0.0'.
+	self deny: (properties includesKey: #coordinates)
+]
+
+{ #category : 'tests' }
+MooseNexusProjectIdentityTest >> testProjectPropertiesRoundTripFromFile [
+
+	| project loadedProject propertiesFile |
+	project := MooseNexusTestProject coordinates: (MooseNexusProjectCoordinates group: 'com.example' name: 'demo' version: '1.0.0').
+	project dependencies: { (Dictionary with: #group -> 'org.example' with: #name -> 'dep' with: #version -> '2.0.0') }.
+	propertiesFile := rootDirectory / 'properties.json'.
+	propertiesFile writeStreamDo: [ :stream | project writePropertiesOn: stream ].
+
+	loadedProject := MooseNexusProject fromProperties: propertiesFile.
+
+	self assert: loadedProject class equals: MooseNexusTestProject.
+	self assert: loadedProject coordinates equals: project coordinates.
+	self assert: loadedProject dependencies equals: project dependencies
+]
+
+{ #category : 'tests' }
+MooseNexusProjectIdentityTest >> testProjectSpecHoldsRecordingIntent [
+
+	| coordinates spec |
+	coordinates := MooseNexusProjectCoordinates group: 'com.example' name: 'demo' version: '1.0.0'.
+	spec := MooseNexusProjectSpec coordinates: coordinates sourceDirectory: sourceDirectory.
+
+	self assert: spec coordinates equals: coordinates.
+	self assert: spec group equals: 'com.example'.
+	self assert: spec name equals: 'demo'.
+	self assert: spec version equals: '1.0.0'.
+	self assert: spec sourceDirectory pathString equals: sourceDirectory pathString
+]
+
+{ #category : 'tests' }
 MooseNexusProjectIdentityTest >> testRecordedProjectRejectsCoordinateChanges [
 
 	| project coordinates |
 	coordinates := MooseNexusProjectCoordinates group: 'com.example' name: 'demo' version: '1.0.0'.
-	project := MooseNexusTestProject new.
-	project
-		coordinates: coordinates;
-		directory: 'nexus/repository/com.example/demo/1.0.0'.
+	project := MooseNexusTestProject coordinates: coordinates.
+	project directory: 'nexus/repository/com.example/demo/1.0.0'.
 
-	self should: [ project coordinates: (MooseNexusProjectCoordinates group: 'org.example' name: 'demo' version: '1.0.0') ] raise: Error.
-	self should: [ project group: 'org.example' ] raise: Error.
-	self should: [ project name: 'renamed' ] raise: Error.
-	self should: [ project version: '2.0.0' ] raise: Error
+	self
+		should: [ project initializeCoordinates: (MooseNexusProjectCoordinates group: 'org.example' name: 'demo' version: '1.0.0') ]
+		raise: Error
 ]
 
 { #category : 'tests' }
 MooseNexusProjectIdentityTest >> testRepositoryCreatesLayoutBeforeRecordingProject [
 
-	| project coordinates projectDirectory |
+	| project spec projectDirectory |
 	project := MooseNexusTestProject new.
-	coordinates := MooseNexusProjectCoordinates group: 'com.example' name: 'demo' version: '1.0.0'.
+	spec := MooseNexusProjectSpec
+		        coordinates: (MooseNexusProjectCoordinates group: 'com.example' name: 'demo' version: '1.0.0')
+		        sourceDirectory: sourceDirectory.
 	projectDirectory := repository directory / 'repository' / 'com.example' / 'demo' / '1.0.0'.
 
 	self deny: repository directory exists.
-	repository recordProject: project coordinates: coordinates fromDirectory: sourceDirectory pathString.
+	repository recordLoadedProject: project describedBy: spec.
 
 	self assert: projectDirectory exists.
 	self assert: (projectDirectory / 'sources') exists.
@@ -91,12 +159,13 @@ MooseNexusProjectIdentityTest >> testRepositoryCreatesLayoutBeforeRecordingProje
 ]
 
 { #category : 'tests' }
-MooseNexusProjectIdentityTest >> testRepositoryRecordWithCoordinatesSetsIdentityBeforeRecording [
+MooseNexusProjectIdentityTest >> testRepositoryRecordFromSpecSetsIdentityBeforeRecording [
 
-	| project coordinates recordedProject |
+	| project spec recordedProject coordinates |
 	project := MooseNexusTestProject new.
 	coordinates := MooseNexusProjectCoordinates group: 'com.example' name: 'demo' version: '1.0.0'.
-	recordedProject := repository recordProject: project coordinates: coordinates fromDirectory: sourceDirectory pathString.
+	spec := MooseNexusProjectSpec coordinates: coordinates sourceDirectory: sourceDirectory.
+	recordedProject := repository recordLoadedProject: project describedBy: spec.
 
 	self assert: recordedProject identicalTo: project.
 	self assert: project coordinates equals: coordinates.

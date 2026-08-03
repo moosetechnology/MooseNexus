@@ -1,5 +1,5 @@
 "
-I represent a project to analyze with Moose.
+I represent a MooseNexus project loaded in memory or recorded in a repository.
 
 My properties follow this mapping:
 ```text
@@ -11,17 +11,16 @@ version:  <version>
 dependencies:
 	- path: <localPath>
 ```
-The nature corresponds to the concrete subclass of `MooseNexusProject` that handles the project.
-The group, name, and version are the same concept used by other project managers (e.g. Maven).
-They are used to uniquely identify a project to be modeled.
+The nature corresponds to the concrete subclass of MooseNexusProject that handles the source project.
+The group, name, and version are the coordinates that identify the source project as modeled by MooseNexus.
+
+Use MooseNexusProjectSpec to describe the intent to create or record a project. Coordinate inference belongs to importers; this object only carries the coordinates it was initialized with.
 "
 Class {
 	#name : 'MooseNexusProject',
 	#superclass : 'Object',
 	#instVars : [
-		'name',
-		'group',
-		'version',
+		'coordinates',
 		'directory',
 		'dependencies'
 	],
@@ -29,6 +28,14 @@ Class {
 	#package : 'MooseNexus',
 	#tag : 'Project'
 }
+
+{ #category : 'instance creation' }
+MooseNexusProject class >> coordinates: aMooseNexusProjectCoordinates [
+
+	^ self new
+		  initializeCoordinates: aMooseNexusProjectCoordinates;
+		  yourself
+]
 
 { #category : 'instance creation' }
 MooseNexusProject class >> fromNexusDirectory: directory [
@@ -42,7 +49,7 @@ MooseNexusProject class >> fromProperties: file [
 
 	| properties |
 	properties := file readStreamDo: [ :s | STON fromStream: s ].
-	^ ((properties at: #nature) asClassInEnvironment: self class environment) new readProperties: properties
+	^ ((properties at: #nature) asClassInEnvironment: self environment) new readProperties: properties
 ]
 
 { #category : 'testing' }
@@ -73,16 +80,7 @@ MooseNexusProject >> buildModel [
 { #category : 'accessing' }
 MooseNexusProject >> coordinates [
 
-	^ MooseNexusProjectCoordinates group: self group name: self name version: self version
-]
-
-{ #category : 'accessing' }
-MooseNexusProject >> coordinates: aMooseNexusProjectCoordinates [
-
-	self isRecorded ifTrue: [ Error signal: 'Cannot change project coordinates after recording the project in a repository' ].
-	group := aMooseNexusProjectCoordinates group.
-	name := aMooseNexusProjectCoordinates name.
-	version := aMooseNexusProjectCoordinates version
+	^ coordinates
 ]
 
 { #category : 'accessing' }
@@ -95,24 +93,6 @@ MooseNexusProject >> dependencies [
 MooseNexusProject >> dependencies: aDictionary [
 
 	dependencies := aDictionary
-]
-
-{ #category : 'querying' }
-MooseNexusProject >> determineGroup [
-
-	Error signal: 'Instance of ' , self className , ' ignores how to determine the group'
-]
-
-{ #category : 'querying' }
-MooseNexusProject >> determineName [
-
-	Error signal: 'Instance of ' , self className , ' ignores how to determine the name'
-]
-
-{ #category : 'querying' }
-MooseNexusProject >> determineVersion [
-
-	Error signal: 'Instance of ' , self className , ' ignores how to determine the version'
 ]
 
 { #category : 'accessing' }
@@ -130,13 +110,7 @@ MooseNexusProject >> directory: pathString [
 { #category : 'accessing' }
 MooseNexusProject >> group [
 
-	^ group ifNil: [ group := self determineGroup ]
-]
-
-{ #category : 'accessing' }
-MooseNexusProject >> group: aString [
-
-	self coordinates: (MooseNexusProjectCoordinates group: aString name: name version: version)
+	^ self coordinates group
 ]
 
 { #category : 'setup' }
@@ -167,6 +141,14 @@ MooseNexusProject >> importModel: modelDescription [
 	^ model
 ]
 
+{ #category : 'initialization' }
+MooseNexusProject >> initializeCoordinates: aMooseNexusProjectCoordinates [
+
+	self isRecorded ifTrue: [ Error signal: 'Cannot change project coordinates after recording the project in a repository' ].
+	coordinates ifNotNil: [ Error signal: 'Cannot change project coordinates after initialization' ].
+	coordinates := aMooseNexusProjectCoordinates
+]
+
 { #category : 'testing' }
 MooseNexusProject >> isManagedProject [
 
@@ -186,11 +168,6 @@ MooseNexusProject >> language [
 	self subclassResponsibility
 ]
 
-{ #category : 'accessing' }
-MooseNexusProject >> language: aString [
-	"Subclasses that need to figure out their language can use this hook."
-]
-
 { #category : 'building' }
 MooseNexusProject >> modelBuilder [
 
@@ -206,13 +183,7 @@ MooseNexusProject >> models [
 { #category : 'accessing' }
 MooseNexusProject >> name [
 
-	^ name ifNil: [ name := self determineName ]
-]
-
-{ #category : 'accessing' }
-MooseNexusProject >> name: aString [
-
-	self coordinates: (MooseNexusProjectCoordinates group: group name: aString version: version)
+	^ self coordinates name
 ]
 
 { #category : 'printing' }
@@ -220,11 +191,7 @@ MooseNexusProject >> printOn: stream [
 
 	super printOn: stream.
 	stream nextPut: $(.
-	group ifNil: [ stream nextPutAll: '<group>' ] ifNotNil: [ stream nextPutAll: group ].
-	stream nextPut: $:.
-	name ifNil: [ stream nextPutAll: '<project>' ] ifNotNil: [ stream nextPutAll: name ].
-	stream nextPut: $:.
-	version ifNil: [ stream nextPutAll: '<version>' ] ifNotNil: [ stream nextPutAll: version ].
+	coordinates ifNil: [ stream nextPutAll: '<coordinates>' ] ifNotNil: [ coordinates printOn: stream ].
 	stream nextPut: $)
 ]
 
@@ -251,7 +218,9 @@ MooseNexusProject >> properties [
 { #category : 'properties' }
 MooseNexusProject >> readProperties: properties [
 
-	properties keysAndValuesDo: [ :key :value | key = #nature ifFalse: [ self perform: key asSymbol asMutator with: value ] ]
+	self initializeCoordinates:
+		(MooseNexusProjectCoordinates group: (properties at: #group) name: (properties at: #name) version: (properties at: #version)).
+	properties at: #dependencies ifPresent: [ :deps | self dependencies: deps ]
 ]
 
 { #category : 'enumerating' }
@@ -265,13 +234,7 @@ MooseNexusProject >> sourceDirectory [
 { #category : 'accessing' }
 MooseNexusProject >> version [
 
-	^ version ifNil: [ version := self determineVersion ]
-]
-
-{ #category : 'accessing' }
-MooseNexusProject >> version: aString [
-
-	self coordinates: (MooseNexusProjectCoordinates group: group name: name version: aString)
+	^ self coordinates version
 ]
 
 { #category : 'properties' }

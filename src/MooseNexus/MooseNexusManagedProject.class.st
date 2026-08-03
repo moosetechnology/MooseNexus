@@ -54,13 +54,6 @@ MooseNexusManagedProject class >> knownLanguages [
 ]
 
 { #category : 'querying' }
-MooseNexusManagedProject >> determineGroup [
-
-	projects size == 1 ifFalse: [ Error signal: 'Can only determine group if only one is declared' ].
-	projects keysDo: [ :key | ^ key ]
-]
-
-{ #category : 'querying' }
 MooseNexusManagedProject >> determineLanguage [
 
 	| knownLanguages candidates sourceDirectory |
@@ -87,31 +80,6 @@ MooseNexusManagedProject >> determineLanguage [
 						 candidates do: [ :candidate | s << candidate ] separatedBy: [ s << ', ' ].
 						 s << '`, proceed to choose the first one' ]) ].
 	^ candidates anyOne
-]
-
-{ #category : 'querying' }
-MooseNexusManagedProject >> determineName [
-
-	(projects size == 1 and: [ projects anyOne size == 1 ]) ifFalse: [
-		Error signal: 'Can only determine name if only one is declared' ].
-	projects anyOne keysDo: [ :key | ^ key ]
-]
-
-{ #category : 'querying' }
-MooseNexusManagedProject >> determineVersion [
-
-	| theVersion |
-	(projects isNotEmpty and: [ projects anyOne isNotEmpty ]) ifFalse: [
-		Error signal: 'Cannot determine version because there are no managed projects' ].
-	"verify all managed projects declare same version"
-	theVersion := self validateProjectVersion: (projects anyOne anyOne at: #version ifAbsent: [ nil ]).
-	projects do: [ :projectGroup |
-			projectGroup do: [ :descriptor |
-					| descriptorVersion |
-					descriptorVersion := self validateProjectVersion: (descriptor at: #version ifAbsent: [ nil ]).
-					descriptorVersion = theVersion ifFalse: [
-						Error signal: 'Can only determine version if all managed projects declare the same one' ] ] ].
-	^ theVersion
 ]
 
 { #category : 'testing' }
@@ -178,10 +146,10 @@ MooseNexusManagedProject >> properties [
 		  yourself
 ]
 
-{ #category : 'validating' }
-MooseNexusManagedProject >> validateProjectVersion: aString [
+{ #category : 'properties' }
+MooseNexusManagedProject >> readProperties: properties [
 
-	(aString isNil or: [ aString isEmpty ]) ifTrue: [
-		Error signal: 'Cannot determine version because a managed project does not declare one' ].
-	^ aString
+	super readProperties: properties.
+	properties at: #language ifPresent: [ :lang | self language: lang ].
+	properties at: #projects ifPresent: [ :data | self projects: data ]
 ]
