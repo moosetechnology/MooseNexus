@@ -58,6 +58,53 @@ MooseNexusProjectIdentityTest >> testCoordinatesAreValueObjects [
 ]
 
 { #category : 'tests' }
+MooseNexusProjectIdentityTest >> testManagedProjectDescriptorDictionaryRoundTrip [
+
+	| dictionary descriptor |
+	dictionary := Dictionary
+		              with: #path -> '.'
+		              with: #version -> '1.0.0'
+		              with: #dependencies -> (Dictionary with: 'org.example' -> { (Dictionary
+					                with: #name -> 'dep'
+					                with: #version -> '2.0.0'
+					                with: #type -> 'jar'
+					                with: #scopes -> #( 'compile' )
+					                with: #path -> 'repository/dep-2.0.0.jar') }).
+	descriptor := MooseNexusManagedProjectDescriptor fromDictionary: dictionary.
+
+	self assert: descriptor version equals: '1.0.0'.
+	self assert: descriptor path equals: '.'.
+	self assert: descriptor asDictionary equals: dictionary
+]
+
+{ #category : 'tests' }
+MooseNexusProjectIdentityTest >> testManagedProjectDescriptorIsValueObject [
+
+	| dependency descriptor sameDescriptor otherDescriptor |
+	dependency := MooseNexusDependencyDescriptor
+		              coordinates: (MooseNexusCoordinates group: nil name: 'dep' version: '2.0.0')
+		              type: 'jar'
+		              scopes: #( 'compile' )
+		              path: 'repository/dep-2.0.0.jar'.
+	descriptor := MooseNexusManagedProjectDescriptor
+		              version: '1.0.0'
+		              path: '.'
+		              dependencies: (Dictionary with: 'org.example' -> { dependency }).
+	sameDescriptor := MooseNexusManagedProjectDescriptor
+		                  version: '1.0.0'
+		                  path: '.'
+		                  dependencies: (Dictionary with: 'org.example' -> { dependency }).
+	otherDescriptor := MooseNexusManagedProjectDescriptor
+		                   version: '2.0.0'
+		                   path: '.'
+		                   dependencies: (Dictionary with: 'org.example' -> { dependency }).
+
+	self assert: descriptor equals: sameDescriptor.
+	self deny: descriptor equals: otherDescriptor.
+	self assert: descriptor hash equals: sameDescriptor hash
+]
+
+{ #category : 'tests' }
 MooseNexusProjectIdentityTest >> testManagedProjectPropertiesRoundTripFromFile [
 
 	| project loadedProject propertiesFile projects projectDependencies dependency |
@@ -67,9 +114,10 @@ MooseNexusProjectIdentityTest >> testManagedProjectPropertiesRoundTripFromFile [
 		              scopes: #( 'compile' )
 		              path: 'repository/dep-2.0.0.jar'.
 	projectDependencies := Dictionary with: 'org.example' -> { dependency }.
-	projects := Dictionary with:
-		            'com.example'
-		            -> (Dictionary with: 'demo' -> (Dictionary with: #version -> '1.0.0' with: #dependencies -> projectDependencies)).
+	projects := Dictionary with: 'com.example'
+		            ->
+		            (Dictionary with:
+			             'demo' -> (MooseNexusManagedProjectDescriptor version: '1.0.0' path: nil dependencies: projectDependencies)).
 	project := MooseNexusMavenProject coordinates: (MooseNexusCoordinates group: 'com.example' name: 'demo' version: '1.0.0').
 	project
 		language: 'java';

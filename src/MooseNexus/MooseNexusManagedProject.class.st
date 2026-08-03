@@ -65,13 +65,6 @@ MooseNexusManagedProject >> dependencyDescriptorsFrom: descriptors group: depend
 	^ descriptors collect: [ :descriptor | self dependencyDescriptorFrom: descriptor group: dependencyGroup ]
 ]
 
-{ #category : 'properties' }
-MooseNexusManagedProject >> dependencyGroupsFromProperties: dependencyGroups [
-
-	^ dependencyGroups collect: [ :dependencyDictionaries |
-		  dependencyDictionaries collect: [ :dependency | MooseNexusDependencyDescriptor fromDictionary: dependency ] ]
-]
-
 { #category : 'querying' }
 MooseNexusManagedProject >> determineLanguage [
 
@@ -138,7 +131,7 @@ MooseNexusManagedProject >> projectDependenciesDo: aBlock [
 
 	self projects do: [ :projectGroup |
 			projectGroup do: [ :projectDescriptor |
-					(projectDescriptor at: #dependencies) keysAndValuesDo: [ :dependencyGroup :descriptors |
+					projectDescriptor dependencies keysAndValuesDo: [ :dependencyGroup :descriptors |
 							(self dependencyDescriptorsFrom: descriptors group: dependencyGroup) do: [ :descriptor |
 								aBlock value: dependencyGroup value: descriptor ] ] ] ]
 ]
@@ -146,13 +139,7 @@ MooseNexusManagedProject >> projectDependenciesDo: aBlock [
 { #category : 'properties' }
 MooseNexusManagedProject >> projectDescriptorFromProperties: projectDescriptor [
 
-	| loadedDescriptor |
-	loadedDescriptor := projectDescriptor copy.
-	loadedDescriptor
-		at: #dependencies
-		ifPresent: [ :dependencyGroups |
-		loadedDescriptor at: #dependencies put: (self dependencyGroupsFromProperties: dependencyGroups) ].
-	^ loadedDescriptor
+	^ MooseNexusManagedProjectDescriptor fromDictionary: projectDescriptor
 ]
 
 { #category : 'accessing' }
@@ -194,24 +181,9 @@ MooseNexusManagedProject >> readProperties: properties [
 ]
 
 { #category : 'enumerating' }
-MooseNexusManagedProject >> serializedDependenciesFrom: descriptors group: dependencyGroup [
-
-	^ (self dependencyDescriptorsFrom: descriptors group: dependencyGroup) collect: [ :descriptor |
-			  descriptor asDictionary
-				  removeKey: #group ifAbsent: [ nil ];
-				  yourself ]
-]
-
-{ #category : 'enumerating' }
 MooseNexusManagedProject >> serializedProjectDescriptor: projectDescriptor [
 
-	| serializedDescriptor serializedDependencies |
-	serializedDescriptor := projectDescriptor copy.
-	serializedDependencies := Dictionary new.
-	(projectDescriptor at: #dependencies ifAbsent: [ Dictionary new ]) keysAndValuesDo: [ :dependencyGroup :descriptors |
-		serializedDependencies at: dependencyGroup put: (self serializedDependenciesFrom: descriptors group: dependencyGroup) asArray ].
-	serializedDescriptor at: #dependencies put: serializedDependencies.
-	^ serializedDescriptor
+	^ projectDescriptor asDictionary
 ]
 
 { #category : 'enumerating' }

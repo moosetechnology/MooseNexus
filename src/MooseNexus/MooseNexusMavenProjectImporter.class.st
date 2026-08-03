@@ -120,10 +120,7 @@ MooseNexusMavenProjectImporter >> parseProject: raw startingAt: initialStart [
 				at: group
 				at: name
 				put:
-				(Dictionary
-					 with: #path -> path
-					 with: #version -> version
-					 with: #dependencies -> (self dependencyGroupsFrom: projectDependencies)) ].
+				(MooseNexusManagedProjectDescriptor version: version path: path dependencies: (self dependencyGroupsFrom: projectDependencies)) ].
 
 	"return the updated reading position"
 	^ start

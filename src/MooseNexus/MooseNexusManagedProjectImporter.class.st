@@ -97,11 +97,11 @@ MooseNexusManagedProjectImporter >> determineVersion [
 	(project projects isNotEmpty and: [ project projects anyOne isNotEmpty ]) ifFalse: [
 		Error signal: 'Cannot determine version because there are no managed projects' ].
 	"verify all managed projects declare same version"
-	theVersion := self validateProjectVersion: (project projects anyOne anyOne at: #version ifAbsent: [ nil ]).
+	theVersion := self validateProjectVersion: project projects anyOne anyOne version.
 	project projects do: [ :projectGroup |
 			projectGroup do: [ :descriptor |
 					| descriptorVersion |
-					descriptorVersion := self validateProjectVersion: (descriptor at: #version ifAbsent: [ nil ]).
+					descriptorVersion := self validateProjectVersion: descriptor version.
 					descriptorVersion = theVersion ifFalse: [
 						Error signal: 'Can only determine version if all managed projects declare the same one' ] ] ].
 	^ theVersion

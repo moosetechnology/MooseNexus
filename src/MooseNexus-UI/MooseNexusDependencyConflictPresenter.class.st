@@ -57,7 +57,7 @@ MooseNexusDependencyConflictPresenter >> initializePresenters [
 
 	versionRadioButtons := descriptors collect: [ :descriptor |
 			                       | version |
-			                       version := descriptor at: #version.
+			                       version := descriptor version.
 			                       self newRadioButton
 				                       label: version;
 				                       whenActivatedDo: [
@@ -108,7 +108,7 @@ MooseNexusDependencyConflictPresenter >> unlock [
 MooseNexusDependencyConflictPresenter >> updateWithResolverChoice: descriptor [
 
 	self freezeLock: true.
-	(self versionRadioButtons detect: [ :button | button label = (descriptor at: #version) ]) state: true.
+	(self versionRadioButtons detect: [ :button | button label = descriptor version ]) state: true.
 	self freezeLock: false
 ]
 
