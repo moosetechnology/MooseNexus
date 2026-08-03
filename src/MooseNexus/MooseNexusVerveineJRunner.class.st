@@ -128,16 +128,34 @@ MooseNexusVerveineJRunner >> jvmArgs: aString [
 	jvmArgs := aString
 ]
 
+{ #category : 'accessing' }
+MooseNexusVerveineJRunner >> outputPath [
+
+	^ 'sources/' , self class outputFilename , '.' , self format
+]
+
 { #category : 'printing' }
 MooseNexusVerveineJRunner >> printOptionsOn: stream [
 
+	self printOptionsOn: stream outputFile: self class outputFilename , '.' , self format
+]
+
+{ #category : 'printing' }
+MooseNexusVerveineJRunner >> printOptionsOn: stream outputFile: outputFileName [
+
 	self jvmArgs ifNotNil: [ :args | stream << args << ' ' ].
-	stream << '-o ' << self class outputFilename << '.' << self format << ' -format ' << self format.
+	stream << '-o ' << outputFileName << ' -format ' << self format.
 	self allLocals ifTrue: [ stream << ' -alllocals' ].
 	self anchor ifNotNil: [ :a | stream << ' -anchor ' << a ].
 	self javaVersion ifNotNil: [ :v | stream << ' -' << v ].
 	self summary ifTrue: [ stream << ' -summary' ].
 	self excludePaths ifNotEmpty: [ :paths | paths do: [ :path | stream << ' -excludepath ' << path ] ]
+]
+
+{ #category : 'running' }
+MooseNexusVerveineJRunner >> runCommand: aCommand [
+
+	^ LibC runCommand: aCommand
 ]
 
 { #category : 'accessing' }
