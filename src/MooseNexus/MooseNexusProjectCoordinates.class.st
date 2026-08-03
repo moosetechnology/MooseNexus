@@ -1,3 +1,10 @@
+"
+I am the stable identity of a MooseNexus project.
+
+I identify the source project as modeled by MooseNexus, using Maven-like group, name, and version components. These coordinates are used for equality, hashing, printing, and repository path decisions.
+
+I am value-like: create a new instance when a project should have different coordinates instead of mutating an existing one.
+"
 Class {
 	#name : 'MooseNexusProjectCoordinates',
 	#superclass : 'Object',
@@ -21,7 +28,7 @@ MooseNexusProjectCoordinates class >> group: aGroup name: aName version: aVersio
 MooseNexusProjectCoordinates >> = anObject [
 
 	self == anObject ifTrue: [ ^ true ].
-	anObject class = self class ifFalse: [ ^ false ].
+	anObject class == self class ifFalse: [ ^ false ].
 	^ anObject group = group and: [ anObject name = name and: [ anObject version = version ] ]
 ]
 

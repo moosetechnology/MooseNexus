@@ -145,3 +145,11 @@ MooseNexusManagedProject >> properties [
 		  add: #projects -> self projects;
 		  yourself
 ]
+
+{ #category : 'properties' }
+MooseNexusManagedProject >> readProperties: properties [
+
+	super readProperties: properties.
+	properties at: #language ifPresent: [ :lang | self language: lang ].
+	properties at: #projects ifPresent: [ :data | self projects: data ]
+]

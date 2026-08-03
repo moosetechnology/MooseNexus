@@ -49,7 +49,7 @@ MooseNexusProject class >> fromProperties: file [
 
 	| properties |
 	properties := file readStreamDo: [ :s | STON fromStream: s ].
-	^ ((properties at: #nature) asClassInEnvironment: self class environment) new readProperties: properties
+	^ ((properties at: #nature) asClassInEnvironment: self environment) new readProperties: properties
 ]
 
 { #category : 'testing' }
@@ -145,8 +145,7 @@ MooseNexusProject >> importModel: modelDescription [
 MooseNexusProject >> initializeCoordinates: aMooseNexusProjectCoordinates [
 
 	self isRecorded ifTrue: [ Error signal: 'Cannot change project coordinates after recording the project in a repository' ].
-	(coordinates notNil and: [ coordinates ~= aMooseNexusProjectCoordinates ]) ifTrue: [
-		Error signal: 'Cannot change project coordinates after initialization' ].
+	coordinates ifNotNil: [ Error signal: 'Cannot change project coordinates after initialization' ].
 	coordinates := aMooseNexusProjectCoordinates
 ]
 
@@ -167,11 +166,6 @@ MooseNexusProject >> language [
 	"Subclasses must return a lowercase string of the project's language name."
 
 	self subclassResponsibility
-]
-
-{ #category : 'accessing' }
-MooseNexusProject >> language: aString [
-	"Subclasses that need to figure out their language can use this hook."
 ]
 
 { #category : 'building' }
@@ -226,8 +220,7 @@ MooseNexusProject >> readProperties: properties [
 
 	self initializeCoordinates:
 		(MooseNexusProjectCoordinates group: (properties at: #group) name: (properties at: #name) version: (properties at: #version)).
-	properties keysAndValuesDo: [ :key :value |
-		(#( nature group name version ) includes: key) ifFalse: [ self perform: key asSymbol asMutator with: value ] ]
+	properties at: #dependencies ifPresent: [ :deps | self dependencies: deps ]
 ]
 
 { #category : 'enumerating' }

@@ -29,6 +29,29 @@ MooseNexusProjectIdentityTest >> tearDown [
 ]
 
 { #category : 'tests' }
+MooseNexusProjectIdentityTest >> testManagedProjectPropertiesRoundTripFromFile [
+
+	| project loadedProject propertiesFile projects |
+	projects := Dictionary with:
+		            'com.example'
+		            -> (Dictionary with: 'demo' -> (Dictionary with: #version -> '1.0.0' with: #dependencies -> Dictionary new)).
+	project := MooseNexusMavenProject coordinates: (MooseNexusProjectCoordinates group: 'com.example' name: 'demo' version: '1.0.0').
+	project
+		language: 'java';
+		projects: projects;
+		dependencies: #(  ).
+	propertiesFile := rootDirectory / 'managed-properties.json'.
+	propertiesFile writeStreamDo: [ :stream | project writePropertiesOn: stream ].
+
+	loadedProject := MooseNexusProject fromProperties: propertiesFile.
+
+	self assert: loadedProject class equals: MooseNexusMavenProject.
+	self assert: loadedProject coordinates equals: project coordinates.
+	self assert: loadedProject language equals: 'java'.
+	self assert: loadedProject projects equals: projects
+]
+
+{ #category : 'tests' }
 MooseNexusProjectIdentityTest >> testProjectCoordinatesAreInitializedOnce [
 
 	| project coordinates |
@@ -55,6 +78,36 @@ MooseNexusProjectIdentityTest >> testProjectCoordinatesAreValueObjects [
 	self assert: coordinates equals: sameCoordinates.
 	self deny: coordinates equals: otherCoordinates.
 	self assert: coordinates printString equals: 'com.example:demo:1.0.0'
+]
+
+{ #category : 'tests' }
+MooseNexusProjectIdentityTest >> testProjectPropertiesFlattenCoordinates [
+
+	| project properties |
+	project := MooseNexusTestProject coordinates: (MooseNexusProjectCoordinates group: 'com.example' name: 'demo' version: '1.0.0').
+	project dependencies: #(  ).
+	properties := project properties.
+
+	self assert: (properties at: #group) equals: 'com.example'.
+	self assert: (properties at: #name) equals: 'demo'.
+	self assert: (properties at: #version) equals: '1.0.0'.
+	self deny: (properties includesKey: #coordinates)
+]
+
+{ #category : 'tests' }
+MooseNexusProjectIdentityTest >> testProjectPropertiesRoundTripFromFile [
+
+	| project loadedProject propertiesFile |
+	project := MooseNexusTestProject coordinates: (MooseNexusProjectCoordinates group: 'com.example' name: 'demo' version: '1.0.0').
+	project dependencies: { (Dictionary with: #group -> 'org.example' with: #name -> 'dep' with: #version -> '2.0.0') }.
+	propertiesFile := rootDirectory / 'properties.json'.
+	propertiesFile writeStreamDo: [ :stream | project writePropertiesOn: stream ].
+
+	loadedProject := MooseNexusProject fromProperties: propertiesFile.
+
+	self assert: loadedProject class equals: MooseNexusTestProject.
+	self assert: loadedProject coordinates equals: project coordinates.
+	self assert: loadedProject dependencies equals: project dependencies
 ]
 
 { #category : 'tests' }
