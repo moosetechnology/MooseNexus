@@ -45,11 +45,3 @@ MooseNexusDependencyConflictResolver >> resolveConflicts: conflicts on: dependen
 
 	self subclassResponsibility
 ]
-
-{ #category : 'accessing' }
-MooseNexusDependencyConflictResolver >> versionOf: descriptor [
-
-	^ descriptor isDictionary
-		  ifTrue: [ descriptor at: #version ]
-		  ifFalse: [ descriptor version ]
-]

@@ -8,6 +8,24 @@ Class {
 	#package : 'MooseNexus-Tests'
 }
 
+{ #category : 'helpers' }
+MooseNexusSemanticVersioningDependencyConflictResolverTest >> descriptorVersion: version [
+
+	^ MooseNexusDependencyDescriptor
+		  group: 'test'
+		  name: 'dependency'
+		  version: version
+		  type: 'jar'
+		  scope: 'compile'
+		  path: 'repository/dependency-' , version , '.jar'
+]
+
+{ #category : 'helpers' }
+MooseNexusSemanticVersioningDependencyConflictResolverTest >> descriptorsWithVersions: versions [
+
+	^ versions collect: [ :version | self descriptorVersion: version ] as: OrderedCollection
+]
+
 { #category : 'running' }
 MooseNexusSemanticVersioningDependencyConflictResolverTest >> setUp [
 
@@ -19,14 +37,7 @@ MooseNexusSemanticVersioningDependencyConflictResolverTest >> setUp [
 MooseNexusSemanticVersioningDependencyConflictResolverTest >> testCheckAndSortByVersion [
 
 	| descriptors sorted |
-	descriptors := {
-		               (Dictionary with: #version -> '0.0.0').
-		               (Dictionary with: #version -> '0.0.1').
-		               (Dictionary with: #version -> '0.1.0').
-		               (Dictionary with: #version -> '1.0.0').
-		               (Dictionary with: #version -> '1.0.1').
-		               (Dictionary with: #version -> '1.1.0').
-		               (Dictionary with: #version -> '1.1.1') } asOrderedCollection.
+	descriptors := self descriptorsWithVersions: #( '0.0.0' '0.0.1' '0.1.0' '1.0.0' '1.0.1' '1.1.0' '1.1.1' ).
 
 	sorted := (resolver checkAndSortByVersion: descriptors reversed) collect: #value.
 
@@ -37,15 +48,9 @@ MooseNexusSemanticVersioningDependencyConflictResolverTest >> testCheckAndSortBy
 MooseNexusSemanticVersioningDependencyConflictResolverTest >> testCheckAndSortByVersionComplex [
 
 	| descriptors sorted |
-	descriptors := {
-		               (Dictionary with: #version -> '12.3.0').
-		               (Dictionary with: #version -> '12.3.0-alpha').
-		               (Dictionary with: #version -> '9.5.1').
-		               (Dictionary with: #version -> '9.5.1-rc').
-		               (Dictionary with: #version -> '9.5').
-		               (Dictionary with: #version -> '12e') } asOrderedCollection.
+	descriptors := self descriptorsWithVersions: #( '12.3.0' '12.3.0-alpha' '9.5.1' '9.5.1-rc' '9.5' '12e' ).
 
-	sorted := (resolver checkAndSortByVersion: descriptors) collect: [ :descriptor | descriptor value at: #version ].
+	sorted := (resolver checkAndSortByVersion: descriptors) collect: [ :descriptor | descriptor value version ].
 
 	self assert: sorted equals: { '9.5'. '9.5.1'. '12e'. '12.3.0' } asOrderedCollection
 ]
@@ -55,10 +60,7 @@ MooseNexusSemanticVersioningDependencyConflictResolverTest >> testCheckAndSortBy
 	"Versions with the same missing parts cannot be resolved against each other."
 
 	| descriptors |
-	descriptors := {
-		               (Dictionary with: #version -> '1.0').
-		               (Dictionary with: #version -> '1.0-alpha').
-		               (Dictionary with: #version -> '1.0-rc') } asOrderedCollection.
+	descriptors := self descriptorsWithVersions: #( '1.0' '1.0-alpha' '1.0-rc' ).
 
 	self assert: (resolver checkAndSortByVersion: descriptors) equals: nil
 ]
@@ -68,10 +70,7 @@ MooseNexusSemanticVersioningDependencyConflictResolverTest >> testCheckAndSortBy
 	"Refuse to choose among equally unparsable versions."
 
 	| descriptors |
-	descriptors := {
-		               (Dictionary with: #version -> 'alpha').
-		               (Dictionary with: #version -> 'beta').
-		               (Dictionary with: #version -> 'rc') } asOrderedCollection.
+	descriptors := self descriptorsWithVersions: #( 'alpha' 'beta' 'rc' ).
 
 	self assert: (resolver checkAndSortByVersion: descriptors) equals: nil
 ]
@@ -81,10 +80,7 @@ MooseNexusSemanticVersioningDependencyConflictResolverTest >> testCheckAndSortBy
 	"Should refuse to select a version if all major.minor.patch match but the suffix does not."
 
 	| descriptors |
-	descriptors := {
-		               (Dictionary with: #version -> '1.0.0-alpha').
-		               (Dictionary with: #version -> '1.0.0-beta').
-		               (Dictionary with: #version -> '1.0.0-rc') } asOrderedCollection.
+	descriptors := self descriptorsWithVersions: #( '1.0.0-alpha' '1.0.0-beta' '1.0.0-rc' ).
 
 	self assert: (resolver checkAndSortByVersion: descriptors) equals: nil
 ]
@@ -93,11 +89,7 @@ MooseNexusSemanticVersioningDependencyConflictResolverTest >> testCheckAndSortBy
 MooseNexusSemanticVersioningDependencyConflictResolverTest >> testCheckAndSortByVersionWithPartiallyUnparsable [
 
 	| descriptors sorted |
-	descriptors := {
-		               (Dictionary with: #version -> '0.1').
-		               (Dictionary with: #version -> '1.0.1').
-		               (Dictionary with: #version -> '1.1.a').
-		               (Dictionary with: #version -> '1.1.0') } asOrderedCollection.
+	descriptors := self descriptorsWithVersions: #( '0.1' '1.0.1' '1.1.a' '1.1.0' ).
 
 	sorted := (resolver checkAndSortByVersion: descriptors) collect: #value.
 
@@ -109,10 +101,7 @@ MooseNexusSemanticVersioningDependencyConflictResolverTest >> testCheckAndSortBy
 	"Can select a version if all major.minor.patch match and one does not have a suffix."
 
 	| descriptors sorted |
-	descriptors := {
-		               (Dictionary with: #version -> '1.0.0-alpha').
-		               (Dictionary with: #version -> '1.0.0-beta').
-		               (Dictionary with: #version -> '1.0.0') } asOrderedCollection.
+	descriptors := self descriptorsWithVersions: #( '1.0.0-alpha' '1.0.0-beta' '1.0.0' ).
 
 	sorted := (resolver checkAndSortByVersion: descriptors) collect: #value.
 
@@ -198,24 +187,16 @@ MooseNexusSemanticVersioningDependencyConflictResolverTest >> testResolveConflic
 
 	| conflicts resolved |
 	conflicts := Dictionary
-		             with: 'net:versioned' -> {
-				             (Dictionary with: #version -> '8.7.5').
-				             (Dictionary with: #version -> '5.3.9').
-				             (Dictionary with: #version -> '10.2.0-rc') } asOrderedCollection
-		             with: 'org:example' -> {
-				             (Dictionary with: #version -> '1.0.0').
-				             (Dictionary with: #version -> '2.0.0').
-				             (Dictionary with: #version -> '1.1.0') } asOrderedCollection
-		             with: 'com:potato' -> {
-				             (Dictionary with: #version -> '2.39.451e-rc').
-				             (Dictionary with: #version -> '2.39.452e-rc') } asOrderedCollection.
+		             with: 'net:versioned' -> (self descriptorsWithVersions: #( '8.7.5' '5.3.9' '10.2.0-rc' ))
+		             with: 'org:example' -> (self descriptorsWithVersions: #( '1.0.0' '2.0.0' '1.1.0' ))
+		             with: 'com:potato' -> (self descriptorsWithVersions: #( '2.39.451e-rc' '2.39.452e-rc' )).
 
 	resolver resolveConflicts: conflicts on: (resolved := Dictionary new).
 
 	self assert: resolved equals: (Dictionary
-			 with: 'net:versioned' -> (Dictionary with: #version -> '10.2.0-rc')
-			 with: 'org:example' -> (Dictionary with: #version -> '2.0.0')
-			 with: 'com:potato' -> (Dictionary with: #version -> '2.39.452e-rc'))
+			 with: 'net:versioned' -> (self descriptorVersion: '10.2.0-rc')
+			 with: 'org:example' -> (self descriptorVersion: '2.0.0')
+			 with: 'com:potato' -> (self descriptorVersion: '2.39.452e-rc'))
 ]
 
 { #category : 'tests' }
@@ -223,25 +204,17 @@ MooseNexusSemanticVersioningDependencyConflictResolverTest >> testResolveConflic
 
 	| conflicts resolved |
 	conflicts := Dictionary
-		             with: 'net:versioned' -> {
-				             (Dictionary with: #version -> '8.7.5').
-				             (Dictionary with: #version -> '5.3.9').
-				             (Dictionary with: #version -> '10.2.0-rc') } asOrderedCollection
-		             with: 'org:example' -> {
-				             (Dictionary with: #version -> '1.0.0').
-				             (Dictionary with: #version -> '2.0.0').
-				             (Dictionary with: #version -> '1.1.0') } asOrderedCollection
-		             with: 'com:potato' -> {
-				             (Dictionary with: #version -> '2.39.451e-rc').
-				             (Dictionary with: #version -> '2.39.452e-rc') } asOrderedCollection.
+		             with: 'net:versioned' -> (self descriptorsWithVersions: #( '8.7.5' '5.3.9' '10.2.0-rc' ))
+		             with: 'org:example' -> (self descriptorsWithVersions: #( '1.0.0' '2.0.0' '1.1.0' ))
+		             with: 'com:potato' -> (self descriptorsWithVersions: #( '2.39.451e-rc' '2.39.452e-rc' )).
 
 	resolver useOldest.
 	resolver resolveConflicts: conflicts on: (resolved := Dictionary new).
 
 	self assert: resolved equals: (Dictionary
-			 with: 'net:versioned' -> (Dictionary with: #version -> '5.3.9')
-			 with: 'org:example' -> (Dictionary with: #version -> '1.0.0')
-			 with: 'com:potato' -> (Dictionary with: #version -> '2.39.451e-rc'))
+			 with: 'net:versioned' -> (self descriptorVersion: '5.3.9')
+			 with: 'org:example' -> (self descriptorVersion: '1.0.0')
+			 with: 'com:potato' -> (self descriptorVersion: '2.39.451e-rc'))
 ]
 
 { #category : 'tests' }
@@ -249,22 +222,14 @@ MooseNexusSemanticVersioningDependencyConflictResolverTest >> testResolveConflic
 
 	| conflicts resolved |
 	conflicts := Dictionary
-		             with: 'net:versioned' -> {
-				             (Dictionary with: #version -> '8.7.5').
-				             (Dictionary with: #version -> '5.3.9').
-				             (Dictionary with: #version -> '10.2.0-rc') } asOrderedCollection
-		             with: 'org:example' -> {
-				             (Dictionary with: #version -> 'awfulVersion').
-				             (Dictionary with: #version -> 'awesomeVersion').
-				             (Dictionary with: #version -> 'worstVersion') } asOrderedCollection
-		             with: 'com:potato' -> {
-				             (Dictionary with: #version -> '2b.39.451e-rc').
-				             (Dictionary with: #version -> '2a.39.451e-rc') } asOrderedCollection.
+		             with: 'net:versioned' -> (self descriptorsWithVersions: #( '8.7.5' '5.3.9' '10.2.0-rc' ))
+		             with: 'org:example' -> (self descriptorsWithVersions: #( 'awfulVersion' 'awesomeVersion' 'worstVersion' ))
+		             with: 'com:potato' -> (self descriptorsWithVersions: #( '2b.39.451e-rc' '2a.39.451e-rc' )).
 
 	resolver resolveConflicts: conflicts on: (resolved := Dictionary new).
 
 	self assert: resolved equals: (Dictionary
-			 with: 'net:versioned' -> (Dictionary with: #version -> '10.2.0-rc')
-			 with: 'org:example' -> (Dictionary with: #version -> 'awfulVersion')
-			 with: 'com:potato' -> (Dictionary with: #version -> '2b.39.451e-rc'))
+			 with: 'net:versioned' -> (self descriptorVersion: '10.2.0-rc')
+			 with: 'org:example' -> (self descriptorVersion: 'awfulVersion')
+			 with: 'com:potato' -> (self descriptorVersion: '2b.39.451e-rc'))
 ]

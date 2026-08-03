@@ -29,7 +29,7 @@ MooseNexusSemanticVersioningDependencyConflictResolver >> checkAndSortByVersion:
 	Versions with a suffix are added to a bag without the suffix to count them."
 	listWithVersion := descriptors collectWithIndex: [ :descriptor :index |
 			                   | version |
-			                   version := self parseVersion: (self versionOf: descriptor).
+			                   version := self parseVersion: descriptor version.
 			                   uniqueVersions add: version.
 			                   version size = 4 ifTrue: [ "version has suffix"
 					                   | suffixless |

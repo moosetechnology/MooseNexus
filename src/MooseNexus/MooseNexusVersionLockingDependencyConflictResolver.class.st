@@ -57,7 +57,7 @@ MooseNexusVersionLockingDependencyConflictResolver >> resolveConflicts: conflict
 				at: groupAndName
 				ifPresent: [ :version |
 						descriptors
-							detect: [ :descriptor | version = (self versionOf: descriptor) ]
+							detect: [ :descriptor | version = descriptor version ]
 							ifFound: [ :descriptor | dependencies at: groupAndName put: descriptor ]
 							ifNone: [ remaining at: groupAndName put: descriptors ] ]
 				ifAbsent: [ remaining at: groupAndName put: descriptors ] ].

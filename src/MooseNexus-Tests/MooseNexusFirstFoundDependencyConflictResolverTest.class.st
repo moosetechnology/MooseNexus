@@ -8,6 +8,24 @@ Class {
 	#package : 'MooseNexus-Tests'
 }
 
+{ #category : 'helpers' }
+MooseNexusFirstFoundDependencyConflictResolverTest >> descriptorVersion: version [
+
+	^ MooseNexusDependencyDescriptor
+		  group: 'test'
+		  name: 'dependency'
+		  version: version
+		  type: 'jar'
+		  scope: 'compile'
+		  path: 'repository/dependency-' , version , '.jar'
+]
+
+{ #category : 'helpers' }
+MooseNexusFirstFoundDependencyConflictResolverTest >> descriptorsWithVersions: versions [
+
+	^ versions collect: [ :version | self descriptorVersion: version ] as: OrderedCollection
+]
+
 { #category : 'running' }
 MooseNexusFirstFoundDependencyConflictResolverTest >> setUp [
 
@@ -20,17 +38,12 @@ MooseNexusFirstFoundDependencyConflictResolverTest >> testResolveConflictsOn [
 
 	| conflicts resolved |
 	conflicts := Dictionary
-		             with: 'org:example' -> {
-				             (Dictionary with: #version -> 'awfulVersion').
-				             (Dictionary with: #version -> 'awesomeVersion').
-				             (Dictionary with: #version -> 'worstVersion') } asOrderedCollection
-		             with: 'com:potato' -> {
-				             (Dictionary with: #version -> '2b.39.451e-rc').
-				             (Dictionary with: #version -> '2a.39.451e-rc') } asOrderedCollection.
+		             with: 'org:example' -> (self descriptorsWithVersions: #( 'awfulVersion' 'awesomeVersion' 'worstVersion' ))
+		             with: 'com:potato' -> (self descriptorsWithVersions: #( '2b.39.451e-rc' '2a.39.451e-rc' )).
 
 	resolver resolveConflicts: conflicts on: (resolved := Dictionary new).
 
 	self assert: resolved equals: (Dictionary
-			 with: 'org:example' -> (Dictionary with: #version -> 'awfulVersion')
-			 with: 'com:potato' -> (Dictionary with: #version -> '2b.39.451e-rc'))
+			 with: 'org:example' -> (self descriptorVersion: 'awfulVersion')
+			 with: 'com:potato' -> (self descriptorVersion: '2b.39.451e-rc'))
 ]
