@@ -96,9 +96,9 @@ MooseNexusModelBuilder >> project: aMooseNexusProject [
 
 { #category : 'building' }
 MooseNexusModelBuilder >> registerModel: modelPath [
-	"Name and record the model file produced by the extractor. Answer the recorded model description."
+	"Name and record the model file produced by the extractor. Answer the recorded model artifact."
 
-	| projectDirectory source target modelDescription |
+	| projectDirectory source target artifactPath modelArtifact |
 	projectDirectory := FileLocator home / project directory.
 	source := projectDirectory / modelPath.
 	target := ((projectDirectory / 'models') ensureCreateDirectory / self modelName , source extension) ensureDelete.
@@ -106,14 +106,17 @@ MooseNexusModelBuilder >> registerModel: modelPath [
 	source copyTo: target.
 	source ensureDelete.
 
-	modelDescription := Dictionary
-		                    with: 'name' -> self modelName
-		                    with: 'format' -> source extension
-		                    with: 'comment' -> self modelComment
-		                    with: 'timestamp' -> DateAndTime now asString
-		                    with: 'famixVersion' -> 'unknown'.
-	project addModel: modelDescription.
-	^ modelDescription
+	artifactPath := (target relativeTo: projectDirectory) pathString.
+	modelArtifact := MooseNexusModelArtifact
+		                 coordinates: project coordinates
+		                 name: self modelName
+		                 path: artifactPath
+		                 format: source extension
+		                 comment: self modelComment
+		                 timestamp: DateAndTime now asString
+		                 famixVersion: 'unknown'.
+	project addModel: modelArtifact.
+	^ modelArtifact
 ]
 
 { #category : 'building' }

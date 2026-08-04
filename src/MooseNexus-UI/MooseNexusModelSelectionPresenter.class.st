@@ -44,8 +44,8 @@ MooseNexusModelSelectionPresenter >> initializePresenters [
 
 	modelsList := self newList
 		              items: nexusProject models;
-		              display: [ :dict | dict at: 'description' ];
-		              whenSelectedDo: [ :dict | self updateForSelectedModel ].
+		              display: [ :artifact | artifact description ];
+		              whenSelectedDo: [ :artifact | self updateForSelectedModel ].
 
 	importButton := self newButton
 		                label: 'Import';
@@ -82,11 +82,11 @@ MooseNexusModelSelectionPresenter >> updateForSelectedModel [
 { #category : 'updating' }
 MooseNexusModelSelectionPresenter >> updateLabels [
 
-	commentLabel label: 'Comment: ' , (modelsList selectedItem at: 'comment').
-	timestampLabel label: 'Timestamp: ' , (modelsList selectedItem at: 'timestamp').
-	famixVersionLabel label: 'Famix version: ' , (modelsList selectedItem at: 'famixVersion').
-	fileSizeLabel label: 'File size: '
-		, (nexusProject directory asFileReference / 'models' / (modelsList selectedItem at: 'name')) size humanReadableByteSizeString
+	commentLabel label: 'Comment: ' , modelsList selectedItem comment.
+	timestampLabel label: 'Timestamp: ' , modelsList selectedItem timestamp.
+	famixVersionLabel label: 'Famix version: ' , modelsList selectedItem famixVersion.
+	fileSizeLabel label:
+		'File size: ' , (FileLocator home / nexusProject directory / modelsList selectedItem path) size humanReadableByteSizeString
 ]
 
 { #category : 'updating' }

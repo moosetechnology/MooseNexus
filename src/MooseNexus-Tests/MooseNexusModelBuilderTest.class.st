@@ -74,6 +74,8 @@ MooseNexusModelBuilderTest >> testBuildSpecExecutesPlanAndAnswersModelBuildResul
 	self assert: result dependencyResolutionResult project identicalTo: result project.
 	self assert: result dependencyResolutionResult warnings isEmpty.
 	self assert: result dependencyResolutionResult decisions isEmpty.
+	self assert: result modelArtifact coordinates equals: result project coordinates.
+	self assert: result modelArtifact path equals: 'models/planned-model.json'.
 	self assert: result modelName equals: 'planned-model'.
 	self assert: result modelFormat equals: 'json'.
 	self assert: modelFile exists.
@@ -96,23 +98,51 @@ MooseNexusModelBuilderTest >> testBuildSpecKeepsModelBuilderDefaultsWhenOptionsA
 ]
 
 { #category : 'tests' }
+MooseNexusModelBuilderTest >> testModelArtifactDictionaryRoundTrip [
+
+	| artifact sameArtifact |
+	artifact := MooseNexusModelArtifact
+		            coordinates: project coordinates
+		            name: 'demo-model'
+		            path: 'models/demo-model.json'
+		            format: 'json'
+		            comment: 'generated for tests'
+		            timestamp: '2026-08-04T10:00:00+02:00'
+		            famixVersion: 'unknown'.
+
+	sameArtifact := MooseNexusModelArtifact fromDictionary: artifact asDictionary.
+
+	self assert: sameArtifact equals: artifact.
+	self assert: sameArtifact hash equals: artifact hash
+]
+
+{ #category : 'tests' }
 MooseNexusModelBuilderTest >> testRegisterModelCopiesOutputIntoModelsDirectory [
 
-	| builder source target models modelDescription |
+	| builder source target models modelArtifact serializedModels serializedArtifact |
 	source := rootDirectory / 'sources' / 'mooseNexusModel.json'.
 	source writeStreamDo: [ :stream | stream nextPutAll: '{ }' ].
 	builder := MooseNexusModelBuilder on: project.
 	builder modelName: 'demo-model'.
 
-	modelDescription := builder registerModel: 'sources/mooseNexusModel.json'.
+	modelArtifact := builder registerModel: 'sources/mooseNexusModel.json'.
 
 	target := rootDirectory / 'models' / 'demo-model.json'.
 	self deny: source exists.
 	self assert: target exists.
 	self assert: target contents equals: '{ }'.
-	models := rootDirectory / 'models.json' readStreamDo: [ :stream | STON fromStream: stream ].
+	self assert: modelArtifact coordinates equals: project coordinates.
+	self assert: modelArtifact name equals: 'demo-model'.
+	self assert: modelArtifact path equals: 'models/demo-model.json'.
+	self assert: modelArtifact format equals: 'json'.
+	self assert: modelArtifact famixVersion equals: 'unknown'.
+	models := project models.
 	self assert: models size equals: 1.
-	self assert: modelDescription equals: models first.
-	self assert: (modelDescription at: 'name') equals: 'demo-model'.
-	self assert: (modelDescription at: 'format') equals: 'json'
+	self assert: models first equals: modelArtifact.
+	serializedModels := rootDirectory / 'models.json' readStreamDo: [ :stream | STON fromStream: stream ].
+	self assert: serializedModels size equals: 1.
+	serializedArtifact := serializedModels first.
+	self assert: (serializedArtifact at: 'name') equals: 'demo-model'.
+	self assert: (serializedArtifact at: 'path') equals: 'models/demo-model.json'.
+	self assert: ((serializedArtifact at: 'projectCoordinates') at: 'group') equals: 'com.example'
 ]
