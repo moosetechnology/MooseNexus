@@ -15,6 +15,12 @@ Class {
 	#tag : 'Importer'
 }
 
+{ #category : 'capabilities' }
+MooseNexusProjectImporter class >> buildToolName [
+
+	^ self subclassResponsibility
+]
+
 { #category : 'testing' }
 MooseNexusProjectImporter class >> canHandle: directory [
 	"Subclasses define whether they can manage the project in the specified directory."
@@ -37,6 +43,18 @@ MooseNexusProjectImporter class >> fromDirectory: directory [
 MooseNexusProjectImporter class >> isAbstract [
 
 	^ self == MooseNexusProjectImporter
+]
+
+{ #category : 'capabilities' }
+MooseNexusProjectImporter class >> supportedLanguages [
+
+	^ #(  )
+]
+
+{ #category : 'capabilities' }
+MooseNexusProjectImporter >> buildToolName [
+
+	^ self class buildToolName
 ]
 
 { #category : 'configuring' }
@@ -92,4 +110,46 @@ MooseNexusProjectImporter >> project [
 MooseNexusProjectImporter >> project: aMooseNexusProject [
 
 	project := aMooseNexusProject
+]
+
+{ #category : 'capabilities' }
+MooseNexusProjectImporter >> supportedLanguages [
+
+	^ self class supportedLanguages
+]
+
+{ #category : 'capabilities' }
+MooseNexusProjectImporter >> toolRequirements [
+
+	^ #(  )
+]
+
+{ #category : 'validating' }
+MooseNexusProjectImporter >> validateToolRequirements [
+
+	self validateToolRequirements: (self
+			 validateToolRequirementsAvailabilityUsing: [ :command | LibC runCommand: command ]
+			 versionUsing: [ :command | LibC resultOfCommand: command ])
+]
+
+{ #category : 'validating' }
+MooseNexusProjectImporter >> validateToolRequirements: validationResults [
+
+	validationResults
+		detect: [ :result | result isAvailable not ]
+		ifFound: [ :result | Error signal: result errorMessage ].
+	^ validationResults
+]
+
+{ #category : 'validating' }
+MooseNexusProjectImporter >> validateToolRequirementsAvailabilityUsing: availabilityRunner versionUsing: versionRunner [
+
+	^ self toolRequirements collect: [ :requirement |
+		  requirement validateAvailabilityUsing: availabilityRunner versionUsing: versionRunner ]
+]
+
+{ #category : 'validating' }
+MooseNexusProjectImporter >> validateToolRequirementsUsing: aCommandRunner [
+
+	^ self toolRequirements collect: [ :requirement | requirement validateUsing: aCommandRunner ]
 ]

@@ -21,7 +21,7 @@ Class {
 { #category : 'testing' }
 MooseNexusVerveineJRunner class >> canHandle: language [
 
-	^ language = 'java'
+	^ language = self language
 ]
 
 { #category : 'instance creation' }
@@ -36,12 +36,40 @@ MooseNexusVerveineJRunner class >> isAbstract [
 	^ self == MooseNexusVerveineJRunner
 ]
 
+{ #category : 'capabilities' }
+MooseNexusVerveineJRunner class >> language [
+
+	^ 'java'
+]
+
+{ #category : 'capabilities' }
+MooseNexusVerveineJRunner class >> metamodel [
+
+	^ 'Famix-Java'
+]
+
+{ #category : 'capabilities' }
+MooseNexusVerveineJRunner class >> modelFormats [
+
+	^ #( json mse )
+]
+
 { #category : 'constants' }
 MooseNexusVerveineJRunner class >> outputFilename [
 	"This is the filename of the VerveineJ output, meant to avoid conflicts with an existing source file.
 	Its final name will be given afterwards."
 
 	^ 'mooseNexusModel'
+]
+
+{ #category : 'capabilities' }
+MooseNexusVerveineJRunner class >> toolRequirements [
+
+	^ { MooseNexusImageRequirement
+		    name: 'Moose/Famix Java'
+		    availabilityBlock: [ (Smalltalk includesKey: #FamixJavaModel) and: [ Smalltalk includesKey: #FamixJSONFileImporter ] ]
+		    versionBlock: [ 'FamixJavaModel and FamixJSONFileImporter loaded' ]
+		    expectedVersionDescription: 'loaded Moose image with Famix Java JSON import support' }
 ]
 
 { #category : 'accessing' }

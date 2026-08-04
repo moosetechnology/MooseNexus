@@ -31,6 +31,7 @@ MooseNexusModelBuilder >> build [
 	"Create the model and answer its recorded description."
 
 	^ [
+		  self validateExtractorRequirements.
 		  self setUp.
 		  self registerModel: self extractor run ] ensure: [ self cleanUp ]
 ]
@@ -175,6 +176,12 @@ MooseNexusModelBuilder >> setUp [
 					artifact copyTo: dependencies / artifact basename ] ].
 
 	self extractor target: projectDirectory pathString
+]
+
+{ #category : 'validating' }
+MooseNexusModelBuilder >> validateExtractorRequirements [
+
+	(self extractor respondsTo: #validateToolRequirements) ifTrue: [ self extractor validateToolRequirements ]
 ]
 
 { #category : 'accessing' }

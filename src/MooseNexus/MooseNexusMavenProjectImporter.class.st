@@ -10,10 +10,22 @@ Class {
 	#tag : 'Importer'
 }
 
+{ #category : 'capabilities' }
+MooseNexusMavenProjectImporter class >> buildToolName [
+
+	^ 'maven'
+]
+
 { #category : 'testing' }
 MooseNexusMavenProjectImporter class >> canHandle: directory [
 
 	^ (directory asFileReference / 'pom.xml') exists
+]
+
+{ #category : 'capabilities' }
+MooseNexusMavenProjectImporter class >> supportedLanguages [
+
+	^ #( java )
 ]
 
 { #category : 'enumerating' }
@@ -133,4 +145,16 @@ MooseNexusMavenProjectImporter >> read [
 	Requires Maven to be installed."
 
 	^ LibC resultOfCommand: 'cd "' , directory pathString , '" && ' , self findMavenCommand , ' --batch-mode dependency:resolve'
+]
+
+{ #category : 'capabilities' }
+MooseNexusMavenProjectImporter >> toolRequirements [
+
+	| command |
+	command := self findMavenCommand , ' --version'.
+	^ { MooseNexusToolRequirement
+		    name: 'Maven'
+		    availabilityCommand: command
+		    versionCommand: command
+		    expectedVersionDescription: 'Maven CLI compatible with dependency:resolve' }
 ]

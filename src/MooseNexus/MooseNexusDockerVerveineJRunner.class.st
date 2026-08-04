@@ -27,6 +27,16 @@ MooseNexusDockerVerveineJRunner >> run [
 	^ self outputPath
 ]
 
+{ #category : 'capabilities' }
+MooseNexusDockerVerveineJRunner >> toolRequirements [
+
+	^ super toolRequirements copyWith: (MooseNexusToolRequirement
+		   name: 'Docker'
+		   availabilityCommand: 'docker --version'
+		   versionCommand: 'docker --version'
+		   expectedVersionDescription: 'Docker CLI capable of running ghcr.io/evref-bl/verveinej:' , self version)
+]
+
 { #category : 'accessing' }
 MooseNexusDockerVerveineJRunner >> version [
 

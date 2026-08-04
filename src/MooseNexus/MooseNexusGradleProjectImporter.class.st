@@ -18,6 +18,12 @@ Class {
 	#tag : 'Importer'
 }
 
+{ #category : 'capabilities' }
+MooseNexusGradleProjectImporter class >> buildToolName [
+
+	^ 'gradle'
+]
+
 { #category : 'testing' }
 MooseNexusGradleProjectImporter class >> canHandle: directory [
 
@@ -26,6 +32,12 @@ MooseNexusGradleProjectImporter class >> canHandle: directory [
 	directoryReference / 'build.gradle' ifExists: [ ^ true ].
 	directoryReference / 'build.gradle.kts' ifExists: [ ^ true ].
 	^ false
+]
+
+{ #category : 'capabilities' }
+MooseNexusGradleProjectImporter class >> supportedLanguages [
+
+	^ #( java )
 ]
 
 { #category : 'constants' }
@@ -199,6 +211,18 @@ MooseNexusGradleProjectImporter >> read [
 		  "execute the task we inserted and return the raw terminal output"
 		  LibC resultOfCommand: 'cd "' , directory pathString , '" && ' , gradleCmd , ' ' , self class taskName ] ensure: [ "restore the original build file"
 		  (File named: buildFile fullName) writeStreamDo: [ :ws | ws truncate: originalSize ] ]
+]
+
+{ #category : 'capabilities' }
+MooseNexusGradleProjectImporter >> toolRequirements [
+
+	| command |
+	command := self findGradleCommand , ' --version'.
+	^ { MooseNexusToolRequirement
+		    name: 'Gradle'
+		    availabilityCommand: command
+		    versionCommand: command
+		    expectedVersionDescription: 'Gradle CLI compatible with injected MooseNexus dependency task' }
 ]
 
 { #category : 'validating' }

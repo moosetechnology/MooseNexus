@@ -39,6 +39,7 @@ MooseNexusBuildPlan >> configureProjectMetadata [
 	buildSpec validateForRecording.
 	projectImporter := buildSpec projectImporter.
 	buildSpec configureImporter: projectImporter.
+	projectImporter validateToolRequirements.
 	project := projectImporter importWithCoordinates: buildSpec coordinates.
 	^ project
 ]

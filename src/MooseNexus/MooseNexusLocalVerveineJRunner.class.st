@@ -37,6 +37,24 @@ MooseNexusLocalVerveineJRunner >> shellQuoted: aString [
 	^ '"' , (aString copyReplaceAll: '"' with: '\"') , '"'
 ]
 
+{ #category : 'capabilities' }
+MooseNexusLocalVerveineJRunner >> toolRequirements [
+
+	| wrapperCommand |
+	wrapperCommand := (self shellQuoted: (self verveineJDirectory / 'gradlew') pathString) , ' --version'.
+	^ super toolRequirements , {
+		  (MooseNexusToolRequirement
+			   name: 'Java'
+			   availabilityCommand: 'java -version'
+			   versionCommand: 'java -version'
+			   expectedVersionDescription: 'Java runtime compatible with VerveineJ').
+		  (MooseNexusToolRequirement
+			   name: 'VerveineJ Gradle wrapper'
+			   availabilityCommand: wrapperCommand
+			   versionCommand: wrapperCommand
+			   expectedVersionDescription: 'VerveineJ checkout Gradle wrapper capable of running app:run') }
+]
+
 { #category : 'accessing' }
 MooseNexusLocalVerveineJRunner >> verveineJDirectory [
 
