@@ -63,6 +63,7 @@ MooseNexusBuildPlan >> executeExtraction [
 	| modelBuilder modelArtifact |
 	modelBuilder := MooseNexusModelBuilder on: project.
 	buildSpec configureModelBuilder: modelBuilder.
+	modelBuilder dependencyResolutionResult: dependencyResolutionResult.
 	modelArtifact := modelBuilder build.
 	modelBuildResult := MooseNexusModelBuildResult
 		                    project: project

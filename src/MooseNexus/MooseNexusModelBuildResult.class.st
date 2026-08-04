@@ -1,7 +1,7 @@
 "
 I describe the result of building one model artifact.
 
-I capture the recorded project, the model artifact written to models.json, and the dependency-resolution result that was used for the build.
+I capture the recorded project, the produced model artifact, and the dependency-resolution result that was used for the build. The artifact manifest persisted in models.json is owned by the project/model-builder recording path.
 "
 Class {
 	#name : 'MooseNexusModelBuildResult',

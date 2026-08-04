@@ -74,14 +74,25 @@ MooseNexusProject class >> supportsPropertiesSchemaVersion: schemaVersion [
 
 { #category : 'adding' }
 MooseNexusProject >> addModel: aMooseNexusModelArtifact [
-	"Add a model artifact to this project, overwriting any artifact with the same name."
+	"Add a model artifact to this project with an empty build context. Prefer addModelManifest: when build context is available."
 
-	| models serializedModels |
-	models := self models reject: [ :artifact | artifact name = aMooseNexusModelArtifact name ].
-	models := models copyWith: aMooseNexusModelArtifact.
-	serializedModels := models collect: [ :artifact | artifact asDictionary ].
+	self addModelManifest: (MooseNexusModelArtifactManifest
+			 modelArtifact: aMooseNexusModelArtifact
+			 dependencyResolutionResult: (MooseNexusDependencyResolutionResult forProject: self)
+			 generatedFiles: #(  )
+			 createdTimestamp: aMooseNexusModelArtifact timestamp)
+]
 
-	FileLocator home / directory / 'models.json' writeStreamDo: [ :s | STON put: serializedModels asJsonOnStream: s ]
+{ #category : 'adding' }
+MooseNexusProject >> addModelManifest: aMooseNexusModelArtifactManifest [
+	"Add a model artifact manifest to this project, overwriting any manifest for the same model name."
+
+	| manifests serializedManifests |
+	manifests := self modelManifests reject: [ :manifest |
+		             manifest modelArtifact name = aMooseNexusModelArtifactManifest modelArtifact name ].
+	manifests := manifests copyWith: aMooseNexusModelArtifactManifest.
+	serializedManifests := manifests collect: [ :manifest | manifest asDictionary ].
+	FileLocator home / directory / 'models.json' writeStreamDo: [ :stream | STON put: serializedManifests asJsonOnStream: stream ]
 ]
 
 { #category : 'accessing' }
@@ -175,10 +186,16 @@ MooseNexusProject >> language [
 ]
 
 { #category : 'enumerating' }
+MooseNexusProject >> modelManifests [
+
+	^ FileLocator home / directory / 'models.json' readStreamDo: [ :stream |
+		  (STON fromStream: stream) collect: [ :manifest | MooseNexusModelArtifactManifest fromDictionary: manifest ] ]
+]
+
+{ #category : 'enumerating' }
 MooseNexusProject >> models [
 
-	^ FileLocator home / directory / 'models.json' readStreamDo: [ :s |
-		  (STON fromStream: s) collect: [ :modelArtifact | MooseNexusModelArtifact fromDictionary: modelArtifact ] ]
+	^ self modelManifests collect: [ :manifest | manifest modelArtifact ]
 ]
 
 { #category : 'accessing' }

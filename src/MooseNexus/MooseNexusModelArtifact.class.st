@@ -1,19 +1,16 @@
 "
-I describe one model artifact recorded for a MooseNexus project.
+I describe one produced model artifact for a MooseNexus project.
 
-I carry the project coordinates, model name, repository-relative model path, file format, user comment, creation timestamp, and metamodel version. I own the serialized representation written to models.json so project and build code can work with objects instead of dictionaries.
+I carry model artifact coordinates, repository-relative model path, user comment, and creation timestamp. The coordinates keep the source project coordinates plus model-specific dimensions such as format, metamodel, and classifier. MooseNexusModelArtifactManifest embeds me in models.json together with build context, generated-file checksums, and dependency-resolution data.
 "
 Class {
 	#name : 'MooseNexusModelArtifact',
 	#superclass : 'Object',
 	#instVars : [
-		'coordinates',
-		'name',
+		'artifactCoordinates',
 		'path',
-		'format',
 		'comment',
-		'timestamp',
-		'famixVersion'
+		'timestamp'
 	],
 	#category : 'MooseNexus-ModelExtraction',
 	#package : 'MooseNexus',
@@ -21,35 +18,39 @@ Class {
 }
 
 { #category : 'instance creation' }
-MooseNexusModelArtifact class >> coordinates: aMooseNexusCoordinates name: aName path: aPath format: aFormat comment: aComment timestamp: aTimestamp famixVersion: aFamixVersion [
+MooseNexusModelArtifact class >> artifactCoordinates: aMooseNexusModelArtifactCoordinates path: aPath comment: aComment timestamp: aTimestamp [
 
 	^ self new
-		  initializeCoordinates: aMooseNexusCoordinates
-		  name: aName
+		  initializeArtifactCoordinates: aMooseNexusModelArtifactCoordinates
 		  path: aPath
-		  format: aFormat
 		  comment: aComment
-		  timestamp: aTimestamp
-		  famixVersion: aFamixVersion;
+		  timestamp: aTimestamp;
 		  yourself
 ]
 
 { #category : 'instance creation' }
 MooseNexusModelArtifact class >> fromDictionary: aDictionary [
 
-	| projectCoordinates |
-	projectCoordinates := aDictionary at: 'projectCoordinates'.
 	^ self
-		  coordinates: (MooseNexusCoordinates
-				   group: (projectCoordinates at: 'group')
-				   name: (projectCoordinates at: 'name')
-				   version: (projectCoordinates at: 'version'))
-		  name: (aDictionary at: 'name')
+		  artifactCoordinates: (MooseNexusModelArtifactCoordinates fromDictionary: (aDictionary at: 'artifactCoordinates'))
 		  path: (aDictionary at: 'path')
-		  format: (aDictionary at: 'format')
 		  comment: (aDictionary at: 'comment')
 		  timestamp: (aDictionary at: 'timestamp')
-		  famixVersion: (aDictionary at: 'famixVersion')
+]
+
+{ #category : 'instance creation' }
+MooseNexusModelArtifact class >> projectCoordinates: aMooseNexusCoordinates name: aName path: aPath format: aFormat comment: aComment timestamp: aTimestamp metamodel: aMetamodel classifier: aClassifier [
+
+	^ self
+		  artifactCoordinates: (MooseNexusModelArtifactCoordinates
+				   projectCoordinates: aMooseNexusCoordinates
+				   name: aName
+				   format: aFormat
+				   metamodel: aMetamodel
+				   classifier: aClassifier)
+		  path: aPath
+		  comment: aComment
+		  timestamp: aTimestamp
 ]
 
 { #category : 'comparing' }
@@ -57,28 +58,24 @@ MooseNexusModelArtifact >> = anObject [
 
 	self == anObject ifTrue: [ ^ true ].
 	anObject class == self class ifFalse: [ ^ false ].
-	^ anObject coordinates = coordinates and: [
-			  anObject name = name and: [
-					  anObject path = path and: [
-							  anObject format = format and: [
-								  anObject comment = comment and: [ anObject timestamp = timestamp and: [ anObject famixVersion = famixVersion ] ] ] ] ] ]
+	^ anObject artifactCoordinates = artifactCoordinates and: [
+		  anObject path = path and: [ anObject comment = comment and: [ anObject timestamp = timestamp ] ] ]
+]
+
+{ #category : 'accessing' }
+MooseNexusModelArtifact >> artifactCoordinates [
+
+	^ artifactCoordinates
 ]
 
 { #category : 'converting' }
 MooseNexusModelArtifact >> asDictionary [
 
 	^ Dictionary new
-		  add: 'projectCoordinates' -> (Dictionary new
-					   add: 'group' -> coordinates group;
-					   add: 'name' -> coordinates name;
-					   add: 'version' -> coordinates version;
-					   yourself);
-		  add: 'name' -> name;
+		  add: 'artifactCoordinates' -> artifactCoordinates asDictionary;
 		  add: 'path' -> path;
-		  add: 'format' -> format;
 		  add: 'comment' -> comment;
 		  add: 'timestamp' -> timestamp;
-		  add: 'famixVersion' -> famixVersion;
 		  yourself
 ]
 
@@ -91,50 +88,40 @@ MooseNexusModelArtifact >> comment [
 { #category : 'accessing' }
 MooseNexusModelArtifact >> coordinates [
 
-	^ coordinates
+	^ artifactCoordinates projectCoordinates
 ]
 
 { #category : 'accessing' }
 MooseNexusModelArtifact >> description [
 
-	^ name
-]
-
-{ #category : 'accessing' }
-MooseNexusModelArtifact >> famixVersion [
-
-	^ famixVersion
+	^ self name
 ]
 
 { #category : 'accessing' }
 MooseNexusModelArtifact >> format [
 
-	^ format
+	^ artifactCoordinates format
 ]
 
 { #category : 'comparing' }
 MooseNexusModelArtifact >> hash [
 
-	^ coordinates hash bitXor:
-		  (name hash bitXor: (path hash bitXor: (format hash bitXor: (comment hash bitXor: (timestamp hash bitXor: famixVersion hash)))))
+	^ artifactCoordinates hash bitXor: (path hash bitXor: (comment hash bitXor: timestamp hash))
 ]
 
 { #category : 'initialization' }
-MooseNexusModelArtifact >> initializeCoordinates: aMooseNexusCoordinates name: aName path: aPath format: aFormat comment: aComment timestamp: aTimestamp famixVersion: aFamixVersion [
+MooseNexusModelArtifact >> initializeArtifactCoordinates: aMooseNexusModelArtifactCoordinates path: aPath comment: aComment timestamp: aTimestamp [
 
-	coordinates := aMooseNexusCoordinates.
-	name := aName.
+	artifactCoordinates := aMooseNexusModelArtifactCoordinates.
 	path := aPath.
-	format := aFormat.
 	comment := aComment.
-	timestamp := aTimestamp.
-	famixVersion := aFamixVersion
+	timestamp := aTimestamp
 ]
 
 { #category : 'accessing' }
 MooseNexusModelArtifact >> name [
 
-	^ name
+	^ artifactCoordinates name
 ]
 
 { #category : 'accessing' }
@@ -149,7 +136,7 @@ MooseNexusModelArtifact >> printOn: aStream [
 	aStream
 		nextPutAll: self className;
 		nextPut: $(;
-		nextPutAll: name;
+		nextPutAll: self name;
 		nextPut: $)
 ]
 

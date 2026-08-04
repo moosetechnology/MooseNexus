@@ -23,12 +23,29 @@ MooseNexusDependencyConflictDecision class >> conflict: aMooseNexusDependencyCon
 		  yourself
 ]
 
+{ #category : 'instance creation' }
+MooseNexusDependencyConflictDecision class >> fromDictionary: aDictionary [
+
+	^ self
+		  conflict: (MooseNexusDependencyConflict fromDictionary: (aDictionary at: 'conflict'))
+		  selectedDependency: (MooseNexusDependencyDescriptor fromDictionary: (aDictionary at: 'selectedDependency'))
+]
+
 { #category : 'comparing' }
 MooseNexusDependencyConflictDecision >> = anObject [
 
 	self == anObject ifTrue: [ ^ true ].
 	anObject class == self class ifFalse: [ ^ false ].
 	^ anObject conflict = conflict and: [ anObject selectedDependency = selectedDependency ]
+]
+
+{ #category : 'converting' }
+MooseNexusDependencyConflictDecision >> asDictionary [
+
+	^ Dictionary new
+		  add: 'conflict' -> conflict asDictionary;
+		  add: 'selectedDependency' -> selectedDependency asDictionary;
+		  yourself
 ]
 
 { #category : 'accessing' }
