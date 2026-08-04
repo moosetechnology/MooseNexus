@@ -177,7 +177,8 @@ MooseNexusGradleProjectImporter >> parse: raw [
 			project projects
 				at: group
 				at: name
-				put: (MooseNexusManagedProjectDescriptor version: version path: path dependencies: (self dependencyGroupsFrom: dependencies)) ]
+				put:
+				(MooseNexusManagedProjectDescriptor version: version path: path dependencyGraph: (self dependencyGraphFrom: dependencies)) ]
 ]
 
 { #category : 'reading' }

@@ -142,21 +142,25 @@ MooseNexusProjectIdentityTest >> testCoordinatesAreValueObjects [
 { #category : 'tests' }
 MooseNexusProjectIdentityTest >> testManagedImporterCapturesDependencyConflictDecisions [
 
-	| project importer dependencies projectDescriptor otherProjectDescriptor result decision |
-	dependencies := Dictionary with: 'org.example' -> { (MooseNexusDependencyDescriptor
-			                 coordinates: (MooseNexusCoordinates group: nil name: 'dep' version: '1.0.0')
-			                 type: 'jar'
-			                 scopes: #( 'compile' )
-			                 path: 'repository/dep-1.0.0.jar') }.
-	projectDescriptor := MooseNexusManagedProjectDescriptor version: '1.0.0' path: '.' dependencies: dependencies.
+	| project importer dependency otherDependency projectDescriptor otherProjectDescriptor result decision |
+	dependency := MooseNexusDependencyDescriptor
+		              coordinates: (MooseNexusCoordinates group: 'org.example' name: 'dep' version: '1.0.0')
+		              type: 'jar'
+		              scopes: #( 'compile' )
+		              path: 'repository/dep-1.0.0.jar'.
+	otherDependency := MooseNexusDependencyDescriptor
+		                   coordinates: (MooseNexusCoordinates group: 'org.example' name: 'dep' version: '2.0.0')
+		                   type: 'jar'
+		                   scopes: #( 'runtime' )
+		                   path: 'repository/dep-2.0.0.jar'.
+	projectDescriptor := MooseNexusManagedProjectDescriptor
+		                     version: '1.0.0'
+		                     path: '.'
+		                     dependencyGraph: (MooseNexusDependencyGraph dependencies: { dependency }).
 	otherProjectDescriptor := MooseNexusManagedProjectDescriptor
 		                          version: '1.0.0'
 		                          path: 'other'
-		                          dependencies: (Dictionary with: 'org.example' -> { (MooseNexusDependencyDescriptor
-					                            coordinates: (MooseNexusCoordinates group: nil name: 'dep' version: '2.0.0')
-					                            type: 'jar'
-					                            scopes: #( 'runtime' )
-					                            path: 'repository/dep-2.0.0.jar') }).
+		                          dependencyGraph: (MooseNexusDependencyGraph dependencies: { otherDependency }).
 	project := MooseNexusMavenProject coordinates: (MooseNexusCoordinates group: 'com.example' name: 'demo' version: '1.0.0').
 	project projects:
 		(Dictionary with: 'com.example' -> (Dictionary with: 'demo' -> projectDescriptor with: 'other' -> otherProjectDescriptor)).
@@ -179,44 +183,41 @@ MooseNexusProjectIdentityTest >> testManagedImporterCapturesDependencyConflictDe
 { #category : 'tests' }
 MooseNexusProjectIdentityTest >> testManagedProjectDescriptorDictionaryRoundTrip [
 
-	| dictionary descriptor |
+	| dictionary descriptor dependencyGraph dependency |
 	dictionary := Dictionary
 		              with: #path -> '.'
 		              with: #version -> '1.0.0'
-		              with: #dependencies -> (Dictionary with: 'org.example' -> { (Dictionary
+		              with: #dependencyGraph -> (Dictionary with: #dependencies -> { (Dictionary
+					                with: #group -> 'org.example'
 					                with: #name -> 'dep'
 					                with: #version -> '2.0.0'
 					                with: #type -> 'jar'
 					                with: #scopes -> #( 'compile' )
 					                with: #path -> 'repository/dep-2.0.0.jar') }).
 	descriptor := MooseNexusManagedProjectDescriptor fromDictionary: dictionary.
+	dependencyGraph := descriptor dependencyGraph.
+	dependency := dependencyGraph dependencies first.
 
 	self assert: descriptor version equals: '1.0.0'.
 	self assert: descriptor path equals: '.'.
+	self assert: dependencyGraph size equals: 1.
+	self assert: dependency group equals: 'org.example'.
 	self assert: descriptor asDictionary equals: dictionary
 ]
 
 { #category : 'tests' }
 MooseNexusProjectIdentityTest >> testManagedProjectDescriptorIsValueObject [
 
-	| dependency descriptor sameDescriptor otherDescriptor |
+	| dependency dependencyGraph descriptor sameDescriptor otherDescriptor |
 	dependency := MooseNexusDependencyDescriptor
-		              coordinates: (MooseNexusCoordinates group: nil name: 'dep' version: '2.0.0')
+		              coordinates: (MooseNexusCoordinates group: 'org.example' name: 'dep' version: '2.0.0')
 		              type: 'jar'
 		              scopes: #( 'compile' )
 		              path: 'repository/dep-2.0.0.jar'.
-	descriptor := MooseNexusManagedProjectDescriptor
-		              version: '1.0.0'
-		              path: '.'
-		              dependencies: (Dictionary with: 'org.example' -> { dependency }).
-	sameDescriptor := MooseNexusManagedProjectDescriptor
-		                  version: '1.0.0'
-		                  path: '.'
-		                  dependencies: (Dictionary with: 'org.example' -> { dependency }).
-	otherDescriptor := MooseNexusManagedProjectDescriptor
-		                   version: '2.0.0'
-		                   path: '.'
-		                   dependencies: (Dictionary with: 'org.example' -> { dependency }).
+	dependencyGraph := MooseNexusDependencyGraph dependencies: { dependency }.
+	descriptor := MooseNexusManagedProjectDescriptor version: '1.0.0' path: '.' dependencyGraph: dependencyGraph.
+	sameDescriptor := MooseNexusManagedProjectDescriptor version: '1.0.0' path: '.' dependencyGraph: dependencyGraph.
+	otherDescriptor := MooseNexusManagedProjectDescriptor version: '2.0.0' path: '.' dependencyGraph: dependencyGraph.
 
 	self assert: descriptor equals: sameDescriptor.
 	self deny: descriptor equals: otherDescriptor.
@@ -226,17 +227,15 @@ MooseNexusProjectIdentityTest >> testManagedProjectDescriptorIsValueObject [
 { #category : 'tests' }
 MooseNexusProjectIdentityTest >> testManagedProjectPropertiesRoundTripFromFile [
 
-	| project loadedProject propertiesFile projects projectDependencies dependency |
+	| project loadedProject propertiesFile projects dependency dependencyGraph descriptor |
 	dependency := MooseNexusDependencyDescriptor
-		              coordinates: (MooseNexusCoordinates group: nil name: 'dep' version: '2.0.0')
+		              coordinates: (MooseNexusCoordinates group: 'org.example' name: 'dep' version: '2.0.0')
 		              type: 'jar'
 		              scopes: #( 'compile' )
 		              path: 'repository/dep-2.0.0.jar'.
-	projectDependencies := Dictionary with: 'org.example' -> { dependency }.
-	projects := Dictionary with: 'com.example'
-		            ->
-		            (Dictionary with:
-			             'demo' -> (MooseNexusManagedProjectDescriptor version: '1.0.0' path: nil dependencies: projectDependencies)).
+	dependencyGraph := MooseNexusDependencyGraph dependencies: { dependency }.
+	descriptor := MooseNexusManagedProjectDescriptor version: '1.0.0' path: nil dependencyGraph: dependencyGraph.
+	projects := Dictionary with: 'com.example' -> (Dictionary with: 'demo' -> descriptor).
 	project := MooseNexusMavenProject coordinates: (MooseNexusCoordinates group: 'com.example' name: 'demo' version: '1.0.0').
 	project
 		language: 'java';
@@ -265,6 +264,8 @@ MooseNexusProjectIdentityTest >> testProjectPropertiesFlattenCoordinates [
 	self assert: (properties at: #group) equals: 'com.example'.
 	self assert: (properties at: #name) equals: 'demo'.
 	self assert: (properties at: #version) equals: '1.0.0'.
+	self assert: (properties includesKey: #resolvedDependencies).
+	self deny: (properties includesKey: #dependencies).
 	self deny: (properties includesKey: #coordinates)
 ]
 

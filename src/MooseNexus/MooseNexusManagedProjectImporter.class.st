@@ -84,9 +84,12 @@ MooseNexusManagedProjectImporter >> dependencyConflictResolver: aMooseNexusDepen
 ]
 
 { #category : 'private' }
-MooseNexusManagedProjectImporter >> dependencyGroupsFrom: dependenciesByGroup [
+MooseNexusManagedProjectImporter >> dependencyGraphFrom: dependenciesByGroup [
 
-	^ dependenciesByGroup collect: [ :descriptorsByArtifact | descriptorsByArtifact values asArray ]
+	| dependencyDescriptors |
+	dependencyDescriptors := OrderedCollection new.
+	dependenciesByGroup do: [ :descriptorsByArtifact | dependencyDescriptors addAll: descriptorsByArtifact values ].
+	^ MooseNexusDependencyGraph dependencies: (self sortedDependencyDescriptors: dependencyDescriptors)
 ]
 
 { #category : 'accessing' }
@@ -197,16 +200,15 @@ MooseNexusManagedProjectImporter >> resolve: descriptor [
 
 { #category : 'querying' }
 MooseNexusManagedProjectImporter >> resolveDependencies [
-	"Resolve all dependencies of this project into a flat list.
-	A conflict can occur if two projects define the same dependency with different versions."
+	"Resolve all dependencies of this project into a flat resolved dependency set.
+	A conflict can occur if two managed projects declare the same dependency with different versions."
 
 	| dependencies conflicts decisions |
 	dependencies := Dictionary new.
 	conflicts := Dictionary new.
 
-	project projectDependenciesDo: [ :dependencyGroup :descriptor |
-			| dependency key |
-			dependency := project dependencyDescriptorFrom: descriptor group: dependencyGroup.
+	project projectDependenciesDo: [ :dependencyGroup :dependency |
+			| key |
 			key := dependency group , ':' , dependency name.
 			conflicts at: key ifPresent: [ :conflictList | conflictList add: dependency ] ifAbsent: [
 					dependencies
@@ -231,6 +233,13 @@ MooseNexusManagedProjectImporter >> resolveDependencyConflicts: conflicts on: de
 
 	self effectiveDependencyConflictResolver resolveConflicts: conflicts on: dependencies.
 	^ self dependencyConflictDecisionsFrom: conflicts resolvedOn: dependencies
+]
+
+{ #category : 'private' }
+MooseNexusManagedProjectImporter >> sortedDependencyDescriptors: dependencyDescriptors [
+
+	^ dependencyDescriptors asArray sort: [ :left :right |
+		  left printString , ':' , left type , ':' , left path <= (right printString , ':' , right type , ':' , right path) ]
 ]
 
 { #category : 'validating' }

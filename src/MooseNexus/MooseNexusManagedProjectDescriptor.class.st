@@ -1,7 +1,7 @@
 "
 I describe one project managed by an external build tool, such as a Maven module or Gradle subproject.
 
-I carry the managed project's declared version, source path relative to the imported root, and dependency descriptors grouped by dependency group. MooseNexus uses me internally as a value-like object. Repository serialization writes dictionaries at the boundary so properties files remain easy to inspect.
+I carry the managed project's declared version, source path relative to the imported root, and declared dependency graph. MooseNexus uses me internally as a value-like object. Repository serialization writes dictionaries at the boundary so properties files remain easy to inspect.
 "
 Class {
 	#name : 'MooseNexusManagedProjectDescriptor',
@@ -9,19 +9,12 @@ Class {
 	#instVars : [
 		'version',
 		'path',
-		'dependencies'
+		'dependencyGraph'
 	],
 	#category : 'MooseNexus-Project',
 	#package : 'MooseNexus',
 	#tag : 'Project'
 }
-
-{ #category : 'properties' }
-MooseNexusManagedProjectDescriptor class >> dependencyGroupsFromDictionary: dependencyGroups [
-
-	^ dependencyGroups collect: [ :dependencyDictionaries |
-		  dependencyDictionaries collect: [ :dependency | MooseNexusDependencyDescriptor fromDictionary: dependency ] ]
-]
 
 { #category : 'instance creation' }
 MooseNexusManagedProjectDescriptor class >> fromDictionary: aDictionary [
@@ -29,14 +22,14 @@ MooseNexusManagedProjectDescriptor class >> fromDictionary: aDictionary [
 	^ self
 		  version: (aDictionary at: #version ifAbsent: [ nil ])
 		  path: (aDictionary at: #path ifAbsent: [ nil ])
-		  dependencies: (self dependencyGroupsFromDictionary: (aDictionary at: #dependencies ifAbsent: [ Dictionary new ]))
+		  dependencyGraph: (MooseNexusDependencyGraph fromDictionary: (aDictionary at: #dependencyGraph))
 ]
 
 { #category : 'instance creation' }
-MooseNexusManagedProjectDescriptor class >> version: aVersion path: aPath dependencies: dependencyGroups [
+MooseNexusManagedProjectDescriptor class >> version: aVersion path: aPath dependencyGraph: aMooseNexusDependencyGraph [
 
 	^ self new
-		  initializeVersion: aVersion path: aPath dependencies: dependencyGroups;
+		  initializeVersion: aVersion path: aPath dependencyGraph: aMooseNexusDependencyGraph;
 		  yourself
 ]
 
@@ -45,21 +38,14 @@ MooseNexusManagedProjectDescriptor >> = anObject [
 
 	self == anObject ifTrue: [ ^ true ].
 	anObject class == self class ifFalse: [ ^ false ].
-	^ anObject version = version and: [ anObject path = path and: [ anObject dependencies = dependencies ] ]
+	^ anObject version = version and: [ anObject path = path and: [ anObject dependencyGraph = dependencyGraph ] ]
 ]
 
 { #category : 'converting' }
 MooseNexusManagedProjectDescriptor >> asDictionary [
 
-	| dictionary serializedDependencies |
-	serializedDependencies := dependencies collect: [ :descriptors |
-			                          descriptors
-				                          collect: [ :descriptor |
-						                          descriptor asDictionary
-							                          removeKey: #group ifAbsent: [ nil ];
-							                          yourself ]
-				                          as: Array ].
-	dictionary := Dictionary with: #version -> version with: #dependencies -> serializedDependencies.
+	| dictionary |
+	dictionary := Dictionary with: #version -> version with: #dependencyGraph -> dependencyGraph asDictionary.
 	path ifNotNil: [ dictionary at: #path put: path ].
 	^ dictionary
 ]
@@ -67,21 +53,27 @@ MooseNexusManagedProjectDescriptor >> asDictionary [
 { #category : 'accessing' }
 MooseNexusManagedProjectDescriptor >> dependencies [
 
-	^ dependencies
+	^ dependencyGraph dependencies
+]
+
+{ #category : 'accessing' }
+MooseNexusManagedProjectDescriptor >> dependencyGraph [
+
+	^ dependencyGraph
 ]
 
 { #category : 'comparing' }
 MooseNexusManagedProjectDescriptor >> hash [
 
-	^ version hash bitXor: (path hash bitXor: dependencies hash)
+	^ version hash bitXor: (path hash bitXor: dependencyGraph hash)
 ]
 
 { #category : 'initialization' }
-MooseNexusManagedProjectDescriptor >> initializeVersion: aVersion path: aPath dependencies: dependencyGroups [
+MooseNexusManagedProjectDescriptor >> initializeVersion: aVersion path: aPath dependencyGraph: aMooseNexusDependencyGraph [
 
 	version := aVersion.
 	path := aPath.
-	dependencies := dependencyGroups ifNil: [ Dictionary new ]
+	dependencyGraph := aMooseNexusDependencyGraph ifNil: [ MooseNexusDependencyGraph empty ]
 ]
 
 { #category : 'accessing' }

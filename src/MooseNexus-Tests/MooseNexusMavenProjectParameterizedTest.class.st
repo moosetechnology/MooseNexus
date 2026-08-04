@@ -38,9 +38,9 @@ MooseNexusMavenProjectParameterizedTest class >> case1 [
 [INFO] 
 [INFO]'.
 
-	projects := Dictionary with:
-		            group
-		            -> (Dictionary with: projectName -> (Dictionary with: #version -> version with: #dependencies -> Dictionary new)).
+	projects := Dictionary with: group -> (Dictionary with:
+			             projectName
+			             -> (Dictionary with: #version -> version with: #dependencyGraph -> (Dictionary with: #dependencies -> #(  )))).
 
 	^ self
 		  initializeCase: {
@@ -81,7 +81,7 @@ MooseNexusMavenProjectParameterizedTest class >> case2 [
 [INFO] 
 [INFO]'.
 
-	"expected list of flat dependencies"
+	"expected list of resolved dependencies"
 	dependencies := {
 		                (Dictionary
 			                 with: #group -> group
@@ -103,28 +103,33 @@ MooseNexusMavenProjectParameterizedTest class >> case2 [
 			                 with: #scopes -> #( 'provided' )) }.
 
 	"expected projects to parse"
-	(projects := Dictionary new) at: group put: (Dictionary with:
-			 projectName -> (Dictionary with: #version -> version with: #dependencies -> (projectDependencies := Dictionary new))).
-	projectDependencies
-		at: 'org.moose' put: {
-				(Dictionary
-					 with: #name -> 'fame'
-					 with: #version -> '1.1'
-					 with: #type -> 'jar'
-					 with: #scopes -> #( 'compile' 'runtime' )
-					 with: #path -> 'mavenRepository').
-				(Dictionary
-					 with: #name -> 'famix'
-					 with: #version -> '2.0'
-					 with: #type -> 'jar'
-					 with: #scopes -> #( 'runtime' )
-					 with: #path -> 'mavenRepository') };
-		at: 'com.example' put: { (Dictionary
-				 with: #name -> 'logger'
-				 with: #version -> '3.14.0'
-				 with: #type -> 'jar'
-				 with: #scopes -> #( 'provided' )
-				 with: #path -> 'mavenRepository') }.
+	projectDependencies := {
+		                       (Dictionary
+			                        with: #group -> group
+			                        with: #name -> 'fame'
+			                        with: #version -> '1.1'
+			                        with: #type -> 'jar'
+			                        with: #scopes -> #( 'compile' 'runtime' )
+			                        with: #path -> 'mavenRepository').
+		                       (Dictionary
+			                        with: #group -> group
+			                        with: #name -> 'famix'
+			                        with: #version -> '2.0'
+			                        with: #type -> 'jar'
+			                        with: #scopes -> #( 'runtime' )
+			                        with: #path -> 'mavenRepository').
+		                       (Dictionary
+			                        with: #group -> 'com.example'
+			                        with: #name -> 'logger'
+			                        with: #version -> '3.14.0'
+			                        with: #type -> 'jar'
+			                        with: #scopes -> #( 'provided' )
+			                        with: #path -> 'mavenRepository') }.
+	projects := Dictionary with: group -> (Dictionary with: projectName
+			             ->
+			             (Dictionary
+				              with: #version -> version
+				              with: #dependencyGraph -> (Dictionary with: #dependencies -> projectDependencies))).
 
 	^ self
 		  initializeCase: {
@@ -166,16 +171,22 @@ MooseNexusMavenProjectParameterizedTest class >> initializeCase: aCase withMaven
 	"compute paths of projects and dependencies"
 	projects do: [ :projectGroup |
 			projectGroup do: [ :subProject |
+					| projectDependencyGraph projectDependencies |
 					subProject at: #path put: '.'.
-					(subProject at: #dependencies) keysAndValuesDo: [ :groupName :dependencyGroup |
-							dependencyGroup do: [ :dependency | "'dependency at: #path' is the repository name only, compute the rest of the path"
-									| depName depVersion filename path |
-									depName := dependency at: #name.
-									depVersion := dependency at: #version.
-									filename := String streamContents: [ :s | s << depName << '-' << depVersion << '.jar' ].
-									path := ((root / (dependency at: #path) / (groupName copyReplaceAll: '.' with: '/') / depName / depVersion / filename)
-										         absolutePath relativeTo: FileLocator home) pathString.
-									dependency at: #path put: path ] ] ] ].
+					projectDependencyGraph := subProject at: #dependencyGraph.
+					projectDependencies := projectDependencyGraph at: #dependencies.
+					projectDependencies do: [ :dependency |
+							| depGroup depName depVersion filename path |
+							depGroup := dependency at: #group.
+							depName := dependency at: #name.
+							depVersion := dependency at: #version.
+							filename := String streamContents: [ :s | s << depName << '-' << depVersion << '.jar' ].
+							path := ((root / (dependency at: #path) / (depGroup copyReplaceAll: '.' with: '/') / depName / depVersion / filename)
+								         absolutePath relativeTo: FileLocator home) pathString.
+							dependency at: #path put: path ].
+					projectDependencyGraph at: #dependencies put: (projectDependencies asArray sort: [ :left :right |
+								 (left at: #group) , ':' , (left at: #name) , ':' , (left at: #type) , ':' , (left at: #path)
+								 <= ((right at: #group) , ':' , (right at: #name) , ':' , (right at: #type) , ':' , (right at: #path)) ]) ] ].
 
 	"create the project subdirectories, mostly used to determine the language"
 	directories do: [ :path | (root / projectName / 'sources/project' / path) ensureCreateDirectory ].

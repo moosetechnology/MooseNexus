@@ -3,18 +3,18 @@ I represent a MooseNexus project loaded in memory or recorded in a repository.
 
 My properties follow this mapping:
 ```text
-schemaVersion: <propertiesSchemaVersion>
-language:      <language>
-nature:        <subclassOfMooseNexusProject>
-group:         <group>
-name:          <name>
-version:       <version>
-dependencies:
-	- path: <localPath>
+schemaVersion:         <propertiesSchemaVersion>
+language:              <language>
+nature:                <subclassOfMooseNexusProject>
+group:                 <group>
+name:                  <name>
+version:               <version>
+resolvedDependencies:  <serializedResolvedDependencySet>
 ```
 The schema version identifies the persisted properties format.
 The nature corresponds to the concrete subclass of MooseNexusProject that handles the source project.
 The group, name, and version are the coordinates that identify the source project as modeled by MooseNexus.
+Resolved dependencies are the exact dependency descriptors selected for this project build.
 
 Use MooseNexusBuildSpec to describe build-time intent and MooseNexusProjectSpec for the narrower source-project coordinates and directory. Coordinate inference belongs to importers; this object only carries the coordinates it was initialized with.
 "
@@ -24,7 +24,7 @@ Class {
 	#instVars : [
 		'coordinates',
 		'directory',
-		'dependencies'
+		'resolvedDependencySet'
 	],
 	#category : 'MooseNexus-Project',
 	#package : 'MooseNexus',
@@ -93,19 +93,13 @@ MooseNexusProject >> coordinates [
 { #category : 'accessing' }
 MooseNexusProject >> dependencies [
 
-	^ dependencies ifNil: [ dependencies := #(  ) ]
+	^ self resolvedDependencySet dependencies
 ]
 
 { #category : 'accessing' }
 MooseNexusProject >> dependencies: aCollection [
 
-	dependencies := aCollection
-]
-
-{ #category : 'properties' }
-MooseNexusProject >> dependencyDescriptorsFromProperties: dependencyDictionaries [
-
-	^ dependencyDictionaries collect: [ :dependency | MooseNexusDependencyDescriptor fromDictionary: dependency ]
+	resolvedDependencySet := MooseNexusResolvedDependencySet dependencies: aCollection
 ]
 
 { #category : 'accessing' }
@@ -211,7 +205,7 @@ MooseNexusProject >> projectSourceDirectory [
 
 { #category : 'enumerating' }
 MooseNexusProject >> properties [
-	"Gather all of the properties of this project in a dictionary"
+	"Gather all of the properties of this project in a dictionary."
 
 	^ Dictionary new
 		  add: #schemaVersion -> self propertiesSchemaVersion;
@@ -220,7 +214,7 @@ MooseNexusProject >> properties [
 		  add: #group -> self group;
 		  add: #name -> self name;
 		  add: #version -> self version;
-		  add: #dependencies -> self serializedDependencies;
+		  add: #resolvedDependencies -> self serializedResolvedDependencies;
 		  yourself
 ]
 
@@ -236,13 +230,27 @@ MooseNexusProject >> readProperties: properties [
 	self validatePropertiesSchemaVersion: properties.
 	self initializeCoordinates:
 		(MooseNexusCoordinates group: (properties at: #group) name: (properties at: #name) version: (properties at: #version)).
-	properties at: #dependencies ifPresent: [ :deps | self dependencies: (self dependencyDescriptorsFromProperties: deps) ]
+	properties
+		at: #resolvedDependencies
+		ifPresent: [ :deps | resolvedDependencySet := self resolvedDependencySetFromProperties: deps ]
+]
+
+{ #category : 'accessing' }
+MooseNexusProject >> resolvedDependencySet [
+
+	^ resolvedDependencySet ifNil: [ resolvedDependencySet := MooseNexusResolvedDependencySet empty ]
+]
+
+{ #category : 'properties' }
+MooseNexusProject >> resolvedDependencySetFromProperties: dependencyDictionaries [
+
+	^ MooseNexusResolvedDependencySet fromDictionaries: dependencyDictionaries
 ]
 
 { #category : 'enumerating' }
-MooseNexusProject >> serializedDependencies [
+MooseNexusProject >> serializedResolvedDependencies [
 
-	^ self dependencies collect: [ :dependency | dependency asDictionary ]
+	^ self resolvedDependencySet asDictionaries
 ]
 
 { #category : 'enumerating' }

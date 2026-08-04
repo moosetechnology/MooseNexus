@@ -7,6 +7,23 @@ Class {
 }
 
 { #category : 'tests' }
+MooseNexusDependencyDescriptorTest >> testDependencyGraphDictionaryRoundTrip [
+
+	| dependency graph sameGraph |
+	dependency := MooseNexusDependencyDescriptor
+		              coordinates: (MooseNexusCoordinates group: 'org.example' name: 'lib' version: '1.0.0')
+		              type: 'jar'
+		              scopes: #( 'compile' )
+		              path: '.m2/repository/org/example/lib/1.0.0/lib-1.0.0.jar'.
+	graph := MooseNexusDependencyGraph dependencies: { dependency }.
+
+	sameGraph := MooseNexusDependencyGraph fromDictionary: graph asDictionary.
+
+	self assert: sameGraph equals: graph.
+	self assert: sameGraph dependencies equals: { dependency }
+]
+
+{ #category : 'tests' }
 MooseNexusDependencyDescriptorTest >> testDescriptorIsValueObject [
 
 	| coordinates descriptor sameDescriptor otherDescriptor |
@@ -69,6 +86,23 @@ MooseNexusDependencyDescriptorTest >> testMergeAggregatesScopes [
 
 	self assert: mergedDescriptor coordinates equals: coordinates.
 	self assert: mergedDescriptor scopes equals: #( 'compile' 'runtime' )
+]
+
+{ #category : 'tests' }
+MooseNexusDependencyDescriptorTest >> testResolvedDependencySetDictionaryRoundTrip [
+
+	| dependency resolvedSet sameSet |
+	dependency := MooseNexusDependencyDescriptor
+		              coordinates: (MooseNexusCoordinates group: 'org.example' name: 'lib' version: '1.0.0')
+		              type: 'jar'
+		              scopes: #( 'runtime' )
+		              path: '.m2/repository/org/example/lib/1.0.0/lib-1.0.0.jar'.
+	resolvedSet := MooseNexusResolvedDependencySet dependencies: { dependency }.
+
+	sameSet := MooseNexusResolvedDependencySet fromDictionaries: resolvedSet asDictionaries.
+
+	self assert: sameSet equals: resolvedSet.
+	self assert: sameSet dependencies equals: { dependency }
 ]
 
 { #category : 'tests' }
