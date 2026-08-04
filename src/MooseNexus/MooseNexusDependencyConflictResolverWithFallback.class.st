@@ -33,8 +33,8 @@ MooseNexusDependencyConflictResolverWithFallback >> fallbackResolver: aMooseNexu
 ]
 
 { #category : 'resolving' }
-MooseNexusDependencyConflictResolverWithFallback >> resolveRemainingConflicts: conflicts on: dependencies [
-	"If a resolver is unable to make a decision on some conflicts, it will defer to another resolver."
+MooseNexusDependencyConflictResolverWithFallback >> resolveRemainingConflict: aMooseNexusDependencyConflict [
+	"If a resolver is unable to make a decision on a conflict, it defers to another resolver."
 
-	self fallbackResolver resolveConflicts: conflicts on: dependencies
+	^ self fallbackResolver resolveConflict: aMooseNexusDependencyConflict
 ]

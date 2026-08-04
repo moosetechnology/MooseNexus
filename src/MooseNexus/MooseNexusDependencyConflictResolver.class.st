@@ -32,16 +32,13 @@ MooseNexusDependencyConflictResolver >> displayName [
 ]
 
 { #category : 'resolving' }
-MooseNexusDependencyConflictResolver >> resolveConflicts: conflicts [
+MooseNexusDependencyConflictResolver >> resolveConflict: aMooseNexusDependencyConflict [
 
-	| choices |
-	choices := Dictionary new.
-	self resolveConflicts: conflicts on: choices.
-	^ choices
+	self subclassResponsibility
 ]
 
 { #category : 'resolving' }
-MooseNexusDependencyConflictResolver >> resolveConflicts: conflicts on: dependencies [
+MooseNexusDependencyConflictResolver >> resolveConflicts: conflicts [
 
-	self subclassResponsibility
+	^ conflicts collect: [ :conflict | self resolveConflict: conflict ] as: Array
 ]

@@ -13,33 +13,35 @@ MooseNexusVersionLockingDependencyConflictResolverTest >> setUp [
 ]
 
 { #category : 'tests' }
-MooseNexusVersionLockingDependencyConflictResolverTest >> testResolveConflictsOn [
+MooseNexusVersionLockingDependencyConflictResolverTest >> testRememberDecisionAddsVersionLock [
 
-	| conflicts resolved |
-	conflicts := Dictionary
-		             with: 'org:example' -> (self descriptorsWithVersions: #( 'awfulVersion' 'awesomeVersion' 'worstVersion' ))
-		             with: 'com:potato' -> (self descriptorsWithVersions: #( '2b.39.451e-rc' '2a.39.451e-rc' )).
-	resolver locks: (Dictionary with: 'org:example' -> 'awesomeVersion' with: 'com:potato' -> '2a.39.451e-rc').
+	| conflict decision |
+	conflict := self conflictId: 'org:example' versions: #( 'awfulVersion' 'awesomeVersion' ).
+	decision := MooseNexusDependencyConflictDecision conflict: conflict selectedDependency: conflict candidates second.
 
-	resolver resolveConflicts: conflicts on: (resolved := Dictionary new).
+	resolver rememberDecision: decision.
 
-	self assert: resolved equals: (Dictionary
-			 with: 'org:example' -> (self descriptorVersion: 'awesomeVersion')
-			 with: 'com:potato' -> (self descriptorVersion: '2a.39.451e-rc'))
+	self assert: (resolver locks at: 'org:example') equals: 'awesomeVersion'
 ]
 
 { #category : 'tests' }
-MooseNexusVersionLockingDependencyConflictResolverTest >> testResolveConflictsOnWithFallback [
+MooseNexusVersionLockingDependencyConflictResolverTest >> testResolveConflicts [
 
-	| conflicts resolved |
-	conflicts := Dictionary
-		             with: 'org:example' -> (self descriptorsWithVersions: #( 'awfulVersion' 'awesomeVersion' 'worstVersion' ))
-		             with: 'com:potato' -> (self descriptorsWithVersions: #( '2b.39.451e-rc' '2a.39.451e-rc' )).
+	resolver locks: (Dictionary with: 'org:example' -> 'awesomeVersion' with: 'com:potato' -> '2a.39.451e-rc').
+	self
+		assertResolverDecisionsFrom: (Dictionary
+				 with: 'org:example' -> #( 'awfulVersion' 'awesomeVersion' 'worstVersion' )
+				 with: 'com:potato' -> #( '2b.39.451e-rc' '2a.39.451e-rc' ))
+		selectVersions: (Dictionary with: 'org:example' -> 'awesomeVersion' with: 'com:potato' -> '2a.39.451e-rc')
+]
+
+{ #category : 'tests' }
+MooseNexusVersionLockingDependencyConflictResolverTest >> testResolveConflictsWithFallback [
+
 	resolver locks: (Dictionary with: 'org:example' -> 'awesomeVersion').
-
-	resolver resolveConflicts: conflicts on: (resolved := Dictionary new).
-
-	self assert: resolved equals: (Dictionary
-			 with: 'org:example' -> (self descriptorVersion: 'awesomeVersion')
-			 with: 'com:potato' -> (self descriptorVersion: '2b.39.451e-rc'))
+	self
+		assertResolverDecisionsFrom: (Dictionary
+				 with: 'org:example' -> #( 'awfulVersion' 'awesomeVersion' 'worstVersion' )
+				 with: 'com:potato' -> #( '2b.39.451e-rc' '2a.39.451e-rc' ))
+		selectVersions: (Dictionary with: 'org:example' -> 'awesomeVersion' with: 'com:potato' -> '2b.39.451e-rc')
 ]

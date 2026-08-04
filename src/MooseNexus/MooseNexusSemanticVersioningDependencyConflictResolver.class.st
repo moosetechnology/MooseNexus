@@ -182,27 +182,21 @@ MooseNexusSemanticVersioningDependencyConflictResolver >> parseVersionNumberFrom
 ]
 
 { #category : 'resolving' }
+MooseNexusSemanticVersioningDependencyConflictResolver >> resolveConflict: aMooseNexusDependencyConflict [
+	"Try to select a version based on semantic versioning, then defer if versions are ambiguous."
+
+	^ (self resolveConflictBetween: aMooseNexusDependencyConflict candidates)
+		  ifNotNil: [ :chosen | MooseNexusDependencyConflictDecision conflict: aMooseNexusDependencyConflict selectedDependency: chosen ]
+		  ifNil: [ self resolveRemainingConflict: aMooseNexusDependencyConflict ]
+]
+
+{ #category : 'resolving' }
 MooseNexusSemanticVersioningDependencyConflictResolver >> resolveConflictBetween: descriptors [
 
 	^ (self checkAndSortByVersion: descriptors) ifNotNil: [ :listWithVersion |
 			  (listWithVersion at: (useLatest
 					    ifTrue: [ listWithVersion size ]
 					    ifFalse: [ 1 ])) value ]
-]
-
-{ #category : 'resolving' }
-MooseNexusSemanticVersioningDependencyConflictResolver >> resolveConflicts: conflicts on: dependencies [
-	"For each dependency conflict, try to select a version based on semantic versioning."
-
-	| remaining |
-	remaining := Dictionary new.
-
-	conflicts keysAndValuesDo: [ :groupAndName :descriptors |
-			(self resolveConflictBetween: descriptors)
-				ifNotNil: [ :chosen | dependencies at: groupAndName put: chosen ]
-				ifNil: [ remaining at: groupAndName put: descriptors ] ].
-
-	remaining ifNotEmpty: [ self resolveRemainingConflicts: remaining on: dependencies ]
 ]
 
 { #category : 'configuring' }

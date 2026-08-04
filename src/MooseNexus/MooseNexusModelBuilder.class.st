@@ -11,7 +11,8 @@ Class {
 		'withDependencies',
 		'extractor',
 		'modelName',
-		'modelComment'
+		'modelComment',
+		'dependencySourceSelectionPolicy'
 	],
 	#category : 'MooseNexus-ModelExtraction',
 	#package : 'MooseNexus',
@@ -38,6 +39,21 @@ MooseNexusModelBuilder >> cleanUp [
 	"delete temp directories"
 
 	(FileLocator home / project directory / 'dependencies') ensureDeleteAll
+]
+
+{ #category : 'accessing' }
+MooseNexusModelBuilder >> dependencySourceSelectionPolicy [
+
+	^ dependencySourceSelectionPolicy ifNil: [
+			  dependencySourceSelectionPolicy := withDependencies
+				                                     ifTrue: [ MooseNexusDependencySourceSelectionPolicy all ]
+				                                     ifFalse: [ MooseNexusDependencySourceSelectionPolicy none ] ]
+]
+
+{ #category : 'accessing' }
+MooseNexusModelBuilder >> dependencySourceSelectionPolicy: aMooseNexusDependencySourceSelectionPolicy [
+
+	dependencySourceSelectionPolicy := aMooseNexusDependencySourceSelectionPolicy
 ]
 
 { #category : 'accessing' }
@@ -122,13 +138,15 @@ MooseNexusModelBuilder >> registerModel: modelPath [
 { #category : 'building' }
 MooseNexusModelBuilder >> setUp [
 
-	| home projectDirectory dependencies |
+	| home projectDirectory dependencies selectedDependencies |
 	home := FileLocator home.
 	projectDirectory := home / project directory.
+	selectedDependencies := project dependencies select: [ :dependency |
+		                        self dependencySourceSelectionPolicy includesDependency: dependency ].
 
-	withDependencies ifTrue: [
+	selectedDependencies ifNotEmpty: [
 			dependencies := (projectDirectory / 'dependencies') createDirectory.
-			project dependencies do: [ :dependency |
+			selectedDependencies do: [ :dependency |
 					| artifact |
 					artifact := home / dependency path.
 					artifact copyTo: dependencies / artifact basename ] ].
@@ -145,5 +163,8 @@ MooseNexusModelBuilder >> withDependencies [
 { #category : 'accessing' }
 MooseNexusModelBuilder >> withDependencies: aBoolean [
 
-	withDependencies := aBoolean
+	withDependencies := aBoolean.
+	dependencySourceSelectionPolicy := aBoolean
+		                                   ifTrue: [ MooseNexusDependencySourceSelectionPolicy all ]
+		                                   ifFalse: [ MooseNexusDependencySourceSelectionPolicy none ]
 ]

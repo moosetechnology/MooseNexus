@@ -162,53 +162,38 @@ MooseNexusSemanticVersioningDependencyConflictResolverTest >> testParseVersionWi
 ]
 
 { #category : 'tests' }
-MooseNexusSemanticVersioningDependencyConflictResolverTest >> testResolveConflictsOn [
+MooseNexusSemanticVersioningDependencyConflictResolverTest >> testResolveConflicts [
 
-	| conflicts resolved |
-	conflicts := Dictionary
-		             with: 'net:versioned' -> (self descriptorsWithVersions: #( '8.7.5' '5.3.9' '10.2.0-rc' ))
-		             with: 'org:example' -> (self descriptorsWithVersions: #( '1.0.0' '2.0.0' '1.1.0' ))
-		             with: 'com:potato' -> (self descriptorsWithVersions: #( '2.39.451e-rc' '2.39.452e-rc' )).
-
-	resolver resolveConflicts: conflicts on: (resolved := Dictionary new).
-
-	self assert: resolved equals: (Dictionary
-			 with: 'net:versioned' -> (self descriptorVersion: '10.2.0-rc')
-			 with: 'org:example' -> (self descriptorVersion: '2.0.0')
-			 with: 'com:potato' -> (self descriptorVersion: '2.39.452e-rc'))
+	self
+		assertResolverDecisionsFrom: (Dictionary
+				 with: 'net:versioned' -> #( '8.7.5' '5.3.9' '10.2.0-rc' )
+				 with: 'org:example' -> #( '1.0.0' '2.0.0' '1.1.0' )
+				 with: 'com:potato' -> #( '2.39.451e-rc' '2.39.452e-rc' ))
+		selectVersions:
+		(Dictionary with: 'net:versioned' -> '10.2.0-rc' with: 'org:example' -> '2.0.0' with: 'com:potato' -> '2.39.452e-rc')
 ]
 
 { #category : 'tests' }
-MooseNexusSemanticVersioningDependencyConflictResolverTest >> testResolveConflictsOnUsingOldest [
-
-	| conflicts resolved |
-	conflicts := Dictionary
-		             with: 'net:versioned' -> (self descriptorsWithVersions: #( '8.7.5' '5.3.9' '10.2.0-rc' ))
-		             with: 'org:example' -> (self descriptorsWithVersions: #( '1.0.0' '2.0.0' '1.1.0' ))
-		             with: 'com:potato' -> (self descriptorsWithVersions: #( '2.39.451e-rc' '2.39.452e-rc' )).
+MooseNexusSemanticVersioningDependencyConflictResolverTest >> testResolveConflictsUsingOldest [
 
 	resolver useOldest.
-	resolver resolveConflicts: conflicts on: (resolved := Dictionary new).
-
-	self assert: resolved equals: (Dictionary
-			 with: 'net:versioned' -> (self descriptorVersion: '5.3.9')
-			 with: 'org:example' -> (self descriptorVersion: '1.0.0')
-			 with: 'com:potato' -> (self descriptorVersion: '2.39.451e-rc'))
+	self
+		assertResolverDecisionsFrom: (Dictionary
+				 with: 'net:versioned' -> #( '8.7.5' '5.3.9' '10.2.0-rc' )
+				 with: 'org:example' -> #( '1.0.0' '2.0.0' '1.1.0' )
+				 with: 'com:potato' -> #( '2.39.451e-rc' '2.39.452e-rc' ))
+		selectVersions:
+		(Dictionary with: 'net:versioned' -> '5.3.9' with: 'org:example' -> '1.0.0' with: 'com:potato' -> '2.39.451e-rc')
 ]
 
 { #category : 'tests' }
-MooseNexusSemanticVersioningDependencyConflictResolverTest >> testResolveConflictsOnWithFallback [
+MooseNexusSemanticVersioningDependencyConflictResolverTest >> testResolveConflictsWithFallback [
 
-	| conflicts resolved |
-	conflicts := Dictionary
-		             with: 'net:versioned' -> (self descriptorsWithVersions: #( '8.7.5' '5.3.9' '10.2.0-rc' ))
-		             with: 'org:example' -> (self descriptorsWithVersions: #( 'awfulVersion' 'awesomeVersion' 'worstVersion' ))
-		             with: 'com:potato' -> (self descriptorsWithVersions: #( '2b.39.451e-rc' '2a.39.451e-rc' )).
-
-	resolver resolveConflicts: conflicts on: (resolved := Dictionary new).
-
-	self assert: resolved equals: (Dictionary
-			 with: 'net:versioned' -> (self descriptorVersion: '10.2.0-rc')
-			 with: 'org:example' -> (self descriptorVersion: 'awfulVersion')
-			 with: 'com:potato' -> (self descriptorVersion: '2b.39.451e-rc'))
+	self
+		assertResolverDecisionsFrom: (Dictionary
+				 with: 'net:versioned' -> #( '8.7.5' '5.3.9' '10.2.0-rc' )
+				 with: 'org:example' -> #( 'awfulVersion' 'awesomeVersion' 'worstVersion' )
+				 with: 'com:potato' -> #( '2b.39.451e-rc' '2a.39.451e-rc' ))
+		selectVersions:
+		(Dictionary with: 'net:versioned' -> '10.2.0-rc' with: 'org:example' -> 'awfulVersion' with: 'com:potato' -> '2b.39.451e-rc')
 ]

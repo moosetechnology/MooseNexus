@@ -8,7 +8,9 @@ Class {
 	#instVars : [
 		'localRepositories',
 		'dependencyConflictResolver',
-		'dependencyResolutionResult'
+		'dependencyResolutionResult',
+		'unresolvedDependencyPolicy',
+		'dependencyResolutionWarnings'
 	],
 	#category : 'MooseNexus-Importer',
 	#package : 'MooseNexus',
@@ -56,19 +58,18 @@ MooseNexusManagedProjectImporter >> analyze [
 MooseNexusManagedProjectImporter >> configureFromBuildSpec: aMooseNexusBuildSpec [
 
 	aMooseNexusBuildSpec localRepositories ifNotNil: [ :repositories | self localRepositories: repositories ].
-	aMooseNexusBuildSpec dependencyConflictResolver ifNotNil: [ :resolver | self dependencyConflictResolver: resolver ]
+	aMooseNexusBuildSpec dependencyConflictResolver ifNotNil: [ :resolver | self dependencyConflictResolver: resolver ].
+	aMooseNexusBuildSpec unresolvedDependencyPolicy ifNotNil: [ :policy | self unresolvedDependencyPolicy: policy ]
 ]
 
 { #category : 'private' }
-MooseNexusManagedProjectImporter >> dependencyConflictDecisionsFrom: conflicts resolvedOn: dependencies [
+MooseNexusManagedProjectImporter >> conflictIdForDependency: aMooseNexusDependencyDescriptor [
 
-	^ conflicts associations
-		  collect: [ :association |
-				  MooseNexusDependencyConflictDecision
-					  conflictId: association key
-					  candidates: association value asArray
-					  selectedDependency: (dependencies at: association key) ]
-		  as: Array
+	^ String streamContents: [ :stream |
+			  stream
+				  nextPutAll: aMooseNexusDependencyDescriptor group;
+				  nextPut: $:;
+				  nextPutAll: aMooseNexusDependencyDescriptor name ]
 ]
 
 { #category : 'accessing' }
@@ -81,6 +82,14 @@ MooseNexusManagedProjectImporter >> dependencyConflictResolver [
 MooseNexusManagedProjectImporter >> dependencyConflictResolver: aMooseNexusDependencyConflictResolver [
 
 	dependencyConflictResolver := aMooseNexusDependencyConflictResolver
+]
+
+{ #category : 'private' }
+MooseNexusManagedProjectImporter >> dependencyConflictsFrom: conflictsById [
+
+	^ conflictsById associations
+		  collect: [ :association | MooseNexusDependencyConflict conflictId: association key candidates: association value ]
+		  as: Array
 ]
 
 { #category : 'private' }
@@ -107,6 +116,12 @@ MooseNexusManagedProjectImporter >> dependencyGraphFrom: dependenciesByGroup [
 MooseNexusManagedProjectImporter >> dependencyResolutionResult [
 
 	^ dependencyResolutionResult
+]
+
+{ #category : 'accessing' }
+MooseNexusManagedProjectImporter >> dependencyResolutionWarnings [
+
+	^ dependencyResolutionWarnings ifNil: [ dependencyResolutionWarnings := OrderedCollection new ]
 ]
 
 { #category : 'querying' }
@@ -206,7 +221,10 @@ MooseNexusManagedProjectImporter >> resolve: descriptor [
 	"Attempts to find the local path to an artifact based on the descriptor."
 
 	localRepositories do: [ :repository | (repository resolve: descriptor) ifNotNil: [ :mapping | ^ mapping ] ].
-	Error signal: 'Could not find dependency: ' , descriptor
+	^ self unresolvedDependencyPolicy
+		  handleUnresolvedDescriptor: descriptor
+		  repository: localRepositories first
+		  warnings: self dependencyResolutionWarnings
 ]
 
 { #category : 'querying' }
@@ -220,7 +238,7 @@ MooseNexusManagedProjectImporter >> resolveDependencies [
 
 	project projectDependenciesDo: [ :dependencyGroup :dependency |
 			| key |
-			key := dependency group , ':' , dependency name.
+			key := self conflictIdForDependency: dependency.
 			conflicts at: key ifPresent: [ :conflictList | conflictList add: dependency ] ifAbsent: [
 					dependencies
 						at: key
@@ -230,11 +248,12 @@ MooseNexusManagedProjectImporter >> resolveDependencies [
 									ifFalse: [ conflicts at: key put: (OrderedCollection with: (dependencies removeKey: key) with: dependency) ] ]
 						ifAbsentPut: [ dependency ] ] ].
 
+	conflicts := self dependencyConflictsFrom: conflicts.
 	decisions := conflicts ifEmpty: [ #(  ) ] ifNotEmpty: [ self resolveDependencyConflicts: conflicts on: dependencies ].
 	dependencyResolutionResult := MooseNexusDependencyResolutionResult
 		                              project: project
 		                              dependencies: dependencies asArray
-		                              warnings: #(  )
+		                              warnings: self dependencyResolutionWarnings asArray
 		                              decisions: decisions.
 	^ dependencyResolutionResult
 ]
@@ -242,14 +261,28 @@ MooseNexusManagedProjectImporter >> resolveDependencies [
 { #category : 'querying' }
 MooseNexusManagedProjectImporter >> resolveDependencyConflicts: conflicts on: dependencies [
 
-	self effectiveDependencyConflictResolver resolveConflicts: conflicts on: dependencies.
-	^ self dependencyConflictDecisionsFrom: conflicts resolvedOn: dependencies
+	| decisions |
+	decisions := self effectiveDependencyConflictResolver resolveConflicts: conflicts.
+	decisions do: [ :decision | dependencies at: decision conflictId put: decision selectedDependency ].
+	^ decisions
 ]
 
 { #category : 'private' }
 MooseNexusManagedProjectImporter >> sortedDependencyDescriptors: dependencyDescriptors [
 
 	^ dependencyDescriptors asArray sort: [ :left :right | self dependencyDescriptor: left sortsBeforeOrAt: right ]
+]
+
+{ #category : 'accessing' }
+MooseNexusManagedProjectImporter >> unresolvedDependencyPolicy [
+
+	^ unresolvedDependencyPolicy ifNil: [ unresolvedDependencyPolicy := MooseNexusUnresolvedDependencyPolicy fail ]
+]
+
+{ #category : 'accessing' }
+MooseNexusManagedProjectImporter >> unresolvedDependencyPolicy: aMooseNexusUnresolvedDependencyPolicy [
+
+	unresolvedDependencyPolicy := aMooseNexusUnresolvedDependencyPolicy
 ]
 
 { #category : 'validating' }

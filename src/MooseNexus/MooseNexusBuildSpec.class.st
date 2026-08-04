@@ -15,7 +15,9 @@ Class {
 		'modelName',
 		'modelComment',
 		'localRepositories',
-		'dependencyConflictResolver'
+		'dependencyConflictResolver',
+		'dependencySourceSelectionPolicy',
+		'unresolvedDependencyPolicy'
 	],
 	#category : 'MooseNexus-Project',
 	#package : 'MooseNexus',
@@ -48,6 +50,7 @@ MooseNexusBuildSpec >> configureModelBuilder: aMooseNexusModelBuilder [
 	aMooseNexusModelBuilder
 		withDependencies: withDependencies;
 		modelComment: self modelComment.
+	dependencySourceSelectionPolicy ifNotNil: [ :policy | aMooseNexusModelBuilder dependencySourceSelectionPolicy: policy ].
 	modelName ifNotNil: [ aMooseNexusModelBuilder modelName: modelName ].
 	extractor ifNotNil: [ aMooseNexusModelBuilder extractor: extractor ]
 ]
@@ -68,6 +71,18 @@ MooseNexusBuildSpec >> dependencyConflictResolver [
 MooseNexusBuildSpec >> dependencyConflictResolver: aMooseNexusDependencyConflictResolver [
 
 	dependencyConflictResolver := aMooseNexusDependencyConflictResolver
+]
+
+{ #category : 'accessing' }
+MooseNexusBuildSpec >> dependencySourceSelectionPolicy [
+
+	^ dependencySourceSelectionPolicy
+]
+
+{ #category : 'accessing' }
+MooseNexusBuildSpec >> dependencySourceSelectionPolicy: aMooseNexusDependencySourceSelectionPolicy [
+
+	dependencySourceSelectionPolicy := aMooseNexusDependencySourceSelectionPolicy
 ]
 
 { #category : 'execution' }
@@ -171,6 +186,18 @@ MooseNexusBuildSpec >> projectSpec: aMooseNexusProjectSpec [
 MooseNexusBuildSpec >> sourceDirectory [
 
 	^ projectSpec sourceDirectory
+]
+
+{ #category : 'accessing' }
+MooseNexusBuildSpec >> unresolvedDependencyPolicy [
+
+	^ unresolvedDependencyPolicy
+]
+
+{ #category : 'accessing' }
+MooseNexusBuildSpec >> unresolvedDependencyPolicy: aMooseNexusUnresolvedDependencyPolicy [
+
+	unresolvedDependencyPolicy := aMooseNexusUnresolvedDependencyPolicy
 ]
 
 { #category : 'validating' }
