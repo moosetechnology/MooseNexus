@@ -84,6 +84,17 @@ MooseNexusManagedProjectImporter >> dependencyConflictResolver: aMooseNexusDepen
 ]
 
 { #category : 'private' }
+MooseNexusManagedProjectImporter >> dependencyDescriptor: left sortsBeforeOrAt: right [
+
+	| leftName rightName |
+	leftName := left printString.
+	rightName := right printString.
+	leftName = rightName ifFalse: [ ^ leftName < rightName ].
+	left type = right type ifFalse: [ ^ left type < right type ].
+	^ left path <= right path
+]
+
+{ #category : 'private' }
 MooseNexusManagedProjectImporter >> dependencyGraphFrom: dependenciesByGroup [
 
 	| dependencyDescriptors |
@@ -238,8 +249,7 @@ MooseNexusManagedProjectImporter >> resolveDependencyConflicts: conflicts on: de
 { #category : 'private' }
 MooseNexusManagedProjectImporter >> sortedDependencyDescriptors: dependencyDescriptors [
 
-	^ dependencyDescriptors asArray sort: [ :left :right |
-		  left printString , ':' , left type , ':' , left path <= (right printString , ':' , right type , ':' , right path) ]
+	^ dependencyDescriptors asArray sort: [ :left :right | self dependencyDescriptor: left sortsBeforeOrAt: right ]
 ]
 
 { #category : 'validating' }
