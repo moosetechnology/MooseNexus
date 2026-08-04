@@ -19,6 +19,12 @@ MooseNexusDependencyRepository class >> isAbstract [
 	^ self == MooseNexusDependencyRepository
 ]
 
+{ #category : 'parsing' }
+MooseNexusDependencyRepository >> coordinatesOf: descriptor [
+
+	self subclassResponsibility
+]
+
 { #category : 'accessing' }
 MooseNexusDependencyRepository >> directory [
 
@@ -33,6 +39,12 @@ MooseNexusDependencyRepository >> directory: pathString [
 
 { #category : 'resolving' }
 MooseNexusDependencyRepository >> resolve: descriptor [
+
+	self subclassResponsibility
+]
+
+{ #category : 'parsing' }
+MooseNexusDependencyRepository >> scopeOf: descriptor [
 
 	self subclassResponsibility
 ]

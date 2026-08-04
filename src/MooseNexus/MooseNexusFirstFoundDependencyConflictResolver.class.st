@@ -17,7 +17,9 @@ MooseNexusFirstFoundDependencyConflictResolver >> displayName [
 ]
 
 { #category : 'resolving' }
-MooseNexusFirstFoundDependencyConflictResolver >> resolveConflicts: conflicts on: dependencies [
+MooseNexusFirstFoundDependencyConflictResolver >> resolveConflict: aMooseNexusDependencyConflict [
 
-	conflicts keysAndValuesDo: [ :groupAndName :descriptors | dependencies at: groupAndName put: descriptors first ]
+	^ MooseNexusDependencyConflictDecision
+		  conflict: aMooseNexusDependencyConflict
+		  selectedDependency: aMooseNexusDependencyConflict candidates first
 ]

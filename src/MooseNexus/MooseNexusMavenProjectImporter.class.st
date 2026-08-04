@@ -106,9 +106,7 @@ MooseNexusMavenProjectImporter >> parseProject: raw startingAt: initialStart [
 		(raw at: end) == Character space ifTrue: [ "skip module description (>= 11 chars)"
 			end := raw indexOfAnyOf: String crlf startingAt: end + 11 ].
 		(skip or: [ dependency = 'none' ]) ifFalse: [
-				| mapping |
-				mapping := self resolve: dependency.
-				self addDependency: mapping value to: projectDependencies group: mapping key ].
+			(self resolve: dependency) ifNotNil: [ :mapping | self addDependency: mapping value to: projectDependencies group: mapping key ] ].
 
 		"skip over '[INFO] ' (8 chars) and check if new line, indicating the end of the list
 		else start of next dependency descriptor is 3 spaces later"

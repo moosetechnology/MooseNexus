@@ -20,6 +20,28 @@ MooseNexusDependencyConflictResolverTest class >> isAbstract [
 ]
 
 { #category : 'helpers' }
+MooseNexusDependencyConflictResolverTest >> assertResolverDecisionsFrom: versionMap selectVersions: selectedVersions [
+
+	| decisions selectedById |
+	decisions := resolver resolveConflicts: (self conflictsFromVersionMap: versionMap).
+	selectedById := Dictionary new.
+	decisions do: [ :decision | selectedById at: decision conflictId put: decision selectedDependency version ].
+	self assert: selectedById equals: selectedVersions
+]
+
+{ #category : 'helpers' }
+MooseNexusDependencyConflictResolverTest >> conflictId: conflictId versions: versions [
+
+	^ MooseNexusDependencyConflict conflictId: conflictId candidates: (self descriptorsWithVersions: versions)
+]
+
+{ #category : 'helpers' }
+MooseNexusDependencyConflictResolverTest >> conflictsFromVersionMap: versionMap [
+
+	^ versionMap associations collect: [ :association | self conflictId: association key versions: association value ] as: Array
+]
+
+{ #category : 'helpers' }
 MooseNexusDependencyConflictResolverTest >> descriptorVersion: version [
 
 	^ MooseNexusDependencyDescriptor

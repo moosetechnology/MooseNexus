@@ -18,6 +18,14 @@ MooseNexusMavenRepository class >> default [
 	^ default ifNil: [ default := self new directory: '.m2/repository' ]
 ]
 
+{ #category : 'parsing' }
+MooseNexusMavenRepository >> coordinatesOf: descriptor [
+
+	| parts |
+	parts := $: split: descriptor.
+	^ MooseNexusCoordinates group: parts first name: parts second version: (parts at: 4)
+]
+
 { #category : 'resolving' }
 MooseNexusMavenRepository >> resolve: descriptor [
 	"Attempts to find the local path to an artifact based on the descriptor."
@@ -45,4 +53,10 @@ MooseNexusMavenRepository >> resolve: descriptor [
 					   scopes: { scope }
 					   path: (file relativeTo: homeDirectory) pathString) ]
 		  ifAbsent: [ nil ]
+]
+
+{ #category : 'parsing' }
+MooseNexusMavenRepository >> scopeOf: descriptor [
+
+	^ ($: split: descriptor) at: 5
 ]

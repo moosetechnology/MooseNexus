@@ -1,14 +1,13 @@
 "
 I describe the decision made for one dependency conflict.
 
-The conflict id is the dependency artifact key used during resolution. Candidates are the descriptors considered by the resolver, and selectedDependency is the descriptor kept in the resolved dependency set.
+I keep the structured conflict that was resolved and the dependency descriptor selected by the resolver. The conflict id and candidates remain available through delegated accessors so callers can inspect a decision without losing the conflict object itself.
 "
 Class {
 	#name : 'MooseNexusDependencyConflictDecision',
 	#superclass : 'Object',
 	#instVars : [
-		'conflictId',
-		'candidates',
+		'conflict',
 		'selectedDependency'
 	],
 	#category : 'MooseNexus-Dependency',
@@ -17,10 +16,10 @@ Class {
 }
 
 { #category : 'instance creation' }
-MooseNexusDependencyConflictDecision class >> conflictId: aString candidates: candidateDescriptors selectedDependency: aMooseNexusDependencyDescriptor [
+MooseNexusDependencyConflictDecision class >> conflict: aMooseNexusDependencyConflict selectedDependency: aMooseNexusDependencyDescriptor [
 
 	^ self new
-		  initializeConflictId: aString candidates: candidateDescriptors selectedDependency: aMooseNexusDependencyDescriptor;
+		  initializeConflict: aMooseNexusDependencyConflict selectedDependency: aMooseNexusDependencyDescriptor;
 		  yourself
 ]
 
@@ -29,33 +28,37 @@ MooseNexusDependencyConflictDecision >> = anObject [
 
 	self == anObject ifTrue: [ ^ true ].
 	anObject class == self class ifFalse: [ ^ false ].
-	^ anObject conflictId = conflictId and: [
-		  anObject candidates = candidates and: [ anObject selectedDependency = selectedDependency ] ]
+	^ anObject conflict = conflict and: [ anObject selectedDependency = selectedDependency ]
 ]
 
 { #category : 'accessing' }
 MooseNexusDependencyConflictDecision >> candidates [
 
-	^ candidates
+	^ conflict candidates
+]
+
+{ #category : 'accessing' }
+MooseNexusDependencyConflictDecision >> conflict [
+
+	^ conflict
 ]
 
 { #category : 'accessing' }
 MooseNexusDependencyConflictDecision >> conflictId [
 
-	^ conflictId
+	^ conflict conflictId
 ]
 
 { #category : 'comparing' }
 MooseNexusDependencyConflictDecision >> hash [
 
-	^ conflictId hash bitXor: (candidates hash bitXor: selectedDependency hash)
+	^ conflict hash bitXor: selectedDependency hash
 ]
 
 { #category : 'initialization' }
-MooseNexusDependencyConflictDecision >> initializeConflictId: aString candidates: candidateDescriptors selectedDependency: aMooseNexusDependencyDescriptor [
+MooseNexusDependencyConflictDecision >> initializeConflict: aMooseNexusDependencyConflict selectedDependency: aMooseNexusDependencyDescriptor [
 
-	conflictId := aString.
-	candidates := candidateDescriptors.
+	conflict := aMooseNexusDependencyConflict.
 	selectedDependency := aMooseNexusDependencyDescriptor
 ]
 

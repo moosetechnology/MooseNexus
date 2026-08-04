@@ -13,16 +13,11 @@ MooseNexusFirstFoundDependencyConflictResolverTest >> setUp [
 ]
 
 { #category : 'tests' }
-MooseNexusFirstFoundDependencyConflictResolverTest >> testResolveConflictsOn [
+MooseNexusFirstFoundDependencyConflictResolverTest >> testResolveConflicts [
 
-	| conflicts resolved |
-	conflicts := Dictionary
-		             with: 'org:example' -> (self descriptorsWithVersions: #( 'awfulVersion' 'awesomeVersion' 'worstVersion' ))
-		             with: 'com:potato' -> (self descriptorsWithVersions: #( '2b.39.451e-rc' '2a.39.451e-rc' )).
-
-	resolver resolveConflicts: conflicts on: (resolved := Dictionary new).
-
-	self assert: resolved equals: (Dictionary
-			 with: 'org:example' -> (self descriptorVersion: 'awfulVersion')
-			 with: 'com:potato' -> (self descriptorVersion: '2b.39.451e-rc'))
+	self
+		assertResolverDecisionsFrom: (Dictionary
+				 with: 'org:example' -> #( 'awfulVersion' 'awesomeVersion' 'worstVersion' )
+				 with: 'com:potato' -> #( '2b.39.451e-rc' '2a.39.451e-rc' ))
+		selectVersions: (Dictionary with: 'org:example' -> 'awfulVersion' with: 'com:potato' -> '2b.39.451e-rc')
 ]

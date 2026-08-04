@@ -169,9 +169,7 @@ MooseNexusGradleProjectImporter >> parse: raw [
 			"read dependencies per scope"
 			dependencies := Dictionary new.
 			[ (line := lines at: (index := index + 1)) isEmpty or: [ line first == $- ] ] whileFalse: [ "resolve the descriptor: 'group:name:type:version:scope:path'"
-					| mapping |
-					mapping := self resolve: line.
-					self addDependency: mapping value to: dependencies group: mapping key ].
+				(self resolve: line) ifNotNil: [ :mapping | self addDependency: mapping value to: dependencies group: mapping key ] ].
 
 			"register the parsed project; project name is unique so this never overwrites"
 			project projects

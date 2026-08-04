@@ -39,6 +39,20 @@ MooseNexusVersionLockingDependencyConflictResolver >> locks: aDictionary [
 	locks := aDictionary
 ]
 
+{ #category : 'adding' }
+MooseNexusVersionLockingDependencyConflictResolver >> rememberDecision: aMooseNexusDependencyConflictDecision [
+
+	self locks
+		at: aMooseNexusDependencyConflictDecision conflictId
+		put: aMooseNexusDependencyConflictDecision selectedDependency version
+]
+
+{ #category : 'adding' }
+MooseNexusVersionLockingDependencyConflictResolver >> rememberDecisions: dependencyConflictDecisions [
+
+	dependencyConflictDecisions do: [ :decision | self rememberDecision: decision ]
+]
+
 { #category : 'removing' }
 MooseNexusVersionLockingDependencyConflictResolver >> removeLock: aString [
 	"aString = 'group:name'"
@@ -47,20 +61,13 @@ MooseNexusVersionLockingDependencyConflictResolver >> removeLock: aString [
 ]
 
 { #category : 'resolving' }
-MooseNexusVersionLockingDependencyConflictResolver >> resolveConflicts: conflicts on: dependencies [
+MooseNexusVersionLockingDependencyConflictResolver >> resolveConflict: aMooseNexusDependencyConflict [
 
-	| remaining |
-	remaining := Dictionary new.
-
-	conflicts keysAndValuesDo: [ :groupAndName :descriptors |
-			self locks
-				at: groupAndName
-				ifPresent: [ :version |
-						descriptors
-							detect: [ :descriptor | version = descriptor version ]
-							ifFound: [ :descriptor | dependencies at: groupAndName put: descriptor ]
-							ifNone: [ remaining at: groupAndName put: descriptors ] ]
-				ifAbsent: [ remaining at: groupAndName put: descriptors ] ].
-
-	remaining ifNotEmpty: [ self resolveRemainingConflicts: remaining on: dependencies ]
+	self locks at: aMooseNexusDependencyConflict conflictId ifPresent: [ :version |
+			aMooseNexusDependencyConflict candidates
+				detect: [ :descriptor | version = descriptor version ]
+				ifFound: [ :descriptor |
+				^ MooseNexusDependencyConflictDecision conflict: aMooseNexusDependencyConflict selectedDependency: descriptor ]
+				ifNone: [ nil ] ].
+	^ self resolveRemainingConflict: aMooseNexusDependencyConflict
 ]

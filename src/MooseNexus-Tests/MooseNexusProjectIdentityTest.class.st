@@ -77,6 +77,22 @@ MooseNexusProjectIdentityTest >> testBuildSpecComposesProjectSpec [
 ]
 
 { #category : 'tests' }
+MooseNexusProjectIdentityTest >> testBuildSpecConfiguresDependencyPolicies [
+
+	| buildSpec importer unresolvedPolicy |
+	unresolvedPolicy := MooseNexusUnresolvedDependencyPolicy warnAndContinue.
+	buildSpec := MooseNexusBuildSpec
+		             coordinates: (MooseNexusCoordinates group: 'com.example' name: 'demo' version: '1.0.0')
+		             sourceDirectory: sourceDirectory.
+	buildSpec unresolvedDependencyPolicy: unresolvedPolicy.
+	importer := MooseNexusMavenProjectImporter new.
+
+	buildSpec configureImporter: importer.
+
+	self assert: importer unresolvedDependencyPolicy identicalTo: unresolvedPolicy
+]
+
+{ #category : 'tests' }
 MooseNexusProjectIdentityTest >> testBuildSpecConfiguresManagedImporter [
 
 	| buildSpec importer localRepositories resolver |

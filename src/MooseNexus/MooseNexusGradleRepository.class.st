@@ -18,6 +18,14 @@ MooseNexusGradleRepository class >> default [
 	^ default ifNil: [ default := self new directory: '.gradle/caches/modules-2/files-2.1' ]
 ]
 
+{ #category : 'parsing' }
+MooseNexusGradleRepository >> coordinatesOf: descriptor [
+
+	| parts |
+	parts := $: split: descriptor.
+	^ MooseNexusCoordinates group: parts first name: parts second version: (parts at: 4)
+]
+
 { #category : 'resolving' }
 MooseNexusGradleRepository >> findGroup: group name: name version: version type: type [
 	"Search for an artifact (a file) based on its descriptor."
@@ -57,4 +65,10 @@ MooseNexusGradleRepository >> resolve: descriptor [
 		   type: type
 		   scopes: { scope }
 		   path: (artifact relativeTo: FileLocator home) pathString)
+]
+
+{ #category : 'parsing' }
+MooseNexusGradleRepository >> scopeOf: descriptor [
+
+	^ ($: split: descriptor) at: 5
 ]

@@ -24,6 +24,34 @@ MooseNexusDependencyDescriptorTest >> testDependencyGraphDictionaryRoundTrip [
 ]
 
 { #category : 'tests' }
+MooseNexusDependencyDescriptorTest >> testDependencySourceSelectionPolicyExcludesNonMatchingScopes [
+
+	| dependency policy |
+	dependency := MooseNexusDependencyDescriptor
+		              coordinates: (MooseNexusCoordinates group: 'org.example' name: 'dep' version: '1.0.0')
+		              type: 'jar'
+		              scopes: #( 'test' )
+		              path: 'repository/dep-1.0.0.jar'.
+	policy := MooseNexusDependencySourceSelectionPolicy includedScopes: #( 'compile' 'runtime' ).
+
+	self deny: (policy includesDependency: dependency)
+]
+
+{ #category : 'tests' }
+MooseNexusDependencyDescriptorTest >> testDependencySourceSelectionPolicyIncludesMatchingScopes [
+
+	| dependency policy |
+	dependency := MooseNexusDependencyDescriptor
+		              coordinates: (MooseNexusCoordinates group: 'org.example' name: 'dep' version: '1.0.0')
+		              type: 'jar'
+		              scopes: #( 'compile' 'runtime' )
+		              path: 'repository/dep-1.0.0.jar'.
+	policy := MooseNexusDependencySourceSelectionPolicy includedScopes: #( 'runtime' ).
+
+	self assert: (policy includesDependency: dependency)
+]
+
+{ #category : 'tests' }
 MooseNexusDependencyDescriptorTest >> testDescriptorIsValueObject [
 
 	| coordinates descriptor sameDescriptor otherDescriptor |
@@ -103,6 +131,23 @@ MooseNexusDependencyDescriptorTest >> testResolvedDependencySetDictionaryRoundTr
 
 	self assert: sameSet equals: resolvedSet.
 	self assert: sameSet dependencies equals: { dependency }
+]
+
+{ #category : 'tests' }
+MooseNexusDependencyDescriptorTest >> testUnresolvedDependencyPolicyWarnsAndContinues [
+
+	| policy warnings result |
+	policy := MooseNexusUnresolvedDependencyPolicy warnAndContinue.
+	warnings := OrderedCollection new.
+
+	result := policy
+		          handleUnresolvedDescriptor: 'org.example:dep:jar:1.0.0:compile'
+		          repository: MooseNexusMavenRepository default
+		          warnings: warnings.
+
+	self assert: result equals: nil.
+	self assert: warnings size equals: 1.
+	self assert: (warnings first includesSubstring: 'org.example:dep:1.0.0')
 ]
 
 { #category : 'tests' }
