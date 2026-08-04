@@ -395,6 +395,16 @@ MooseNexusProjectIdentityTest >> testRepositoryCreatesLayoutBeforeRecordingProje
 ]
 
 { #category : 'tests' }
+MooseNexusProjectIdentityTest >> testRepositoryDirectoryConfiguresLocalFilesystemBackend [
+
+	| localRepository |
+	localRepository := MooseNexusRepository new directory: rootDirectory / 'custom-repository'.
+
+	self assert: localRepository backend class equals: MooseNexusLocalRepositoryBackend.
+	self assert: localRepository directory pathString equals: (rootDirectory / 'custom-repository') pathString
+]
+
+{ #category : 'tests' }
 MooseNexusProjectIdentityTest >> testRepositoryRecordFromSpecSetsIdentityBeforeRecording [
 
 	| project spec recordedProject coordinates |
@@ -407,6 +417,27 @@ MooseNexusProjectIdentityTest >> testRepositoryRecordFromSpecSetsIdentityBeforeR
 	self assert: project coordinates equals: coordinates.
 	self assert: project isRecorded.
 	self assert: (repository directory / 'repository' / 'com.example' / 'demo' / '1.0.0' / 'properties.json') exists
+]
+
+{ #category : 'tests' }
+MooseNexusProjectIdentityTest >> testRepositoryRecordsThroughConfiguredBackend [
+
+	| backend localRepository project spec projectDirectory |
+	backend := MooseNexusLocalRepositoryBackend directory: rootDirectory / 'backend-repository'.
+	localRepository := MooseNexusRepository backend: backend.
+	project := MooseNexusTestProject new.
+	spec := MooseNexusProjectSpec
+		        coordinates: (MooseNexusCoordinates group: 'com.example' name: 'demo' version: '1.0.0')
+		        sourceDirectory: sourceDirectory.
+	projectDirectory := backend directory / 'repository' / 'com.example' / 'demo' / '1.0.0'.
+
+	localRepository recordLoadedProject: project describedBy: spec.
+
+	self assert: localRepository backend identicalTo: backend.
+	self assert: project isRecorded.
+	self assert: projectDirectory exists.
+	self assert: (projectDirectory / 'properties.json') exists.
+	self assert: (projectDirectory / 'models.json') exists
 ]
 
 { #category : 'tests' }
