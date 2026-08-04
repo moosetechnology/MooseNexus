@@ -73,15 +73,15 @@ MooseNexusProject class >> supportsPropertiesSchemaVersion: schemaVersion [
 ]
 
 { #category : 'adding' }
-MooseNexusProject >> addModel: modelDescription [
-	"Add a model to the list of models for this project, overwriting any with the same name"
+MooseNexusProject >> addModel: aMooseNexusModelArtifact [
+	"Add a model artifact to this project, overwriting any artifact with the same name."
 
-	| modelName models |
-	modelName := modelDescription at: 'name'.
-	models := self models reject: [ :desc | (desc at: 'name') = modelName ].
-	models := models copyWith: modelDescription.
+	| models serializedModels |
+	models := self models reject: [ :artifact | artifact name = aMooseNexusModelArtifact name ].
+	models := models copyWith: aMooseNexusModelArtifact.
+	serializedModels := models collect: [ :artifact | artifact asDictionary ].
 
-	FileLocator home / directory / 'models.json' writeStreamDo: [ :s | STON put: models asJsonOnStream: s ]
+	FileLocator home / directory / 'models.json' writeStreamDo: [ :s | STON put: serializedModels asJsonOnStream: s ]
 ]
 
 { #category : 'accessing' }
@@ -138,15 +138,14 @@ MooseNexusProject >> importModel [
 ]
 
 { #category : 'setup' }
-MooseNexusProject >> importModel: modelDescription [
-	"modelDescription = { 'name': fileName, 'description', 'comment', 'timestamp', 'famixVersion' }"
+MooseNexusProject >> importModel: aMooseNexusModelArtifact [
 
 	| model |
 	model := FamixJavaModel new.
 
 	FamixJSONFileImporter new
 		model: model;
-		inputFile: FileLocator home / directory / 'models' / (modelDescription at: 'name') , (modelDescription at: 'format');
+		inputFile: FileLocator home / directory / aMooseNexusModelArtifact path;
 		runFilteredBy: FamixJavaImportingContext new importMaximum.
 
 	model install. "add to MooseModel root"
@@ -184,7 +183,8 @@ MooseNexusProject >> language [
 { #category : 'enumerating' }
 MooseNexusProject >> models [
 
-	^ FileLocator home / directory / 'models.json' readStreamDo: [ :s | STON fromStream: s ]
+	^ FileLocator home / directory / 'models.json' readStreamDo: [ :s |
+		  (STON fromStream: s) collect: [ :modelArtifact | MooseNexusModelArtifact fromDictionary: modelArtifact ] ]
 ]
 
 { #category : 'accessing' }

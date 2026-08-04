@@ -1,14 +1,14 @@
 "
 I describe the result of building one model artifact.
 
-I capture the recorded project, the model description written to models.json, and the dependency-resolution result that was used for the build.
+I capture the recorded project, the model artifact written to models.json, and the dependency-resolution result that was used for the build.
 "
 Class {
 	#name : 'MooseNexusModelBuildResult',
 	#superclass : 'Object',
 	#instVars : [
 		'project',
-		'modelDescription',
+		'modelArtifact',
 		'dependencyResolutionResult'
 	],
 	#category : 'MooseNexus-ModelExtraction',
@@ -17,11 +17,11 @@ Class {
 }
 
 { #category : 'instance creation' }
-MooseNexusModelBuildResult class >> project: aMooseNexusProject modelDescription: modelDescription dependencyResolutionResult: aMooseNexusDependencyResolutionResult [
+MooseNexusModelBuildResult class >> project: aMooseNexusProject modelArtifact: aMooseNexusModelArtifact dependencyResolutionResult: aMooseNexusDependencyResolutionResult [
 
 	^ self new
 		  initializeProject: aMooseNexusProject
-		  modelDescription: modelDescription
+		  modelArtifact: aMooseNexusModelArtifact
 		  dependencyResolutionResult: aMooseNexusDependencyResolutionResult;
 		  yourself
 ]
@@ -33,29 +33,29 @@ MooseNexusModelBuildResult >> dependencyResolutionResult [
 ]
 
 { #category : 'initialization' }
-MooseNexusModelBuildResult >> initializeProject: aMooseNexusProject modelDescription: aDictionary dependencyResolutionResult: aMooseNexusDependencyResolutionResult [
+MooseNexusModelBuildResult >> initializeProject: aMooseNexusProject modelArtifact: aMooseNexusModelArtifact dependencyResolutionResult: aMooseNexusDependencyResolutionResult [
 
 	project := aMooseNexusProject.
-	modelDescription := aDictionary.
+	modelArtifact := aMooseNexusModelArtifact.
 	dependencyResolutionResult := aMooseNexusDependencyResolutionResult
 ]
 
 { #category : 'accessing' }
-MooseNexusModelBuildResult >> modelDescription [
+MooseNexusModelBuildResult >> modelArtifact [
 
-	^ modelDescription
+	^ modelArtifact
 ]
 
 { #category : 'accessing' }
 MooseNexusModelBuildResult >> modelFormat [
 
-	^ modelDescription at: 'format'
+	^ modelArtifact format
 ]
 
 { #category : 'accessing' }
 MooseNexusModelBuildResult >> modelName [
 
-	^ modelDescription at: 'name'
+	^ modelArtifact name
 ]
 
 { #category : 'accessing' }
