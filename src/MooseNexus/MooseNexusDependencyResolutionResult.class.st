@@ -28,6 +28,21 @@ MooseNexusDependencyResolutionResult class >> forProject: aMooseNexusProject [
 ]
 
 { #category : 'instance creation' }
+MooseNexusDependencyResolutionResult class >> fromDictionary: aDictionary [
+
+	^ self
+		  project: nil
+		  dependencies: ((aDictionary at: 'resolvedDependencies')
+				   collect: [ :dependency | MooseNexusDependencyDescriptor fromDictionary: dependency ]
+				   as: Array)
+		  warnings: (aDictionary at: 'warnings')
+		  decisions:
+		  ((aDictionary at: 'decisions')
+			   collect: [ :decision | MooseNexusDependencyConflictDecision fromDictionary: decision ]
+			   as: Array)
+]
+
+{ #category : 'instance creation' }
 MooseNexusDependencyResolutionResult class >> project: aMooseNexusProject dependencies: dependencies warnings: warnings decisions: decisions [
 
 	^ self new
@@ -35,6 +50,24 @@ MooseNexusDependencyResolutionResult class >> project: aMooseNexusProject depend
 		  dependencies: dependencies
 		  warnings: warnings
 		  decisions: decisions;
+		  yourself
+]
+
+{ #category : 'comparing' }
+MooseNexusDependencyResolutionResult >> = anObject [
+
+	self == anObject ifTrue: [ ^ true ].
+	anObject class == self class ifFalse: [ ^ false ].
+	^ anObject dependencies = dependencies and: [ anObject warnings = warnings and: [ anObject decisions = decisions ] ]
+]
+
+{ #category : 'converting' }
+MooseNexusDependencyResolutionResult >> asDictionary [
+
+	^ Dictionary new
+		  add: 'resolvedDependencies' -> (dependencies collect: [ :dependency | dependency asDictionary ] as: Array);
+		  add: 'warnings' -> warnings asArray;
+		  add: 'decisions' -> (decisions collect: [ :decision | decision asDictionary ] as: Array);
 		  yourself
 ]
 
@@ -48,6 +81,12 @@ MooseNexusDependencyResolutionResult >> decisions [
 MooseNexusDependencyResolutionResult >> dependencies [
 
 	^ dependencies
+]
+
+{ #category : 'comparing' }
+MooseNexusDependencyResolutionResult >> hash [
+
+	^ dependencies hash bitXor: (warnings hash bitXor: decisions hash)
 ]
 
 { #category : 'initialization' }

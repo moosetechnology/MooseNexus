@@ -12,7 +12,8 @@ Class {
 		'extractor',
 		'modelName',
 		'modelComment',
-		'dependencySourceSelectionPolicy'
+		'dependencySourceSelectionPolicy',
+		'dependencyResolutionResult'
 	],
 	#category : 'MooseNexus-ModelExtraction',
 	#package : 'MooseNexus',
@@ -39,6 +40,18 @@ MooseNexusModelBuilder >> cleanUp [
 	"delete temp directories"
 
 	(FileLocator home / project directory / 'dependencies') ensureDeleteAll
+]
+
+{ #category : 'accessing' }
+MooseNexusModelBuilder >> dependencyResolutionResult [
+
+	^ dependencyResolutionResult ifNil: [ dependencyResolutionResult := MooseNexusDependencyResolutionResult forProject: project ]
+]
+
+{ #category : 'accessing' }
+MooseNexusModelBuilder >> dependencyResolutionResult: aMooseNexusDependencyResolutionResult [
+
+	dependencyResolutionResult := aMooseNexusDependencyResolutionResult
 ]
 
 { #category : 'accessing' }
@@ -114,7 +127,7 @@ MooseNexusModelBuilder >> project: aMooseNexusProject [
 MooseNexusModelBuilder >> registerModel: modelPath [
 	"Name and record the model file produced by the extractor. Answer the recorded model artifact."
 
-	| projectDirectory source target artifactPath modelArtifact |
+	| projectDirectory source target artifactPath timestamp artifactCoordinates modelArtifact manifest generatedFile |
 	projectDirectory := FileLocator home / project directory.
 	source := projectDirectory / modelPath.
 	target := ((projectDirectory / 'models') ensureCreateDirectory / self modelName , source extension) ensureDelete.
@@ -123,15 +136,25 @@ MooseNexusModelBuilder >> registerModel: modelPath [
 	source ensureDelete.
 
 	artifactPath := (target relativeTo: projectDirectory) pathString.
+	timestamp := DateAndTime now asString.
+	artifactCoordinates := MooseNexusModelArtifactCoordinates
+		                       projectCoordinates: project coordinates
+		                       name: self modelName
+		                       format: source extension
+		                       metamodel: 'unknown'
+		                       classifier: 'main'.
 	modelArtifact := MooseNexusModelArtifact
-		                 coordinates: project coordinates
-		                 name: self modelName
+		                 artifactCoordinates: artifactCoordinates
 		                 path: artifactPath
-		                 format: source extension
 		                 comment: self modelComment
-		                 timestamp: DateAndTime now asString
-		                 famixVersion: 'unknown'.
-	project addModel: modelArtifact.
+		                 timestamp: timestamp.
+	generatedFile := MooseNexusModelArtifactManifest generatedFileFor: target relativeTo: projectDirectory.
+	manifest := MooseNexusModelArtifactManifest
+		            modelArtifact: modelArtifact
+		            dependencyResolutionResult: self dependencyResolutionResult
+		            generatedFiles: { generatedFile }
+		            createdTimestamp: timestamp.
+	project addModelManifest: manifest.
 	^ modelArtifact
 ]
 

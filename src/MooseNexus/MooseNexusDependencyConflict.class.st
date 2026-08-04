@@ -23,12 +23,30 @@ MooseNexusDependencyConflict class >> conflictId: aString candidates: dependency
 		  yourself
 ]
 
+{ #category : 'instance creation' }
+MooseNexusDependencyConflict class >> fromDictionary: aDictionary [
+
+	^ self
+		  conflictId: (aDictionary at: 'conflictId')
+		  candidates:
+		  ((aDictionary at: 'candidates') collect: [ :candidate | MooseNexusDependencyDescriptor fromDictionary: candidate ])
+]
+
 { #category : 'comparing' }
 MooseNexusDependencyConflict >> = anObject [
 
 	self == anObject ifTrue: [ ^ true ].
 	anObject class == self class ifFalse: [ ^ false ].
 	^ anObject conflictId = conflictId and: [ anObject candidates = candidates ]
+]
+
+{ #category : 'converting' }
+MooseNexusDependencyConflict >> asDictionary [
+
+	^ Dictionary new
+		  add: 'conflictId' -> conflictId;
+		  add: 'candidates' -> (candidates collect: [ :candidate | candidate asDictionary ] as: Array);
+		  yourself
 ]
 
 { #category : 'accessing' }
