@@ -10,8 +10,8 @@ MooseNexusProjectVersionPolicyTest >> importerWithProjectVersion: version [
 
 	| importer project |
 	project := MooseNexusMavenProject new.
-	project projects: (Dictionary with: 'com.example'
-			 -> (Dictionary with: 'demo' -> (MooseNexusManagedProjectDescriptor version: version path: nil dependencies: Dictionary new))).
+	project projects: (Dictionary with: 'com.example' -> (Dictionary with:
+				  'demo' -> (MooseNexusManagedProjectDescriptor version: version path: nil dependencyGraph: MooseNexusDependencyGraph empty))).
 	importer := MooseNexusMavenProjectImporter new.
 	importer project: project.
 	^ importer
@@ -22,8 +22,8 @@ MooseNexusProjectVersionPolicyTest >> importerWithProjectWithoutVersion [
 
 	| importer project |
 	project := MooseNexusMavenProject new.
-	project projects: (Dictionary with: 'com.example'
-			 -> (Dictionary with: 'demo' -> (MooseNexusManagedProjectDescriptor version: nil path: nil dependencies: Dictionary new))).
+	project projects: (Dictionary with: 'com.example' -> (Dictionary with:
+				  'demo' -> (MooseNexusManagedProjectDescriptor version: nil path: nil dependencyGraph: MooseNexusDependencyGraph empty))).
 	importer := MooseNexusMavenProjectImporter new.
 	importer project: project.
 	^ importer

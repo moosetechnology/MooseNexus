@@ -4,30 +4,23 @@ A project with managed dependencies, such as one using Maven or Gradle.
 My properties define the additional mapping:
 ```text
 projects: <projects>
-dependencies:
-	- group:   <dependencyGroup>
-	  name:    <dependencyName>
-	  version: <dependencyVersion>
-	  scopes:  <dependencyScopes>
-	  type:    <dependencyType>
 ```
-The dependencies contain additional mappings for their own group, artifact, and version, as well as their type and scopes.
-The type is the file format of the dependency (usually `jar` for Java).
-The scopes are the application lifecycles that require the dependency, such as `compile` or `runtime`.
-
 A managed project can encompass multiple projects and subprojects.
 The `projects` property has the following mapping:
 ```text
 <projectGroup>:
 	<projectName>:
 		version: <projectVersion>
-		dependencies:
-			<dependencyGroup>:
-				- name:    <dependencyName>
+		dependencyGraph:
+			dependencies:
+				- group:   <dependencyGroup>
+				  name:    <dependencyName>
 				  version: <dependencyVersion>
 				  scopes:  <dependencyScopes>
+				  type:    <dependencyType>
 				  path:    <localPath>
 ```
+Managed project dependency graphs preserve the declarations read from the external build tool. The inherited `resolvedDependencies` property records the flattened dependencies selected for the MooseNexus build.
 "
 Class {
 	#name : 'MooseNexusManagedProject',
@@ -51,18 +44,6 @@ MooseNexusManagedProject class >> isAbstract [
 MooseNexusManagedProject class >> knownLanguages [
 
 	^ #( java )
-]
-
-{ #category : 'private' }
-MooseNexusManagedProject >> dependencyDescriptorFrom: descriptor group: dependencyGroup [
-
-	^ descriptor group ifNil: [ descriptor withGroup: dependencyGroup ] ifNotNil: [ descriptor ]
-]
-
-{ #category : 'private' }
-MooseNexusManagedProject >> dependencyDescriptorsFrom: descriptors group: dependencyGroup [
-
-	^ descriptors collect: [ :descriptor | self dependencyDescriptorFrom: descriptor group: dependencyGroup ]
 ]
 
 { #category : 'querying' }
@@ -131,9 +112,7 @@ MooseNexusManagedProject >> projectDependenciesDo: aBlock [
 
 	self projects do: [ :projectGroup |
 			projectGroup do: [ :projectDescriptor |
-					projectDescriptor dependencies keysAndValuesDo: [ :dependencyGroup :descriptors |
-							(self dependencyDescriptorsFrom: descriptors group: dependencyGroup) do: [ :descriptor |
-								aBlock value: dependencyGroup value: descriptor ] ] ] ]
+				projectDescriptor dependencyGraph do: [ :descriptor | aBlock value: descriptor group value: descriptor ] ] ]
 ]
 
 { #category : 'properties' }
