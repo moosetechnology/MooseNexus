@@ -16,7 +16,7 @@ The schema version identifies the persisted properties format.
 The nature corresponds to the concrete subclass of MooseNexusProject that handles the source project.
 The group, name, and version are the coordinates that identify the source project as modeled by MooseNexus.
 
-Use MooseNexusProjectSpec to describe the intent to create or record a project. Coordinate inference belongs to importers; this object only carries the coordinates it was initialized with.
+Use MooseNexusBuildSpec to describe build-time intent and MooseNexusProjectSpec for the narrower source-project coordinates and directory. Coordinate inference belongs to importers; this object only carries the coordinates it was initialized with.
 "
 Class {
 	#name : 'MooseNexusProject',
@@ -82,13 +82,6 @@ MooseNexusProject >> addModel: modelDescription [
 	models := models copyWith: modelDescription.
 
 	FileLocator home / directory / 'models.json' writeStreamDo: [ :s | STON put: models asJsonOnStream: s ]
-]
-
-{ #category : 'building' }
-MooseNexusProject >> buildModel [
-	"Build a model with default attributes. Use the model builder API for more control."
-
-	self modelBuilder build
 ]
 
 { #category : 'accessing' }
@@ -186,12 +179,6 @@ MooseNexusProject >> language [
 	"Subclasses must return a lowercase string of the project's language name."
 
 	self subclassResponsibility
-]
-
-{ #category : 'building' }
-MooseNexusProject >> modelBuilder [
-
-	^ MooseNexusModelBuilder on: self
 ]
 
 { #category : 'enumerating' }

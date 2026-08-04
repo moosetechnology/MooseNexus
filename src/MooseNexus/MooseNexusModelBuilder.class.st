@@ -26,13 +26,11 @@ MooseNexusModelBuilder class >> on: aMooseNexusProject [
 
 { #category : 'building' }
 MooseNexusModelBuilder >> build [
-	"Create the model"
+	"Create the model and answer its recorded description."
 
-	[
-		| modelPath |
-		self setUp.
-		modelPath := self extractor run.
-		self registerModel: modelPath ] ensure: [ self cleanUp ]
+	^ [
+		  self setUp.
+		  self registerModel: self extractor run ] ensure: [ self cleanUp ]
 ]
 
 { #category : 'cleanup' }
@@ -98,9 +96,9 @@ MooseNexusModelBuilder >> project: aMooseNexusProject [
 
 { #category : 'building' }
 MooseNexusModelBuilder >> registerModel: modelPath [
-	"Name and record the model file produced by the extractor."
+	"Name and record the model file produced by the extractor. Answer the recorded model description."
 
-	| projectDirectory source target |
+	| projectDirectory source target modelDescription |
 	projectDirectory := FileLocator home / project directory.
 	source := projectDirectory / modelPath.
 	target := ((projectDirectory / 'models') ensureCreateDirectory / self modelName , source extension) ensureDelete.
@@ -108,12 +106,14 @@ MooseNexusModelBuilder >> registerModel: modelPath [
 	source copyTo: target.
 	source ensureDelete.
 
-	project addModel: (Dictionary
-			 with: 'name' -> self modelName
-			 with: 'format' -> source extension
-			 with: 'comment' -> self modelComment
-			 with: 'timestamp' -> DateAndTime now asString
-			 with: 'famixVersion' -> 'unknown')
+	modelDescription := Dictionary
+		                    with: 'name' -> self modelName
+		                    with: 'format' -> source extension
+		                    with: 'comment' -> self modelComment
+		                    with: 'timestamp' -> DateAndTime now asString
+		                    with: 'famixVersion' -> 'unknown'.
+	project addModel: modelDescription.
+	^ modelDescription
 ]
 
 { #category : 'building' }

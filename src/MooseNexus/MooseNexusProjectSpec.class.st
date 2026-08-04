@@ -1,7 +1,7 @@
 "
-I describe the intent to import and record a source project in MooseNexus.
+I describe the source project that a MooseNexus build should import and record.
 
-I am configuration, not a recorded project. A MooseNexusProjectSpec carries the source directory and coordinates chosen before repository recording starts. The repository uses me to create a MooseNexusProject and then records that project.
+I am configuration, not a recorded project. I carry the source directory and coordinates chosen before repository recording starts. MooseNexusBuildSpec composes me with dependency-resolution and model-building policy.
 "
 Class {
 	#name : 'MooseNexusProjectSpec',
@@ -48,13 +48,6 @@ MooseNexusProjectSpec >> coordinates: aMooseNexusCoordinates [
 MooseNexusProjectSpec >> group [
 
 	^ self coordinates group
-]
-
-{ #category : 'importing' }
-MooseNexusProjectSpec >> importProject [
-
-	self validateForRecording.
-	^ (MooseNexusProjectImporter fromDirectory: sourceDirectory pathString) importWithCoordinates: coordinates
 ]
 
 { #category : 'accessing' }
