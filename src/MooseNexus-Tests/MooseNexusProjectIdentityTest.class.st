@@ -374,6 +374,23 @@ MooseNexusProjectIdentityTest >> testRecordedProjectRejectsCoordinateChanges [
 ]
 
 { #category : 'tests' }
+MooseNexusProjectIdentityTest >> testRepositoryCanLoadRecordedProjectFromMetadataDirectory [
+
+	| project spec loadedProject |
+	project := MooseNexusTestProject new.
+	spec := MooseNexusProjectSpec
+		        coordinates: (MooseNexusCoordinates group: 'com.example' name: 'demo' version: '1.0.0')
+		        sourceDirectory: sourceDirectory.
+	repository recordLoadedProject: project describedBy: spec.
+
+	loadedProject := repository group: 'com.example' project: 'demo' version: '1.0.0'.
+
+	self assert: loadedProject class equals: MooseNexusTestProject.
+	self assert: loadedProject coordinates equals: project coordinates.
+	self assert: loadedProject directory equals: project directory
+]
+
+{ #category : 'tests' }
 MooseNexusProjectIdentityTest >> testRepositoryCreatesLayoutBeforeRecordingProject [
 
 	| project spec projectDirectory |
@@ -387,11 +404,14 @@ MooseNexusProjectIdentityTest >> testRepositoryCreatesLayoutBeforeRecordingProje
 	repository recordLoadedProject: project describedBy: spec.
 
 	self assert: projectDirectory exists.
+	self assert: (projectDirectory / 'metadata') exists.
+	self assert: (projectDirectory / 'metadata' / 'properties.json') exists.
+	self assert: (projectDirectory / 'metadata' / 'models.json') exists.
 	self assert: (projectDirectory / 'sources') exists.
 	self assert: (projectDirectory / 'sources' / 'project') exists.
 	self assert: (projectDirectory / 'sources' / 'project' / 'README.txt') exists.
-	self assert: (projectDirectory / 'properties.json') exists.
-	self assert: (projectDirectory / 'models.json') exists
+	self assert: (projectDirectory / 'artifacts') exists.
+	self assert: (projectDirectory / 'artifacts' / 'models') exists
 ]
 
 { #category : 'tests' }
@@ -405,18 +425,35 @@ MooseNexusProjectIdentityTest >> testRepositoryDirectoryConfiguresLocalFilesyste
 ]
 
 { #category : 'tests' }
+MooseNexusProjectIdentityTest >> testRepositoryListsProjectsFromMetadataDirectory [
+
+	| project spec projects |
+	project := MooseNexusTestProject new.
+	spec := MooseNexusProjectSpec
+		        coordinates: (MooseNexusCoordinates group: 'com.example' name: 'demo' version: '1.0.0')
+		        sourceDirectory: sourceDirectory.
+	repository recordLoadedProject: project describedBy: spec.
+
+	projects := repository projects.
+
+	self assert: projects size equals: 1.
+	self assert: projects first coordinates equals: project coordinates
+]
+
+{ #category : 'tests' }
 MooseNexusProjectIdentityTest >> testRepositoryRecordFromSpecSetsIdentityBeforeRecording [
 
-	| project spec recordedProject coordinates |
+	| project spec recordedProject coordinates projectDirectory |
 	project := MooseNexusTestProject new.
 	coordinates := MooseNexusCoordinates group: 'com.example' name: 'demo' version: '1.0.0'.
 	spec := MooseNexusProjectSpec coordinates: coordinates sourceDirectory: sourceDirectory.
 	recordedProject := repository recordLoadedProject: project describedBy: spec.
+	projectDirectory := repository directory / 'repository' / 'com.example' / 'demo' / '1.0.0'.
 
 	self assert: recordedProject identicalTo: project.
 	self assert: project coordinates equals: coordinates.
 	self assert: project isRecorded.
-	self assert: (repository directory / 'repository' / 'com.example' / 'demo' / '1.0.0' / 'properties.json') exists
+	self assert: (projectDirectory / 'metadata' / 'properties.json') exists
 ]
 
 { #category : 'tests' }
@@ -436,8 +473,9 @@ MooseNexusProjectIdentityTest >> testRepositoryRecordsThroughConfiguredBackend [
 	self assert: localRepository backend identicalTo: backend.
 	self assert: project isRecorded.
 	self assert: projectDirectory exists.
-	self assert: (projectDirectory / 'properties.json') exists.
-	self assert: (projectDirectory / 'models.json') exists
+	self assert: (projectDirectory / 'metadata' / 'properties.json') exists.
+	self assert: (projectDirectory / 'metadata' / 'models.json') exists.
+	self assert: (projectDirectory / 'artifacts' / 'models') exists
 ]
 
 { #category : 'tests' }

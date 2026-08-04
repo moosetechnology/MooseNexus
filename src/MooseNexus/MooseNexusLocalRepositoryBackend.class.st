@@ -55,7 +55,9 @@ MooseNexusLocalRepositoryBackend >> prepareDirectoryFor: aMooseNexusProjectSpec 
 	projectDirectory ifExists: [
 			Warning signal: 'This project already exists in given repository, proceed to overwrite it'.
 			projectDirectory deleteAll ].
+	(projectDirectory / 'metadata') ensureCreateDirectory.
 	(projectDirectory / 'sources' / 'project') ensureCreateDirectory.
+	(projectDirectory / 'artifacts' / 'models') ensureCreateDirectory.
 	^ projectDirectory
 ]
 
@@ -95,7 +97,7 @@ MooseNexusLocalRepositoryBackend >> projectProperties [
 	properties := OrderedCollection new.
 	(directory / 'repository') directories do: [ :groupDirectory |
 			groupDirectory directories do: [ :nameDirectory |
-				nameDirectory directories do: [ :versionDirectory | properties add: versionDirectory / 'properties.json' ] ] ].
+				nameDirectory directories do: [ :versionDirectory | properties add: versionDirectory / 'metadata' / 'properties.json' ] ] ].
 	^ properties
 ]
 
@@ -110,17 +112,18 @@ MooseNexusLocalRepositoryBackend >> projects [
 MooseNexusLocalRepositoryBackend >> recordLoadedProject: project describedBy: aMooseNexusProjectSpec [
 	"Add an already loaded project to the repository using the spec that describes recording intent."
 
-	| projectDirectory |
+	| projectDirectory metadataDirectory |
 	aMooseNexusProjectSpec validateForRecording.
 	project coordinates ifNil: [ project initializeCoordinates: aMooseNexusProjectSpec coordinates ] ifNotNil: [ :coordinates |
 			coordinates = aMooseNexusProjectSpec coordinates ifFalse: [
 				Error signal: 'Cannot record a MooseNexus project with coordinates different from its spec' ] ].
 	projectDirectory := self prepareDirectoryFor: aMooseNexusProjectSpec.
+	metadataDirectory := projectDirectory / 'metadata'.
 	project directory: (projectDirectory relativeTo: FileLocator home) pathString.
 
 	aMooseNexusProjectSpec sourceDirectory copyAllTo: projectDirectory / 'sources' / 'project'.
-	(projectDirectory / 'properties.json') ensureCreateFile writeStreamDo: [ :stream | project writePropertiesOn: stream ].
-	(projectDirectory / 'models.json') ensureCreateFile writeStreamDo: [ :stream | stream nextPutAll: '[]' ].
+	(metadataDirectory / 'properties.json') ensureCreateFile writeStreamDo: [ :stream | project writePropertiesOn: stream ].
+	(metadataDirectory / 'models.json') ensureCreateFile writeStreamDo: [ :stream | stream nextPutAll: '[]' ].
 
 	^ project
 ]

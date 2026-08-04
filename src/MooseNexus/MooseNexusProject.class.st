@@ -42,7 +42,7 @@ MooseNexusProject class >> coordinates: aMooseNexusCoordinates [
 { #category : 'instance creation' }
 MooseNexusProject class >> fromNexusDirectory: directory [
 
-	^ (self fromProperties: directory / 'properties.json') directory: (directory relativeTo: FileLocator home) pathString
+	^ (self fromProperties: directory / 'metadata' / 'properties.json') directory: (directory relativeTo: FileLocator home) pathString
 ]
 
 { #category : 'instance creation' }
@@ -92,7 +92,13 @@ MooseNexusProject >> addModelManifest: aMooseNexusModelArtifactManifest [
 		             manifest modelArtifact name = aMooseNexusModelArtifactManifest modelArtifact name ].
 	manifests := manifests copyWith: aMooseNexusModelArtifactManifest.
 	serializedManifests := manifests collect: [ :manifest | manifest asDictionary ].
-	FileLocator home / directory / 'models.json' writeStreamDo: [ :stream | STON put: serializedManifests asJsonOnStream: stream ]
+	self metadataDirectory / 'models.json' writeStreamDo: [ :stream | STON put: serializedManifests asJsonOnStream: stream ]
+]
+
+{ #category : 'enumerating' }
+MooseNexusProject >> artifactPayloadDirectory [
+
+	^ self repositoryDirectory / 'artifacts'
 ]
 
 { #category : 'accessing' }
@@ -186,9 +192,21 @@ MooseNexusProject >> language [
 ]
 
 { #category : 'enumerating' }
+MooseNexusProject >> metadataDirectory [
+
+	^ self repositoryDirectory / 'metadata'
+]
+
+{ #category : 'enumerating' }
+MooseNexusProject >> modelArtifactsDirectory [
+
+	^ self artifactPayloadDirectory / 'models'
+]
+
+{ #category : 'enumerating' }
 MooseNexusProject >> modelManifests [
 
-	^ FileLocator home / directory / 'models.json' readStreamDo: [ :stream |
+	^ self metadataDirectory / 'models.json' readStreamDo: [ :stream |
 		  (STON fromStream: stream) collect: [ :manifest | MooseNexusModelArtifactManifest fromDictionary: manifest ] ]
 ]
 
@@ -252,6 +270,12 @@ MooseNexusProject >> readProperties: properties [
 		ifPresent: [ :deps | resolvedDependencySet := self resolvedDependencySetFromProperties: deps ]
 ]
 
+{ #category : 'enumerating' }
+MooseNexusProject >> repositoryDirectory [
+
+	^ FileLocator home / directory
+]
+
 { #category : 'accessing' }
 MooseNexusProject >> resolvedDependencySet [
 
@@ -275,7 +299,7 @@ MooseNexusProject >> sourceDirectory [
 	"The directory containing all of the sources for this project.
 	This includes the original project sources, and additional sources from dependencies."
 
-	^ FileLocator home / directory / 'sources'
+	^ self repositoryDirectory / 'sources'
 ]
 
 { #category : 'properties' }

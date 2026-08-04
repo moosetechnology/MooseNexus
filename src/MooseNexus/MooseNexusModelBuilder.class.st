@@ -39,7 +39,7 @@ MooseNexusModelBuilder >> build [
 MooseNexusModelBuilder >> cleanUp [
 	"delete temp directories"
 
-	(FileLocator home / project directory / 'dependencies') ensureDeleteAll
+	(project repositoryDirectory / 'dependencies') ensureDeleteAll
 ]
 
 { #category : 'accessing' }
@@ -128,9 +128,9 @@ MooseNexusModelBuilder >> registerModel: modelPath [
 	"Name and record the model file produced by the extractor. Answer the recorded model artifact."
 
 	| projectDirectory source target artifactPath timestamp artifactCoordinates modelArtifact manifest generatedFile |
-	projectDirectory := FileLocator home / project directory.
+	projectDirectory := project repositoryDirectory.
 	source := projectDirectory / modelPath.
-	target := ((projectDirectory / 'models') ensureCreateDirectory / self modelName , source extension) ensureDelete.
+	target := (project modelArtifactsDirectory ensureCreateDirectory / self modelName , source extension) ensureDelete.
 	"Copy before deleting so files produced by external tools are recreated with the image user's ownership."
 	source copyTo: target.
 	source ensureDelete.
@@ -163,7 +163,7 @@ MooseNexusModelBuilder >> setUp [
 
 	| home projectDirectory dependencies selectedDependencies |
 	home := FileLocator home.
-	projectDirectory := home / project directory.
+	projectDirectory := project repositoryDirectory.
 	selectedDependencies := project dependencies select: [ :dependency |
 		                        self dependencySourceSelectionPolicy includesDependency: dependency ].
 
