@@ -38,21 +38,6 @@ MooseNexusModelArtifact class >> fromDictionary: aDictionary [
 		  timestamp: (aDictionary at: 'timestamp')
 ]
 
-{ #category : 'instance creation' }
-MooseNexusModelArtifact class >> projectCoordinates: aMooseNexusCoordinates name: aName path: aPath format: aFormat comment: aComment timestamp: aTimestamp metamodel: aMetamodel classifier: aClassifier [
-
-	^ self
-		  artifactCoordinates: (MooseNexusModelArtifactCoordinates
-				   projectCoordinates: aMooseNexusCoordinates
-				   name: aName
-				   format: aFormat
-				   metamodel: aMetamodel
-				   classifier: aClassifier)
-		  path: aPath
-		  comment: aComment
-		  timestamp: aTimestamp
-]
-
 { #category : 'comparing' }
 MooseNexusModelArtifact >> = anObject [
 

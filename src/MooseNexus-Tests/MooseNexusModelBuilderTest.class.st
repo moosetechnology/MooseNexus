@@ -18,8 +18,9 @@ MooseNexusModelBuilderTest >> setUp [
 	super setUp.
 	rootDirectory := FileLocator temp / ('MooseNexus-' , UUID new asString).
 	(rootDirectory / 'sources') ensureCreateDirectory.
-	(rootDirectory / 'models') ensureCreateDirectory.
-	rootDirectory / 'models.json' writeStreamDo: [ :stream | stream nextPutAll: '[]' ].
+	(rootDirectory / 'artifacts' / 'models') ensureCreateDirectory.
+	(rootDirectory / 'metadata') ensureCreateDirectory.
+	rootDirectory / 'metadata' / 'models.json' writeStreamDo: [ :stream | stream nextPutAll: '[]' ].
 	project := MooseNexusTestProject coordinates: (MooseNexusCoordinates group: 'com.example' name: 'demo' version: '1.0.0').
 	project directory: (rootDirectory relativeTo: FileLocator home) pathString
 ]
@@ -68,14 +69,14 @@ MooseNexusModelBuilderTest >> testBuildSpecExecutesPlanAndAnswersModelBuildResul
 	plan := spec planIn: (MooseNexusRepository new directory: rootDirectory / 'nexus').
 	result := plan execute.
 
-	modelFile := rootDirectory / 'nexus' / 'repository' / 'com.example' / 'demo' / '1.0.0' / 'models' / 'planned-model.json'.
+	modelFile := rootDirectory / 'nexus' / 'repository' / 'com.example' / 'demo' / '1.0.0' / 'artifacts' / 'models' / 'planned-model.json'.
 	self assert: plan projectImporter class equals: MooseNexusTestProjectImporter.
 	self assert: result project isRecorded.
 	self assert: result dependencyResolutionResult project identicalTo: result project.
 	self assert: result dependencyResolutionResult warnings isEmpty.
 	self assert: result dependencyResolutionResult decisions isEmpty.
 	self assert: result modelArtifact coordinates equals: result project coordinates.
-	self assert: result modelArtifact path equals: 'models/planned-model.json'.
+	self assert: result modelArtifact path equals: 'artifacts/models/planned-model.json'.
 	self assert: result modelName equals: 'planned-model'.
 	self assert: result modelFormat equals: 'json'.
 	self assert: modelFile exists.
@@ -134,7 +135,7 @@ MooseNexusModelBuilderTest >> testModelArtifactDictionaryRoundTrip [
 		                       classifier: 'main'.
 	artifact := MooseNexusModelArtifact
 		            artifactCoordinates: artifactCoordinates
-		            path: 'models/demo-model.json'
+		            path: 'artifacts/models/demo-model.json'
 		            comment: 'generated for tests'
 		            timestamp: '2026-08-04T10:00:00+02:00'.
 
@@ -172,11 +173,11 @@ MooseNexusModelBuilderTest >> testModelArtifactManifestDictionaryRoundTrip [
 		                       classifier: 'main'.
 	artifact := MooseNexusModelArtifact
 		            artifactCoordinates: artifactCoordinates
-		            path: 'models/demo-model.json'
+		            path: 'artifacts/models/demo-model.json'
 		            comment: 'generated for tests'
 		            timestamp: '2026-08-04T10:00:00+02:00'.
 	generatedFile := Dictionary new
-		                 add: 'path' -> 'models/demo-model.json';
+		                 add: 'path' -> 'artifacts/models/demo-model.json';
 		                 add: 'size' -> 3;
 		                 add: 'checksumAlgorithm' -> 'sha256';
 		                 add: 'checksum' -> '257c1be96ae69f4b01c2c69bdb6d78605f59175819fb007d0bf245bf48444c4a';
@@ -194,7 +195,7 @@ MooseNexusModelBuilderTest >> testModelArtifactManifestDictionaryRoundTrip [
 ]
 
 { #category : 'tests' }
-MooseNexusModelBuilderTest >> testRegisterModelCopiesOutputIntoModelsDirectory [
+MooseNexusModelBuilderTest >> testRegisterModelCopiesOutputIntoModelArtifactPayloadDirectory [
 
 	| builder source target models modelArtifact serializedModels serializedManifest serializedArtifact artifactCoordinates generatedFile |
 	source := rootDirectory / 'sources' / 'mooseNexusModel.json'.
@@ -204,20 +205,20 @@ MooseNexusModelBuilderTest >> testRegisterModelCopiesOutputIntoModelsDirectory [
 
 	modelArtifact := builder registerModel: 'sources/mooseNexusModel.json'.
 
-	target := rootDirectory / 'models' / 'demo-model.json'.
+	target := rootDirectory / 'artifacts' / 'models' / 'demo-model.json'.
 	self deny: source exists.
 	self assert: target exists.
 	self assert: target contents equals: '{ }'.
 	self assert: modelArtifact coordinates equals: project coordinates.
 	self assert: modelArtifact name equals: 'demo-model'.
-	self assert: modelArtifact path equals: 'models/demo-model.json'.
+	self assert: modelArtifact path equals: 'artifacts/models/demo-model.json'.
 	self assert: modelArtifact format equals: 'json'.
 	self assert: modelArtifact artifactCoordinates metamodel equals: 'unknown'.
 	self assert: modelArtifact artifactCoordinates classifier equals: 'main'.
 	models := project models.
 	self assert: models size equals: 1.
 	self assert: models first equals: modelArtifact.
-	serializedModels := rootDirectory / 'models.json' readStreamDo: [ :stream | STON fromStream: stream ].
+	serializedModels := rootDirectory / 'metadata' / 'models.json' readStreamDo: [ :stream | STON fromStream: stream ].
 	self assert: serializedModels size equals: 1.
 	serializedManifest := serializedModels first.
 	serializedArtifact := serializedManifest at: 'modelArtifact'.
@@ -227,10 +228,10 @@ MooseNexusModelBuilderTest >> testRegisterModelCopiesOutputIntoModelsDirectory [
 	self assert: (artifactCoordinates at: 'metamodel') equals: 'unknown'.
 	self assert: (artifactCoordinates at: 'classifier') equals: 'main'.
 	self assert: ((artifactCoordinates at: 'projectCoordinates') at: 'group') equals: 'com.example'.
-	self assert: (serializedArtifact at: 'path') equals: 'models/demo-model.json'.
+	self assert: (serializedArtifact at: 'path') equals: 'artifacts/models/demo-model.json'.
 	self assert: (serializedManifest includesKey: 'dependencyResolution').
 	generatedFile := (serializedManifest at: 'generatedFiles') first.
-	self assert: (generatedFile at: 'path') equals: 'models/demo-model.json'.
+	self assert: (generatedFile at: 'path') equals: 'artifacts/models/demo-model.json'.
 	self assert: (generatedFile at: 'size') equals: 3.
 	self assert: (generatedFile at: 'checksumAlgorithm') equals: 'sha256'.
 	self assert: (generatedFile at: 'checksum') equals: '257c1be96ae69f4b01c2c69bdb6d78605f59175819fb007d0bf245bf48444c4a'
