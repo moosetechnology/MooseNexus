@@ -11,6 +11,12 @@ Class {
 	#tag : 'Repository'
 }
 
+{ #category : 'testing' }
+MooseNexusRepositoryBackend class >> isAbstract [
+
+	^ self == MooseNexusRepositoryBackend
+]
+
 { #category : 'accessing' }
 MooseNexusRepositoryBackend >> directory [
 

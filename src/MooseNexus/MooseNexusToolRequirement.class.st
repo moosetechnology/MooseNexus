@@ -11,16 +11,6 @@ Class {
 	#tag : 'Build'
 }
 
-{ #category : 'instance creation' }
-MooseNexusToolRequirement class >> name: aName availabilityValidation: availabilityValidationObject versionValidation: versionValidationObject expectedVersionDescription: expectedVersionDescriptionString [
-
-	^ self new
-		  initializeName: aName
-		  availabilityValidation: availabilityValidationObject
-		  versionValidation: versionValidationObject
-		  expectedVersionDescription: expectedVersionDescriptionString
-]
-
 { #category : 'comparing' }
 MooseNexusToolRequirement >> = anObject [
 

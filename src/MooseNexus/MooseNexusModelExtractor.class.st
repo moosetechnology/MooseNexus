@@ -76,12 +76,6 @@ MooseNexusModelExtractor >> modelFormats [
 	^ self class modelFormats
 ]
 
-{ #category : 'capabilities' }
-MooseNexusModelExtractor >> requirements [
-
-	^ #(  )
-]
-
 { #category : 'running' }
 MooseNexusModelExtractor >> run [
 	"Execute the extractor and return the generated model file location."

@@ -11,28 +11,6 @@ Class {
 	#tag : 'Build'
 }
 
-{ #category : 'instance creation' }
-MooseNexusImageRequirement class >> name: aName availabilityValidation: availabilityValidationObject versionValidation: versionValidationObject expectedVersionDescription: expectedVersionDescriptionString [
-
-	^ self new
-		  initializeName: aName
-		  availabilityValidation: availabilityValidationObject
-		  versionValidation: versionValidationObject
-		  expectedVersionDescription: expectedVersionDescriptionString
-]
-
-{ #category : 'comparing' }
-MooseNexusImageRequirement >> = anObject [
-
-	^ self == anObject
-]
-
-{ #category : 'comparing' }
-MooseNexusImageRequirement >> hash [
-
-	^ self identityHash
-]
-
 { #category : 'printing' }
 MooseNexusImageRequirement >> printOn: aStream [
 

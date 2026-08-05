@@ -23,6 +23,16 @@ MooseNexusRequirement class >> isAbstract [
 	^ self == MooseNexusRequirement
 ]
 
+{ #category : 'instance creation' }
+MooseNexusRequirement class >> name: aName availabilityValidation: availabilityValidationObject versionValidation: versionValidationObject expectedVersionDescription: expectedVersionDescriptionString [
+
+	^ self new
+		  initializeName: aName
+		  availabilityValidation: availabilityValidationObject
+		  versionValidation: versionValidationObject
+		  expectedVersionDescription: expectedVersionDescriptionString
+]
+
 { #category : 'accessing' }
 MooseNexusRequirement >> availabilityValidation [
 

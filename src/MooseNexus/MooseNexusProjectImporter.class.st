@@ -114,12 +114,6 @@ MooseNexusProjectImporter >> project: aMooseNexusProject [
 ]
 
 { #category : 'capabilities' }
-MooseNexusProjectImporter >> requirements [
-
-	^ #(  )
-]
-
-{ #category : 'capabilities' }
 MooseNexusProjectImporter >> supportedLanguages [
 
 	^ self class supportedLanguages
