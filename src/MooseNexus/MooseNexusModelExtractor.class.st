@@ -1,6 +1,6 @@
 Class {
 	#name : 'MooseNexusModelExtractor',
-	#superclass : 'Object',
+	#superclass : 'MooseNexusToolRequirementsValidator',
 	#instVars : [
 		'target'
 	],
@@ -99,34 +99,4 @@ MooseNexusModelExtractor >> target: pathString [
 MooseNexusModelExtractor >> toolRequirements [
 
 	^ self class toolRequirements
-]
-
-{ #category : 'validating' }
-MooseNexusModelExtractor >> validateToolRequirements [
-
-	self validateToolRequirements: (self
-			 validateToolRequirementsAvailabilityUsing: [ :command | LibC runCommand: command ]
-			 versionUsing: [ :command | LibC resultOfCommand: command ])
-]
-
-{ #category : 'validating' }
-MooseNexusModelExtractor >> validateToolRequirements: validationResults [
-
-	validationResults
-		detect: [ :result | result isAvailable not ]
-		ifFound: [ :result | Error signal: result errorMessage ].
-	^ validationResults
-]
-
-{ #category : 'validating' }
-MooseNexusModelExtractor >> validateToolRequirementsAvailabilityUsing: availabilityRunner versionUsing: versionRunner [
-
-	^ self toolRequirements collect: [ :requirement |
-		  requirement validateAvailabilityUsing: availabilityRunner versionUsing: versionRunner ]
-]
-
-{ #category : 'validating' }
-MooseNexusModelExtractor >> validateToolRequirementsUsing: aCommandRunner [
-
-	^ self toolRequirements collect: [ :requirement | requirement validateUsing: aCommandRunner ]
 ]

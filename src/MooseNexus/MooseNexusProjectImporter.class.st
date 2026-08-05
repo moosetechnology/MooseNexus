@@ -5,7 +5,7 @@ A new MooseNexusProject is created unless an existing one is given to update. Mo
 "
 Class {
 	#name : 'MooseNexusProjectImporter',
-	#superclass : 'Object',
+	#superclass : 'MooseNexusToolRequirementsValidator',
 	#instVars : [
 		'project',
 		'directory'
@@ -122,34 +122,4 @@ MooseNexusProjectImporter >> supportedLanguages [
 MooseNexusProjectImporter >> toolRequirements [
 
 	^ #(  )
-]
-
-{ #category : 'validating' }
-MooseNexusProjectImporter >> validateToolRequirements [
-
-	self validateToolRequirements: (self
-			 validateToolRequirementsAvailabilityUsing: [ :command | LibC runCommand: command ]
-			 versionUsing: [ :command | LibC resultOfCommand: command ])
-]
-
-{ #category : 'validating' }
-MooseNexusProjectImporter >> validateToolRequirements: validationResults [
-
-	validationResults
-		detect: [ :result | result isAvailable not ]
-		ifFound: [ :result | Error signal: result errorMessage ].
-	^ validationResults
-]
-
-{ #category : 'validating' }
-MooseNexusProjectImporter >> validateToolRequirementsAvailabilityUsing: availabilityRunner versionUsing: versionRunner [
-
-	^ self toolRequirements collect: [ :requirement |
-		  requirement validateAvailabilityUsing: availabilityRunner versionUsing: versionRunner ]
-]
-
-{ #category : 'validating' }
-MooseNexusProjectImporter >> validateToolRequirementsUsing: aCommandRunner [
-
-	^ self toolRequirements collect: [ :requirement | requirement validateUsing: aCommandRunner ]
 ]

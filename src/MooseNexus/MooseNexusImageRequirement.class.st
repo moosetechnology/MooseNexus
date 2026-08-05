@@ -1,17 +1,11 @@
 "
 I describe a requirement that is validated inside the running Pharo image.
 
-I use the same validation protocol as MooseNexusToolRequirement, but I evaluate image-side blocks instead of shell commands. This is used for Moose/Famix compatibility checks that cannot be represented as external tool availability.
+I use the same validation storage as MooseNexusToolRequirement, but evaluate image-side blocks instead of shell commands. This is used for Moose/Famix compatibility checks that cannot be represented as external tool availability.
 "
 Class {
 	#name : 'MooseNexusImageRequirement',
-	#superclass : 'Object',
-	#instVars : [
-		'name',
-		'availabilityBlock',
-		'versionBlock',
-		'expectedVersionDescription'
-	],
+	#superclass : 'MooseNexusRequirement',
 	#category : 'MooseNexus-Build',
 	#package : 'MooseNexus',
 	#tag : 'Build'
@@ -40,12 +34,6 @@ MooseNexusImageRequirement >> availabilityCommand [
 	^ '<image>'
 ]
 
-{ #category : 'accessing' }
-MooseNexusImageRequirement >> expectedVersionDescription [
-
-	^ expectedVersionDescription
-]
-
 { #category : 'comparing' }
 MooseNexusImageRequirement >> hash [
 
@@ -55,16 +43,11 @@ MooseNexusImageRequirement >> hash [
 { #category : 'initialization' }
 MooseNexusImageRequirement >> initializeName: aName availabilityBlock: availabilityBlockClosure versionBlock: versionBlockClosure expectedVersionDescription: expectedVersionDescriptionString [
 
-	name := aName.
-	availabilityBlock := availabilityBlockClosure.
-	versionBlock := versionBlockClosure.
-	expectedVersionDescription := expectedVersionDescriptionString
-]
-
-{ #category : 'accessing' }
-MooseNexusImageRequirement >> name [
-
-	^ name
+	self
+		initializeName: aName
+		availabilityValidation: availabilityBlockClosure
+		versionValidation: versionBlockClosure
+		expectedVersionDescription: expectedVersionDescriptionString
 ]
 
 { #category : 'printing' }
@@ -87,19 +70,12 @@ MooseNexusImageRequirement >> validate [
 MooseNexusImageRequirement >> validateAvailabilityUsing: availabilityRunner versionUsing: versionRunner [
 
 	| available versionDetails |
-	available := availabilityBlock value.
-	versionDetails := available ifTrue: [ versionBlock value asString ] ifFalse: [ '' ].
-	^ MooseNexusToolValidationResult
-		  requirement: self
-		  available: available
+	available := availabilityValidation value.
+	versionDetails := available ifTrue: [ versionValidation value asString ] ifFalse: [ '' ].
+	^ self
+		  validationResultAvailable: available
 		  details: available asString
 		  versionDetails: versionDetails
-]
-
-{ #category : 'validating' }
-MooseNexusImageRequirement >> validateUsing: aCommandRunner [
-
-	^ self validateAvailabilityUsing: nil versionUsing: nil
 ]
 
 { #category : 'accessing' }
