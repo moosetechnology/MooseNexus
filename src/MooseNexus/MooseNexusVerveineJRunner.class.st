@@ -21,7 +21,7 @@ Class {
 { #category : 'testing' }
 MooseNexusVerveineJRunner class >> canHandle: language [
 
-	^ language = 'java'
+	^ language = self language
 ]
 
 { #category : 'instance creation' }
@@ -34,6 +34,24 @@ MooseNexusVerveineJRunner class >> defaultImplementation [
 MooseNexusVerveineJRunner class >> isAbstract [
 
 	^ self == MooseNexusVerveineJRunner
+]
+
+{ #category : 'capabilities' }
+MooseNexusVerveineJRunner class >> language [
+
+	^ 'java'
+]
+
+{ #category : 'capabilities' }
+MooseNexusVerveineJRunner class >> metamodel [
+
+	^ 'Famix-Java'
+]
+
+{ #category : 'capabilities' }
+MooseNexusVerveineJRunner class >> modelFormats [
+
+	^ #( json mse )
 ]
 
 { #category : 'constants' }

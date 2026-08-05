@@ -13,6 +13,16 @@ Class {
 	#tag : 'ModelExtraction'
 }
 
+{ #category : 'capabilities' }
+MooseNexusDockerVerveineJRunner >> requirements [
+
+	^ { MooseNexusToolRequirement
+		   name: 'Docker'
+		   availabilityValidation: 'docker --version'
+		   versionValidation: 'docker --version'
+		   expectedVersionDescription: 'Docker CLI capable of running ghcr.io/evref-bl/verveinej:' , self version }
+]
+
 { #category : 'running' }
 MooseNexusDockerVerveineJRunner >> run [
 

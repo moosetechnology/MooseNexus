@@ -11,6 +11,12 @@ Class {
 	#package : 'MooseNexus-Tests'
 }
 
+{ #category : 'capabilities' }
+MooseNexusTestModelExtractor >> requirements [
+
+	^ #(  )
+]
+
 { #category : 'running' }
 MooseNexusTestModelExtractor >> run [
 
@@ -31,4 +37,10 @@ MooseNexusTestModelExtractor >> target [
 MooseNexusTestModelExtractor >> target: pathString [
 
 	target := pathString
+]
+
+{ #category : 'validating' }
+MooseNexusTestModelExtractor >> validateRequirements [
+
+	^ #(  )
 ]

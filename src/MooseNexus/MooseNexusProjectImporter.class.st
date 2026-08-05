@@ -6,6 +6,7 @@ A new MooseNexusProject is created unless an existing one is given to update. Mo
 Class {
 	#name : 'MooseNexusProjectImporter',
 	#superclass : 'Object',
+	#traits : 'TMooseNexusWithRequirements',
 	#instVars : [
 		'project',
 		'directory'
@@ -14,6 +15,12 @@ Class {
 	#package : 'MooseNexus',
 	#tag : 'Importer'
 }
+
+{ #category : 'capabilities' }
+MooseNexusProjectImporter class >> buildToolName [
+
+	^ self subclassResponsibility
+]
 
 { #category : 'testing' }
 MooseNexusProjectImporter class >> canHandle: directory [
@@ -37,6 +44,18 @@ MooseNexusProjectImporter class >> fromDirectory: directory [
 MooseNexusProjectImporter class >> isAbstract [
 
 	^ self == MooseNexusProjectImporter
+]
+
+{ #category : 'capabilities' }
+MooseNexusProjectImporter class >> supportedLanguages [
+
+	^ #(  )
+]
+
+{ #category : 'capabilities' }
+MooseNexusProjectImporter >> buildToolName [
+
+	^ self class buildToolName
 ]
 
 { #category : 'configuring' }
@@ -92,4 +111,10 @@ MooseNexusProjectImporter >> project [
 MooseNexusProjectImporter >> project: aMooseNexusProject [
 
 	project := aMooseNexusProject
+]
+
+{ #category : 'capabilities' }
+MooseNexusProjectImporter >> supportedLanguages [
+
+	^ self class supportedLanguages
 ]

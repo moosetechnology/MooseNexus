@@ -1,6 +1,12 @@
+"
+I describe a tool that can extract a source project into model import files.
+
+An extractor declares the language, metamodel, output formats, and requirements needed to run the extraction step. Concrete extractors decide how to produce the files; model import into the image remains the responsibility of MooseNexusProject.
+"
 Class {
 	#name : 'MooseNexusModelExtractor',
 	#superclass : 'Object',
+	#traits : 'TMooseNexusWithRequirements',
 	#instVars : [
 		'target'
 	],
@@ -32,6 +38,42 @@ MooseNexusModelExtractor class >> forLanguage: language [
 MooseNexusModelExtractor class >> isAbstract [
 
 	^ self == MooseNexusModelExtractor
+]
+
+{ #category : 'capabilities' }
+MooseNexusModelExtractor class >> language [
+
+	self subclassResponsibility
+]
+
+{ #category : 'capabilities' }
+MooseNexusModelExtractor class >> metamodel [
+
+	self subclassResponsibility
+]
+
+{ #category : 'capabilities' }
+MooseNexusModelExtractor class >> modelFormats [
+
+	self subclassResponsibility
+]
+
+{ #category : 'capabilities' }
+MooseNexusModelExtractor >> language [
+
+	^ self class language
+]
+
+{ #category : 'capabilities' }
+MooseNexusModelExtractor >> metamodel [
+
+	^ self class metamodel
+]
+
+{ #category : 'capabilities' }
+MooseNexusModelExtractor >> modelFormats [
+
+	^ self class modelFormats
 ]
 
 { #category : 'running' }
