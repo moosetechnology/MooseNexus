@@ -29,22 +29,21 @@ MooseNexusImporterExtractorProtocolTest >> tearDown [
 { #category : 'tests' }
 MooseNexusImporterExtractorProtocolTest >> testDockerVerveineJDeclaresJavaModelExtractionCapabilities [
 
-	| extractor requirements dockerRequirement results |
+	| extractor requirements dockerRequirement result |
 	extractor := MooseNexusDockerVerveineJRunner new.
-	requirements := extractor toolRequirements.
+	requirements := extractor requirements.
 	dockerRequirement := requirements detect: [ :requirement | requirement name = 'Docker' ].
 
 	self assert: extractor language equals: 'java'.
 	self assert: extractor metamodel equals: 'Famix-Java'.
 	self assertCollection: extractor modelFormats hasSameElements: #( json mse ).
-	self assert: requirements size equals: 2.
-	self assert: (requirements anySatisfy: [ :requirement | requirement name = 'Moose/Famix Java' ]).
-	self assert: dockerRequirement availabilityCommand equals: 'docker --version'.
-	self assert: dockerRequirement versionCommand equals: 'docker --version'.
+	self assert: requirements size equals: 1.
+	self assert: dockerRequirement availabilityValidation equals: 'docker --version'.
+	self assert: dockerRequirement versionValidation equals: 'docker --version'.
 	self assert: (dockerRequirement expectedVersionDescription includesSubstring: 'verveinej:latest').
-	results := extractor validateToolRequirementsAvailabilityUsing: [ :command | 0 ] versionUsing: [ :command | 'Docker version 1.2.3' ].
-	self assert: (results detect: [ :result | result toolName = 'Docker' ]) isAvailable.
-	self assert: ((results detect: [ :result | result toolName = 'Docker' ]) versionDetails includesSubstring: '1.2.3')
+	result := dockerRequirement validateAvailabilityUsing: [ :command | 0 ] versionUsing: [ :command | 'Docker version 1.2.3' ].
+	self assert: result isAvailable.
+	self assert: (result versionDetails includesSubstring: '1.2.3')
 ]
 
 { #category : 'tests' }
@@ -53,14 +52,14 @@ MooseNexusImporterExtractorProtocolTest >> testGradleImporterDeclaresCapabilitie
 	| importer requirement |
 	(rootDirectory / 'build.gradle') ensureCreateFile.
 	importer := MooseNexusGradleProjectImporter new directory: rootDirectory.
-	requirement := importer toolRequirements first.
+	requirement := importer requirements first.
 
 	self assert: importer buildToolName equals: 'gradle'.
 	self assertCollection: importer supportedLanguages hasSameElements: #( java ).
-	self assert: importer toolRequirements size equals: 1.
+	self assert: importer requirements size equals: 1.
 	self assert: requirement name equals: 'Gradle'.
-	self assert: (requirement availabilityCommand includesSubstring: '--version').
-	self assert: (requirement versionCommand includesSubstring: '--version').
+	self assert: (requirement availabilityValidation includesSubstring: '--version').
+	self assert: (requirement versionValidation includesSubstring: '--version').
 	self assert: (requirement expectedVersionDescription includesSubstring: 'dependency task')
 ]
 
@@ -70,35 +69,32 @@ MooseNexusImporterExtractorProtocolTest >> testImageRequirementValidatesMooseFam
 	| requirement result |
 	requirement := MooseNexusImageRequirement
 		               name: 'Image capability'
-		               availabilityBlock: [ true ]
-		               versionBlock: [ 'Loaded image capability' ]
+		               availabilityValidation: [ true ]
+		               versionValidation: [ 'Loaded image capability' ]
 		               expectedVersionDescription: 'loaded capability'.
 
 	result := requirement validate.
 
 	self assert: result isAvailable.
-	self assert: result toolName equals: 'Image capability'.
+	self assert: result requirementName equals: 'Image capability'.
 	self assert: result versionDetails equals: 'Loaded image capability'
 ]
 
 { #category : 'tests' }
-MooseNexusImporterExtractorProtocolTest >> testImporterValidatesAllToolRequirementsWithInjectedRunners [
+MooseNexusImporterExtractorProtocolTest >> testImporterValidatesAllRequirements [
 
-	| importer results |
+	| importer result |
 	(rootDirectory / 'pom.xml') ensureCreateFile.
 	importer := MooseNexusMavenProjectImporter new directory: rootDirectory.
 
-	results := importer
-		           validateToolRequirementsAvailabilityUsing: [ :command |
-			           self assert: (command includesSubstring: '--version').
-			           0 ]
-		           versionUsing: [ :command |
-			           self assert: (command includesSubstring: '--version').
-			           'Apache Maven 3.9.9' ].
+	result := importer requirements first validateAvailabilityUsing: [ :command |
+		          self assert: (command includesSubstring: '--version').
+		          0 ] versionUsing: [ :command |
+		          self assert: (command includesSubstring: '--version').
+		          'Apache Maven 3.9.9' ].
 
-	self assert: results size equals: 1.
-	self assert: results first isAvailable.
-	self assert: (results first versionDetails includesSubstring: '3.9.9')
+	self assert: result isAvailable.
+	self assert: (result versionDetails includesSubstring: '3.9.9')
 ]
 
 { #category : 'tests' }
@@ -107,12 +103,12 @@ MooseNexusImporterExtractorProtocolTest >> testImporterValidationRaisesWhenARequ
 	| importer result |
 	(rootDirectory / 'pom.xml') ensureCreateFile.
 	importer := MooseNexusMavenProjectImporter new directory: rootDirectory.
-	result := MooseNexusToolValidationResult
-		          requirement: importer toolRequirements first
+	result := MooseNexusRequirementValidationResult
+		          requirement: importer requirements first
 		          available: false
 		          details: '127'.
 
-	self should: [ importer validateToolRequirements: { result } ] raise: Error
+	self should: [ importer validateRequirements: { result } ] raise: Error
 ]
 
 { #category : 'tests' }
@@ -121,19 +117,18 @@ MooseNexusImporterExtractorProtocolTest >> testLocalVerveineJDeclaresJavaAndWrap
 	| extractor requirements javaRequirement wrapperRequirement |
 	(rootDirectory / 'gradlew') ensureCreateFile.
 	extractor := MooseNexusLocalVerveineJRunner new directory: rootDirectory.
-	requirements := extractor toolRequirements.
+	requirements := extractor requirements.
 	javaRequirement := requirements detect: [ :requirement | requirement name = 'Java' ].
 	wrapperRequirement := requirements detect: [ :requirement | requirement name = 'VerveineJ Gradle wrapper' ].
 
 	self assert: extractor language equals: 'java'.
 	self assert: extractor metamodel equals: 'Famix-Java'.
 	self assertCollection: extractor modelFormats hasSameElements: #( json mse ).
-	self assert: requirements size equals: 3.
-	self assert: (requirements anySatisfy: [ :requirement | requirement name = 'Moose/Famix Java' ]).
-	self assert: javaRequirement availabilityCommand equals: 'java -version'.
-	self assert: javaRequirement versionCommand equals: 'java -version'.
-	self assert: (wrapperRequirement availabilityCommand includesSubstring: 'gradlew').
-	self assert: (wrapperRequirement versionCommand includesSubstring: 'gradlew')
+	self assert: requirements size equals: 2.
+	self assert: javaRequirement availabilityValidation equals: 'java -version'.
+	self assert: javaRequirement versionValidation equals: 'java -version'.
+	self assert: (wrapperRequirement availabilityValidation includesSubstring: 'gradlew').
+	self assert: (wrapperRequirement versionValidation includesSubstring: 'gradlew')
 ]
 
 { #category : 'tests' }
@@ -142,14 +137,14 @@ MooseNexusImporterExtractorProtocolTest >> testMavenImporterDeclaresCapabilities
 	| importer requirement |
 	(rootDirectory / 'pom.xml') ensureCreateFile.
 	importer := MooseNexusMavenProjectImporter new directory: rootDirectory.
-	requirement := importer toolRequirements first.
+	requirement := importer requirements first.
 
 	self assert: importer buildToolName equals: 'maven'.
 	self assertCollection: importer supportedLanguages hasSameElements: #( java ).
-	self assert: importer toolRequirements size equals: 1.
+	self assert: importer requirements size equals: 1.
 	self assert: requirement name equals: 'Maven'.
-	self assert: (requirement availabilityCommand includesSubstring: '--version').
-	self assert: (requirement versionCommand includesSubstring: '--version').
+	self assert: (requirement availabilityValidation includesSubstring: '--version').
+	self assert: (requirement versionValidation includesSubstring: '--version').
 	self assert: (requirement expectedVersionDescription includesSubstring: 'dependency:resolve')
 ]
 
@@ -171,13 +166,26 @@ MooseNexusImporterExtractorProtocolTest >> testModelBuilderValidatesExtractorBef
 ]
 
 { #category : 'tests' }
+MooseNexusImporterExtractorProtocolTest >> testProjectDeclaresFamixModelImportRequirement [
+
+	| project requirement result |
+	project := MooseNexusTestProject coordinates: (MooseNexusCoordinates group: 'com.example' name: 'demo' version: '1.0.0').
+	requirement := project modelImportRequirements first.
+
+	self assert: requirement name equals: 'Famix Java JSON import'.
+	self assert: requirement versionValidation value equals: ''.
+	result := requirement validate.
+	self assert: result isAvailable
+]
+
+{ #category : 'tests' }
 MooseNexusImporterExtractorProtocolTest >> testToolRequirementCanValidateAvailabilityAndVersionWithInjectedRunners [
 
 	| requirement result |
 	requirement := MooseNexusToolRequirement
 		               name: 'Example Tool'
-		               availabilityCommand: 'example --help'
-		               versionCommand: 'example --version'
+		               availabilityValidation: 'example --help'
+		               versionValidation: 'example --version'
 		               expectedVersionDescription: 'Example Tool 1.x'.
 
 	result := requirement
@@ -189,7 +197,7 @@ MooseNexusImporterExtractorProtocolTest >> testToolRequirementCanValidateAvailab
 			          'Example Tool 1.2.3' ].
 
 	self assert: result isAvailable.
-	self assert: result toolName equals: 'Example Tool'.
+	self assert: result requirementName equals: 'Example Tool'.
 	self assert: result details equals: '0'.
 	self assert: result versionDetails equals: 'Example Tool 1.2.3'
 ]
@@ -200,14 +208,14 @@ MooseNexusImporterExtractorProtocolTest >> testToolRequirementReportsUnavailable
 	| requirement result |
 	requirement := MooseNexusToolRequirement
 		               name: 'Missing Tool'
-		               availabilityCommand: 'missing --help'
-		               versionCommand: 'missing --version'
+		               availabilityValidation: 'missing --help'
+		               versionValidation: 'missing --version'
 		               expectedVersionDescription: 'Missing Tool 1.x'.
 
 	result := requirement validateAvailabilityUsing: [ :command | 127 ] versionUsing: [ :command | self fail ].
 
 	self deny: result isAvailable.
-	self assert: result toolName equals: 'Missing Tool'.
+	self assert: result requirementName equals: 'Missing Tool'.
 	self assert: result details equals: '127'.
 	self assert: result versionDetails equals: ''
 ]

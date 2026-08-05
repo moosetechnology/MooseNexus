@@ -1,3 +1,8 @@
+"
+I run VerveineJ from a local checkout instead of a container image.
+
+My requirements cover only what is needed to execute that local extraction command, such as Java and the VerveineJ Gradle wrapper. Requirements for importing the produced model into the Pharo image belong to the model import step.
+"
 Class {
 	#name : 'MooseNexusLocalVerveineJRunner',
 	#superclass : 'MooseNexusVerveineJRunner',
@@ -21,6 +26,24 @@ MooseNexusLocalVerveineJRunner >> directory: aPath [
 	directory := aPath asFileReference
 ]
 
+{ #category : 'capabilities' }
+MooseNexusLocalVerveineJRunner >> requirements [
+
+	| wrapperCommand |
+	wrapperCommand := (self shellQuoted: (self verveineJDirectory / 'gradlew') pathString) , ' --version'.
+	^ {
+		  (MooseNexusToolRequirement
+			   name: 'Java'
+			   availabilityValidation: 'java -version'
+			   versionValidation: 'java -version'
+			   expectedVersionDescription: 'Java runtime compatible with VerveineJ').
+		  (MooseNexusToolRequirement
+			   name: 'VerveineJ Gradle wrapper'
+			   availabilityValidation: wrapperCommand
+			   versionValidation: wrapperCommand
+			   expectedVersionDescription: 'VerveineJ checkout Gradle wrapper capable of running app:run') }
+]
+
 { #category : 'running' }
 MooseNexusLocalVerveineJRunner >> run [
 
@@ -35,24 +58,6 @@ MooseNexusLocalVerveineJRunner >> run [
 MooseNexusLocalVerveineJRunner >> shellQuoted: aString [
 
 	^ '"' , (aString copyReplaceAll: '"' with: '\"') , '"'
-]
-
-{ #category : 'capabilities' }
-MooseNexusLocalVerveineJRunner >> toolRequirements [
-
-	| wrapperCommand |
-	wrapperCommand := (self shellQuoted: (self verveineJDirectory / 'gradlew') pathString) , ' --version'.
-	^ super toolRequirements , {
-		  (MooseNexusToolRequirement
-			   name: 'Java'
-			   availabilityCommand: 'java -version'
-			   versionCommand: 'java -version'
-			   expectedVersionDescription: 'Java runtime compatible with VerveineJ').
-		  (MooseNexusToolRequirement
-			   name: 'VerveineJ Gradle wrapper'
-			   availabilityCommand: wrapperCommand
-			   versionCommand: wrapperCommand
-			   expectedVersionDescription: 'VerveineJ checkout Gradle wrapper capable of running app:run') }
 ]
 
 { #category : 'accessing' }

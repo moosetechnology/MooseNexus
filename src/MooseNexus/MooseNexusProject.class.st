@@ -152,6 +152,7 @@ MooseNexusProject >> importModel [
 MooseNexusProject >> importModel: aMooseNexusModelArtifact [
 
 	| model |
+	self validateModelImportRequirements.
 	model := FamixJavaModel new.
 
 	FamixJSONFileImporter new
@@ -201,6 +202,18 @@ MooseNexusProject >> metadataDirectory [
 MooseNexusProject >> modelArtifactsDirectory [
 
 	^ self artifactPayloadDirectory / 'models'
+]
+
+{ #category : 'setup' }
+MooseNexusProject >> modelImportRequirements [
+
+	^ { MooseNexusImageRequirement
+		    name: 'Famix Java JSON import'
+		    availabilityValidation: [
+			    (Smalltalk includesKey: #FamixJavaModel) and: [
+				    (Smalltalk includesKey: #FamixJSONFileImporter) and: [ Smalltalk includesKey: #FamixJavaImportingContext ] ] ]
+		    versionValidation: [ '' ]
+		    expectedVersionDescription: 'loaded Famix Java JSON import support' }
 ]
 
 { #category : 'enumerating' }
@@ -306,6 +319,15 @@ MooseNexusProject >> sourceDirectory [
 MooseNexusProject >> supportsPropertiesSchemaVersion: schemaVersion [
 
 	^ self class supportsPropertiesSchemaVersion: schemaVersion
+]
+
+{ #category : 'setup' }
+MooseNexusProject >> validateModelImportRequirements [
+
+	| validationResults |
+	validationResults := self modelImportRequirements collect: [ :requirement | requirement validate ].
+	validationResults detect: [ :result | result isAvailable not ] ifFound: [ :result | Error signal: result errorMessage ].
+	^ validationResults
 ]
 
 { #category : 'properties' }

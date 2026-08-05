@@ -62,16 +62,6 @@ MooseNexusVerveineJRunner class >> outputFilename [
 	^ 'mooseNexusModel'
 ]
 
-{ #category : 'capabilities' }
-MooseNexusVerveineJRunner class >> toolRequirements [
-
-	^ { MooseNexusImageRequirement
-		    name: 'Moose/Famix Java'
-		    availabilityBlock: [ (Smalltalk includesKey: #FamixJavaModel) and: [ Smalltalk includesKey: #FamixJSONFileImporter ] ]
-		    versionBlock: [ 'FamixJavaModel and FamixJSONFileImporter loaded' ]
-		    expectedVersionDescription: 'loaded Moose image with Famix Java JSON import support' }
-]
-
 { #category : 'accessing' }
 MooseNexusVerveineJRunner >> allLocals [
 

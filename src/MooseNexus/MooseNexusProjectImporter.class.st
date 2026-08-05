@@ -5,7 +5,8 @@ A new MooseNexusProject is created unless an existing one is given to update. Mo
 "
 Class {
 	#name : 'MooseNexusProjectImporter',
-	#superclass : 'MooseNexusToolRequirementsValidator',
+	#superclass : 'Object',
+	#traits : 'TMooseNexusWithRequirements',
 	#instVars : [
 		'project',
 		'directory'
@@ -113,13 +114,13 @@ MooseNexusProjectImporter >> project: aMooseNexusProject [
 ]
 
 { #category : 'capabilities' }
-MooseNexusProjectImporter >> supportedLanguages [
+MooseNexusProjectImporter >> requirements [
 
-	^ self class supportedLanguages
+	^ #(  )
 ]
 
 { #category : 'capabilities' }
-MooseNexusProjectImporter >> toolRequirements [
+MooseNexusProjectImporter >> supportedLanguages [
 
-	^ #(  )
+	^ self class supportedLanguages
 ]

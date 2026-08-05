@@ -17,6 +17,12 @@ Class {
 	#tag : 'Build'
 }
 
+{ #category : 'testing' }
+MooseNexusRequirement class >> isAbstract [
+
+	^ self == MooseNexusRequirement
+]
+
 { #category : 'accessing' }
 MooseNexusRequirement >> availabilityValidation [
 
@@ -45,9 +51,15 @@ MooseNexusRequirement >> name [
 ]
 
 { #category : 'validating' }
+MooseNexusRequirement >> validate [
+
+	self subclassResponsibility
+]
+
+{ #category : 'validating' }
 MooseNexusRequirement >> validationResultAvailable: aBoolean details: detailsString versionDetails: versionDetailsString [
 
-	^ MooseNexusToolValidationResult
+	^ MooseNexusRequirementValidationResult
 		  requirement: self
 		  available: aBoolean
 		  details: detailsString

@@ -12,14 +12,13 @@ Class {
 }
 
 { #category : 'instance creation' }
-MooseNexusToolRequirement class >> name: aName availabilityCommand: availabilityCommandString versionCommand: versionCommandString expectedVersionDescription: expectedVersionDescriptionString [
+MooseNexusToolRequirement class >> name: aName availabilityValidation: availabilityValidationObject versionValidation: versionValidationObject expectedVersionDescription: expectedVersionDescriptionString [
 
 	^ self new
 		  initializeName: aName
-		  availabilityCommand: availabilityCommandString
-		  versionCommand: versionCommandString
-		  expectedVersionDescription: expectedVersionDescriptionString;
-		  yourself
+		  availabilityValidation: availabilityValidationObject
+		  versionValidation: versionValidationObject
+		  expectedVersionDescription: expectedVersionDescriptionString
 ]
 
 { #category : 'comparing' }
@@ -27,31 +26,14 @@ MooseNexusToolRequirement >> = anObject [
 
 	^ self class = anObject class and: [
 		  anObject name = name and: [
-			  anObject availabilityCommand = availabilityValidation and: [
-				  anObject versionCommand = versionValidation and: [
-					  anObject expectedVersionDescription = expectedVersionDescription ] ] ] ]
-]
-
-{ #category : 'accessing' }
-MooseNexusToolRequirement >> availabilityCommand [
-
-	^ availabilityValidation
+			  anObject availabilityValidation = availabilityValidation and: [
+				  anObject versionValidation = versionValidation and: [ anObject expectedVersionDescription = expectedVersionDescription ] ] ] ]
 ]
 
 { #category : 'comparing' }
 MooseNexusToolRequirement >> hash [
 
 	^ name hash bitXor: (availabilityValidation hash bitXor: (versionValidation hash bitXor: expectedVersionDescription hash))
-]
-
-{ #category : 'initialization' }
-MooseNexusToolRequirement >> initializeName: aName availabilityCommand: availabilityCommandString versionCommand: versionCommandString expectedVersionDescription: expectedVersionDescriptionString [
-
-	self
-		initializeName: aName
-		availabilityValidation: availabilityCommandString
-		versionValidation: versionCommandString
-		expectedVersionDescription: expectedVersionDescriptionString
 ]
 
 { #category : 'printing' }
@@ -69,9 +51,7 @@ MooseNexusToolRequirement >> printOn: aStream [
 { #category : 'validating' }
 MooseNexusToolRequirement >> validate [
 
-	^ self
-		  validateAvailabilityUsing: [ :command | LibC runCommand: command ]
-		  versionUsing: [ :command | LibC resultOfCommand: command ]
+	^ self validateAvailabilityUsing: [ :command | LibC runCommand: command ] versionUsing: [ :command | LibC resultOfCommand: command ]
 ]
 
 { #category : 'validating' }
@@ -83,14 +63,5 @@ MooseNexusToolRequirement >> validateAvailabilityUsing: availabilityRunner versi
 	versionResult := available
 		                 ifTrue: [ versionValidation ifNil: [ '' ] ifNotNil: [ versionRunner value: versionValidation ] ]
 		                 ifFalse: [ '' ].
-	^ self
-		  validationResultAvailable: available
-		  details: availabilityResult asString
-		  versionDetails: versionResult asString
-]
-
-{ #category : 'accessing' }
-MooseNexusToolRequirement >> versionCommand [
-
-	^ versionValidation
+	^ self validationResultAvailable: available details: availabilityResult asString versionDetails: versionResult asString
 ]

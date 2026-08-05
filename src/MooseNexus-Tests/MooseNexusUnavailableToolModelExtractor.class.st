@@ -18,6 +18,16 @@ MooseNexusUnavailableToolModelExtractor >> didRun [
 	^ didRun ifNil: [ false ]
 ]
 
+{ #category : 'capabilities' }
+MooseNexusUnavailableToolModelExtractor >> requirements [
+
+	^ { MooseNexusImageRequirement
+		    name: 'Unavailable test extractor tool'
+		    availabilityValidation: [ false ]
+		    versionValidation: [ '' ]
+		    expectedVersionDescription: 'available test extractor tool' }
+]
+
 { #category : 'running' }
 MooseNexusUnavailableToolModelExtractor >> run [
 
@@ -38,7 +48,10 @@ MooseNexusUnavailableToolModelExtractor >> target: pathString [
 ]
 
 { #category : 'validating' }
-MooseNexusUnavailableToolModelExtractor >> validateToolRequirements [
+MooseNexusUnavailableToolModelExtractor >> validateRequirements [
 
-	Error signal: 'Unavailable test extractor tool'
+	| validationResults |
+	validationResults := self requirements collect: [ :requirement | requirement validate ].
+	validationResults detect: [ :result | result isAvailable not ] ifFound: [ :result | Error signal: result errorMessage ].
+	^ validationResults
 ]

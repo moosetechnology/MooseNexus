@@ -181,7 +181,7 @@ MooseNexusModelBuilder >> setUp [
 { #category : 'validating' }
 MooseNexusModelBuilder >> validateExtractorRequirements [
 
-	(self extractor respondsTo: #validateToolRequirements) ifTrue: [ self extractor validateToolRequirements ]
+	self extractor validateRequirements
 ]
 
 { #category : 'accessing' }

@@ -214,14 +214,14 @@ MooseNexusGradleProjectImporter >> read [
 ]
 
 { #category : 'capabilities' }
-MooseNexusGradleProjectImporter >> toolRequirements [
+MooseNexusGradleProjectImporter >> requirements [
 
 	| command |
 	command := self findGradleCommand , ' --version'.
 	^ { MooseNexusToolRequirement
 		    name: 'Gradle'
-		    availabilityCommand: command
-		    versionCommand: command
+		    availabilityValidation: command
+		    versionValidation: command
 		    expectedVersionDescription: 'Gradle CLI compatible with injected MooseNexus dependency task' }
 ]
 

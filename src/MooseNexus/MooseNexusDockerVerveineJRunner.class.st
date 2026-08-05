@@ -13,6 +13,16 @@ Class {
 	#tag : 'ModelExtraction'
 }
 
+{ #category : 'capabilities' }
+MooseNexusDockerVerveineJRunner >> requirements [
+
+	^ { MooseNexusToolRequirement
+		   name: 'Docker'
+		   availabilityValidation: 'docker --version'
+		   versionValidation: 'docker --version'
+		   expectedVersionDescription: 'Docker CLI capable of running ghcr.io/evref-bl/verveinej:' , self version }
+]
+
 { #category : 'running' }
 MooseNexusDockerVerveineJRunner >> run [
 
@@ -25,16 +35,6 @@ MooseNexusDockerVerveineJRunner >> run [
 
 	"VerveineJ-Docker outputs the file in the sources directory"
 	^ self outputPath
-]
-
-{ #category : 'capabilities' }
-MooseNexusDockerVerveineJRunner >> toolRequirements [
-
-	^ super toolRequirements copyWith: (MooseNexusToolRequirement
-		   name: 'Docker'
-		   availabilityCommand: 'docker --version'
-		   versionCommand: 'docker --version'
-		   expectedVersionDescription: 'Docker CLI capable of running ghcr.io/evref-bl/verveinej:' , self version)
 ]
 
 { #category : 'accessing' }
