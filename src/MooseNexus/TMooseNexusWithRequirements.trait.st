@@ -5,8 +5,9 @@ Users provide #requirements as a collection of MooseNexusRequirement instances. 
 "
 Trait {
 	#name : 'TMooseNexusWithRequirements',
-	#category : 'MooseNexus',
-	#package : 'MooseNexus'
+	#category : 'MooseNexus-Requirement',
+	#package : 'MooseNexus',
+	#tag : 'Requirement'
 }
 
 { #category : 'capabilities' }
