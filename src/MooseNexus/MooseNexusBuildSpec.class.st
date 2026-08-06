@@ -86,6 +86,12 @@ MooseNexusBuildSpec >> dependencySourceSelectionPolicy: aMooseNexusDependencySou
 ]
 
 { #category : 'execution' }
+MooseNexusBuildSpec >> execute [
+
+	^ self executeIn: MooseNexusRepository default
+]
+
+{ #category : 'execution' }
 MooseNexusBuildSpec >> executeIn: aMooseNexusRepository [
 
 	^ (self planIn: aMooseNexusRepository) execute
