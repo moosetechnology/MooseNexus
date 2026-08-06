@@ -12,9 +12,9 @@ Class {
 		'versionValidation',
 		'expectedVersionDescription'
 	],
-	#category : 'MooseNexus-Build',
+	#category : 'MooseNexus-Requirement',
 	#package : 'MooseNexus',
-	#tag : 'Build'
+	#tag : 'Requirement'
 }
 
 { #category : 'testing' }

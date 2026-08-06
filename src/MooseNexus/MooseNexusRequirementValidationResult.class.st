@@ -12,9 +12,9 @@ Class {
 		'details',
 		'versionDetails'
 	],
-	#category : 'MooseNexus-Build',
+	#category : 'MooseNexus-Requirement',
 	#package : 'MooseNexus',
-	#tag : 'Build'
+	#tag : 'Requirement'
 }
 
 { #category : 'instance creation' }

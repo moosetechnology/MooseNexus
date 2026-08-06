@@ -12,9 +12,9 @@ Class {
 		'comment',
 		'timestamp'
 	],
-	#category : 'MooseNexus-ModelExtraction',
+	#category : 'MooseNexus-Artifact',
 	#package : 'MooseNexus',
-	#tag : 'ModelExtraction'
+	#tag : 'Artifact'
 }
 
 { #category : 'instance creation' }

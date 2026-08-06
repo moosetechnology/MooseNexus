@@ -6,9 +6,9 @@ I keep the human-readable tool name and the shell command used for a lightweight
 Class {
 	#name : 'MooseNexusToolRequirement',
 	#superclass : 'MooseNexusRequirement',
-	#category : 'MooseNexus-Build',
+	#category : 'MooseNexus-Requirement',
 	#package : 'MooseNexus',
-	#tag : 'Build'
+	#tag : 'Requirement'
 }
 
 { #category : 'comparing' }

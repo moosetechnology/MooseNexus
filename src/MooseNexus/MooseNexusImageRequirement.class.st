@@ -6,9 +6,9 @@ I use the same validation protocol as MooseNexusToolRequirement, but I evaluate 
 Class {
 	#name : 'MooseNexusImageRequirement',
 	#superclass : 'MooseNexusRequirement',
-	#category : 'MooseNexus-Build',
+	#category : 'MooseNexus-Requirement',
 	#package : 'MooseNexus',
-	#tag : 'Build'
+	#tag : 'Requirement'
 }
 
 { #category : 'printing' }
