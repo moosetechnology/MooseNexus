@@ -16,3 +16,9 @@ MooseNexusRepositoryBackend class >> isAbstract [
 
 	^ self == MooseNexusRepositoryBackend
 ]
+
+{ #category : 'artifacts' }
+MooseNexusRepositoryBackend >> artifactExistsAt: repositoryRelativePath [
+
+	self subclassResponsibility
+]
