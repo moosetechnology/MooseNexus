@@ -22,6 +22,27 @@ MooseNexusLocalRepositoryBackend class >> directory: aFileReference [
 		  yourself
 ]
 
+{ #category : 'artifacts' }
+MooseNexusLocalRepositoryBackend >> artifactAt: repositoryRelativePath [
+
+	| artifactFile |
+	artifactFile := self artifactFileAt: repositoryRelativePath.
+	artifactFile ifAbsent: [ NotFound signal: 'Artifact `' , repositoryRelativePath , '` not found in local repository' ].
+	^ artifactFile
+]
+
+{ #category : 'artifacts' }
+MooseNexusLocalRepositoryBackend >> artifactExistsAt: repositoryRelativePath [
+
+	^ (self artifactFileAt: repositoryRelativePath) exists
+]
+
+{ #category : 'artifacts' }
+MooseNexusLocalRepositoryBackend >> artifactFileAt: repositoryRelativePath [
+
+	^ directory / repositoryRelativePath
+]
+
 { #category : 'accessing' }
 MooseNexusLocalRepositoryBackend >> directory [
 
@@ -32,6 +53,13 @@ MooseNexusLocalRepositoryBackend >> directory [
 MooseNexusLocalRepositoryBackend >> directory: aFileReference [
 
 	directory := aFileReference
+]
+
+{ #category : 'artifacts' }
+MooseNexusLocalRepositoryBackend >> fetchArtifactAt: repositoryRelativePath into: aMooseNexusLocalRepositoryBackend ifAbsent: absentBlock [
+
+	(self artifactExistsAt: repositoryRelativePath) ifFalse: [ ^ absentBlock value ].
+	^ aMooseNexusLocalRepositoryBackend storeArtifactAt: repositoryRelativePath from: (self artifactAt: repositoryRelativePath)
 ]
 
 { #category : 'enumerating' }
@@ -132,4 +160,15 @@ MooseNexusLocalRepositoryBackend >> recordLoadedProject: project describedBy: aM
 MooseNexusLocalRepositoryBackend >> resolveDirectoryFor: aMooseNexusProjectSpec [
 
 	^ directory / 'repository' / aMooseNexusProjectSpec group / aMooseNexusProjectSpec name / aMooseNexusProjectSpec version
+]
+
+{ #category : 'artifacts' }
+MooseNexusLocalRepositoryBackend >> storeArtifactAt: repositoryRelativePath from: sourceFileReference [
+
+	| targetFile |
+	targetFile := self artifactFileAt: repositoryRelativePath.
+	targetFile parent ensureCreateDirectory.
+	targetFile ifExists: [ targetFile delete ].
+	sourceFileReference asFileReference copyTo: targetFile.
+	^ targetFile
 ]

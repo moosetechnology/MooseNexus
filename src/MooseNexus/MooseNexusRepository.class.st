@@ -39,6 +39,26 @@ MooseNexusRepository class >> localDirectory: aFileReference [
 	^ self new directory: aFileReference
 ]
 
+{ #category : 'instance creation' }
+MooseNexusRepository class >> localDirectory: aFileReference remotes: remoteRepositoryBackends [
+
+	^ self backend: (MooseNexusRepositoryChainBackend
+			   local: (MooseNexusLocalRepositoryBackend directory: aFileReference)
+			   remotes: remoteRepositoryBackends)
+]
+
+{ #category : 'artifacts' }
+MooseNexusRepository >> artifactAt: repositoryRelativePath [
+
+	^ self backend artifactAt: repositoryRelativePath
+]
+
+{ #category : 'artifacts' }
+MooseNexusRepository >> artifactExistsAt: repositoryRelativePath [
+
+	^ self backend artifactExistsAt: repositoryRelativePath
+]
+
 { #category : 'accessing' }
 MooseNexusRepository >> backend [
 
@@ -123,4 +143,10 @@ MooseNexusRepository >> recordLoadedProject: project describedBy: aMooseNexusPro
 MooseNexusRepository >> resolveDirectoryFor: aMooseNexusProjectSpec [
 
 	^ self backend resolveDirectoryFor: aMooseNexusProjectSpec
+]
+
+{ #category : 'artifacts' }
+MooseNexusRepository >> storeArtifactAt: repositoryRelativePath from: sourceFileReference [
+
+	^ self backend storeArtifactAt: repositoryRelativePath from: sourceFileReference
 ]

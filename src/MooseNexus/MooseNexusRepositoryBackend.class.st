@@ -17,6 +17,18 @@ MooseNexusRepositoryBackend class >> isAbstract [
 	^ self == MooseNexusRepositoryBackend
 ]
 
+{ #category : 'artifacts' }
+MooseNexusRepositoryBackend >> artifactAt: repositoryRelativePath [
+
+	self subclassResponsibility
+]
+
+{ #category : 'artifacts' }
+MooseNexusRepositoryBackend >> artifactExistsAt: repositoryRelativePath [
+
+	self subclassResponsibility
+]
+
 { #category : 'accessing' }
 MooseNexusRepositoryBackend >> directory [
 
@@ -25,6 +37,12 @@ MooseNexusRepositoryBackend >> directory [
 
 { #category : 'accessing' }
 MooseNexusRepositoryBackend >> directory: aFileReference [
+
+	self subclassResponsibility
+]
+
+{ #category : 'artifacts' }
+MooseNexusRepositoryBackend >> fetchArtifactAt: repositoryRelativePath into: aMooseNexusLocalRepositoryBackend ifAbsent: absentBlock [
 
 	self subclassResponsibility
 ]
@@ -73,6 +91,12 @@ MooseNexusRepositoryBackend >> recordLoadedProject: aMooseNexusProject described
 
 { #category : 'enumerating' }
 MooseNexusRepositoryBackend >> resolveDirectoryFor: aMooseNexusProjectSpec [
+
+	self subclassResponsibility
+]
+
+{ #category : 'artifacts' }
+MooseNexusRepositoryBackend >> storeArtifactAt: repositoryRelativePath from: sourceFileReference [
 
 	self subclassResponsibility
 ]
