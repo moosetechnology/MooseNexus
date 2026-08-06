@@ -23,12 +23,6 @@ MooseNexusRemoteRepositoryBackend class >> baseUrl: aString [
 ]
 
 { #category : 'artifacts' }
-MooseNexusRemoteRepositoryBackend >> artifactAt: repositoryRelativePath [
-
-	NotFound signal: 'Remote artifact `' , repositoryRelativePath , '` must be fetched into a local backend before use'
-]
-
-{ #category : 'artifacts' }
 MooseNexusRemoteRepositoryBackend >> artifactExistsAt: repositoryRelativePath [
 
 	| client |
@@ -96,12 +90,6 @@ MooseNexusRemoteRepositoryBackend >> newClient [
 		  beOneShot;
 		  enforceHttpSuccess: false;
 		  yourself
-]
-
-{ #category : 'artifacts' }
-MooseNexusRemoteRepositoryBackend >> storeArtifactAt: repositoryRelativePath from: sourceFileReference [
-
-	Error signal: 'Remote repository publishing is not implemented by the path-based read backend yet'
 ]
 
 { #category : 'artifacts' }

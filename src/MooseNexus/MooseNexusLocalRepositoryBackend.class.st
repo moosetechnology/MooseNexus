@@ -74,6 +74,12 @@ MooseNexusLocalRepositoryBackend >> group: group project: project version: versi
 	^ MooseNexusProject fromNexusDirectory: dir
 ]
 
+{ #category : 'accessing' }
+MooseNexusLocalRepositoryBackend >> localProjectBackend [
+
+	^ self
+]
+
 { #category : 'adding' }
 MooseNexusLocalRepositoryBackend >> prepareDirectoryFor: aMooseNexusProjectSpec [
 	"Create the repository layout needed before copying sources or writing metadata."

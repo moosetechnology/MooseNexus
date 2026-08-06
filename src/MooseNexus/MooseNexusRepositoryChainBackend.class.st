@@ -65,32 +65,6 @@ MooseNexusRepositoryChainBackend >> beRemoteEnabled [
 	remoteEnabled := true
 ]
 
-{ #category : 'accessing' }
-MooseNexusRepositoryChainBackend >> directory [
-
-	^ localBackend directory
-]
-
-{ #category : 'accessing' }
-MooseNexusRepositoryChainBackend >> directory: aFileReference [
-
-	localBackend directory: aFileReference
-]
-
-{ #category : 'artifacts' }
-MooseNexusRepositoryChainBackend >> fetchArtifactAt: repositoryRelativePath into: aMooseNexusLocalRepositoryBackend ifAbsent: absentBlock [
-
-	| artifactFile |
-	artifactFile := self artifactAt: repositoryRelativePath ifAbsent: [ ^ absentBlock value ].
-	^ aMooseNexusLocalRepositoryBackend storeArtifactAt: repositoryRelativePath from: artifactFile
-]
-
-{ #category : 'enumerating' }
-MooseNexusRepositoryChainBackend >> group: group project: project version: version [
-
-	^ localBackend group: group project: project version: version
-]
-
 { #category : 'initialization' }
 MooseNexusRepositoryChainBackend >> initialize [
 
@@ -113,10 +87,10 @@ MooseNexusRepositoryChainBackend >> localBackend [
 	^ localBackend
 ]
 
-{ #category : 'adding' }
-MooseNexusRepositoryChainBackend >> prepareDirectoryFor: aMooseNexusProjectSpec [
+{ #category : 'accessing' }
+MooseNexusRepositoryChainBackend >> localProjectBackend [
 
-	^ localBackend prepareDirectoryFor: aMooseNexusProjectSpec
+	^ localBackend localProjectBackend
 ]
 
 { #category : 'printing' }
@@ -133,36 +107,6 @@ MooseNexusRepositoryChainBackend >> printOn: stream [
 	stream nextPut: $)
 ]
 
-{ #category : 'printing' }
-MooseNexusRepositoryChainBackend >> printProjectProperties: propertiesFile on: writeStream [
-
-	^ localBackend printProjectProperties: propertiesFile on: writeStream
-]
-
-{ #category : 'printing' }
-MooseNexusRepositoryChainBackend >> printProjects [
-
-	^ localBackend printProjects
-]
-
-{ #category : 'enumerating' }
-MooseNexusRepositoryChainBackend >> projectProperties [
-
-	^ localBackend projectProperties
-]
-
-{ #category : 'enumerating' }
-MooseNexusRepositoryChainBackend >> projects [
-
-	^ localBackend projects
-]
-
-{ #category : 'recording' }
-MooseNexusRepositoryChainBackend >> recordLoadedProject: aMooseNexusProject describedBy: aMooseNexusProjectSpec [
-
-	^ localBackend recordLoadedProject: aMooseNexusProject describedBy: aMooseNexusProjectSpec
-]
-
 { #category : 'accessing' }
 MooseNexusRepositoryChainBackend >> remoteBackends [
 
@@ -173,16 +117,4 @@ MooseNexusRepositoryChainBackend >> remoteBackends [
 MooseNexusRepositoryChainBackend >> remoteEnabled [
 
 	^ remoteEnabled
-]
-
-{ #category : 'enumerating' }
-MooseNexusRepositoryChainBackend >> resolveDirectoryFor: aMooseNexusProjectSpec [
-
-	^ localBackend resolveDirectoryFor: aMooseNexusProjectSpec
-]
-
-{ #category : 'artifacts' }
-MooseNexusRepositoryChainBackend >> storeArtifactAt: repositoryRelativePath from: sourceFileReference [
-
-	^ localBackend storeArtifactAt: repositoryRelativePath from: sourceFileReference
 ]

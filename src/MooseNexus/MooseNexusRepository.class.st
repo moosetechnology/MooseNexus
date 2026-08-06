@@ -74,7 +74,7 @@ MooseNexusRepository >> backend: aMooseNexusRepositoryBackend [
 { #category : 'accessing' }
 MooseNexusRepository >> directory [
 
-	^ self backend directory
+	^ self localProjectBackend directory
 ]
 
 { #category : 'accessing' }
@@ -87,14 +87,20 @@ MooseNexusRepository >> directory: aFileReference [
 MooseNexusRepository >> group: group project: project version: version [
 	"Search the repository for the project with the specified group, project name and version."
 
-	^ self backend group: group project: project version: version
+	^ self localProjectBackend group: group project: project version: version
+]
+
+{ #category : 'accessing' }
+MooseNexusRepository >> localProjectBackend [
+
+	^ self backend localProjectBackend
 ]
 
 { #category : 'adding' }
 MooseNexusRepository >> prepareDirectoryFor: aMooseNexusProjectSpec [
 	"Create the repository layout needed before copying sources or writing metadata."
 
-	^ self backend prepareDirectoryFor: aMooseNexusProjectSpec
+	^ self localProjectBackend prepareDirectoryFor: aMooseNexusProjectSpec
 ]
 
 { #category : 'printing' }
@@ -109,44 +115,44 @@ MooseNexusRepository >> printOn: stream [
 { #category : 'printing' }
 MooseNexusRepository >> printProjectProperties: propertiesFile on: writeStream [
 
-	^ self backend printProjectProperties: propertiesFile on: writeStream
+	^ self localProjectBackend printProjectProperties: propertiesFile on: writeStream
 ]
 
 { #category : 'printing' }
 MooseNexusRepository >> printProjects [
 
-	^ self backend printProjects
+	^ self localProjectBackend printProjects
 ]
 
 { #category : 'enumerating' }
 MooseNexusRepository >> projectProperties [
 	"Returns the properties files of all managed projects."
 
-	^ self backend projectProperties
+	^ self localProjectBackend projectProperties
 ]
 
 { #category : 'enumerating' }
 MooseNexusRepository >> projects [
 	"Returns all the projects managed by this repository."
 
-	^ self backend projects
+	^ self localProjectBackend projects
 ]
 
 { #category : 'adding' }
 MooseNexusRepository >> recordLoadedProject: project describedBy: aMooseNexusProjectSpec [
 	"Add an already loaded project to the repository using the spec that describes recording intent."
 
-	^ self backend recordLoadedProject: project describedBy: aMooseNexusProjectSpec
+	^ self localProjectBackend recordLoadedProject: project describedBy: aMooseNexusProjectSpec
 ]
 
 { #category : 'enumerating' }
 MooseNexusRepository >> resolveDirectoryFor: aMooseNexusProjectSpec [
 
-	^ self backend resolveDirectoryFor: aMooseNexusProjectSpec
+	^ self localProjectBackend resolveDirectoryFor: aMooseNexusProjectSpec
 ]
 
 { #category : 'artifacts' }
 MooseNexusRepository >> storeArtifactAt: repositoryRelativePath from: sourceFileReference [
 
-	^ self backend storeArtifactAt: repositoryRelativePath from: sourceFileReference
+	^ self localProjectBackend storeArtifactAt: repositoryRelativePath from: sourceFileReference
 ]

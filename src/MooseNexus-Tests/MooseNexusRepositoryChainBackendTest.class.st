@@ -129,6 +129,40 @@ MooseNexusRepositoryChainBackendTest >> testRemoteBackendDoesNotDuplicateTrailin
 ]
 
 { #category : 'tests' }
+MooseNexusRepositoryChainBackendTest >> testRemoteBackendFetchCachesDownloadedArtifactLocally [
+
+	| remote artifact |
+	remote := MooseNexusTestHttpRemoteRepositoryBackend new.
+	remote artifactAt: 'repository/com.example/demo/1.0.0/artifacts/models/demo.json' contents: '{ }'.
+
+	artifact := remote
+		            fetchArtifactAt: 'repository/com.example/demo/1.0.0/artifacts/models/demo.json'
+		            into: localBackend
+		            ifAbsent: [ self fail ].
+
+	self assert: artifact contents equals: '{ }'.
+	self assert: remote downloadCount equals: 1.
+	self assert: (localBackend artifactExistsAt: 'repository/com.example/demo/1.0.0/artifacts/models/demo.json')
+]
+
+{ #category : 'tests' }
+MooseNexusRepositoryChainBackendTest >> testRemoteBackendFetchEvaluatesAbsentBlockWhenDownloadFails [
+
+	| remote absentValue result |
+	remote := MooseNexusTestHttpRemoteRepositoryBackend new.
+	absentValue := Object new.
+
+	result := remote
+		          fetchArtifactAt: 'repository/com.example/demo/1.0.0/artifacts/models/missing.json'
+		          into: localBackend
+		          ifAbsent: [ absentValue ].
+
+	self assert: result identicalTo: absentValue.
+	self assert: remote downloadCount equals: 1.
+	self deny: (localBackend artifactExistsAt: 'repository/com.example/demo/1.0.0/artifacts/models/missing.json')
+]
+
+{ #category : 'tests' }
 MooseNexusRepositoryChainBackendTest >> testRepositoryFacadeCanUseAChainedBackend [
 
 	| remote repository artifact |
@@ -140,4 +174,26 @@ MooseNexusRepositoryChainBackendTest >> testRepositoryFacadeCanUseAChainedBacken
 
 	self assert: artifact contents equals: '{ }'.
 	self assert: (repository artifactExistsAt: 'repository/com.example/demo/1.0.0/artifacts/models/demo.json')
+]
+
+{ #category : 'tests' }
+MooseNexusRepositoryChainBackendTest >> testRepositoryFacadeRecordsProjectsThroughChainLocalBackend [
+
+	| repository sourceDirectory project spec recordedProject projectDirectory |
+	sourceDirectory := rootDirectory / 'source'.
+	sourceDirectory ensureCreateDirectory.
+	sourceDirectory / 'README.txt' writeStreamDo: [ :stream | stream nextPutAll: 'test source project' ].
+	repository := MooseNexusRepository localDirectory: rootDirectory / 'local' remotes: #(  ).
+	project := MooseNexusTestProject new.
+	spec := MooseNexusProjectSpec
+		        coordinates: (MooseNexusCoordinates group: 'com.example' name: 'demo' version: '1.0.0')
+		        sourceDirectory: sourceDirectory.
+
+	recordedProject := repository recordLoadedProject: project describedBy: spec.
+	projectDirectory := rootDirectory / 'local' / 'repository' / 'com.example' / 'demo' / '1.0.0'.
+
+	self assert: recordedProject identicalTo: project.
+	self assert: projectDirectory exists.
+	self assert: repository projects size equals: 1.
+	self assert: repository directory equals: rootDirectory / 'local'
 ]
