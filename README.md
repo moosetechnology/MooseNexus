@@ -25,28 +25,25 @@ To create new models, you will need to install the appropriate model extractor, 
 ## Support
 
 Currently, MooseNexus only works with Java source projects.
-The supported source project natures, based on build automation tool, are Maven and Gradle.
-Dependency management support for unmanaged source projects is planned.
+The supported source project natures are Maven, Gradle, and unmanaged source projects configured explicitly through MooseNexus.
 
 ## Usage
 
-Import a new project into the Nexus repository:
+Use `MooseNexusBuildSpec` to record a source project, run a model extractor, and store the resulting model artifact.
 
 ```st
-sourcePath := 'path/to/sources'.
-coordinates := MooseNexusProjectCoordinates
+sourceDirectory := '/path/to/sources' asFileReference.
+coordinates := MooseNexusCoordinates
 	group: 'group'
 	name: 'name'
 	version: 'version'.
-spec := MooseNexusProjectSpec
+spec := MooseNexusBuildSpec
 	coordinates: coordinates
-	sourceDirectory: sourcePath.
-project := MooseNexusRepository default
-	record: spec.
+	sourceDirectory: sourceDirectory.
+result := spec executeIn: MooseNexusRepository default.
 ```
 
-The project spec describes the source directory and coordinates before repository recording starts.
-The recorded MooseNexus project then represents the loaded project stored in the repository.
+See [Build Spec](docs/build-spec.md) for managed and unmanaged project build examples.
 
 Retrieve an existing project from a Nexus repository:
 
