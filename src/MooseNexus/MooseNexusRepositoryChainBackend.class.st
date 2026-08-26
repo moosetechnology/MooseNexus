@@ -19,9 +19,7 @@ Class {
 { #category : 'instance creation' }
 MooseNexusRepositoryChainBackend class >> local: aMooseNexusRepositoryBackend remotes: remoteRepositoryBackends [
 
-	^ self new
-		  initializeLocal: aMooseNexusRepositoryBackend remotes: remoteRepositoryBackends;
-		  yourself
+	^ self new initializeLocal: aMooseNexusRepositoryBackend remotes: remoteRepositoryBackends
 ]
 
 { #category : 'artifacts' }

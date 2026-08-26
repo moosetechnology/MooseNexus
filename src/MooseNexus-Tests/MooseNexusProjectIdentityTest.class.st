@@ -270,6 +270,34 @@ MooseNexusProjectIdentityTest >> testManagedProjectPropertiesRoundTripFromFile [
 ]
 
 { #category : 'tests' }
+MooseNexusProjectIdentityTest >> testManagedProjectPropertiesSerializeSharedDependencyScopes [
+
+	| project propertiesFile projects dependency dependencyGraph descriptor loadedProperties loadedProject |
+	dependency := MooseNexusDependencyDescriptor
+		              coordinates: (MooseNexusCoordinates group: 'org.example' name: 'dep' version: '2.0.0')
+		              type: 'jar'
+		              scopes: #( 'compile' 'runtime' )
+		              path: 'repository/dep-2.0.0.jar'.
+	dependencyGraph := MooseNexusDependencyGraph dependencies: { dependency }.
+	descriptor := MooseNexusManagedProjectDescriptor version: '1.0.0' path: nil dependencyGraph: dependencyGraph.
+	projects := Dictionary with: 'com.example' -> (Dictionary with: 'demo' -> descriptor).
+	project := MooseNexusMavenProject coordinates: (MooseNexusCoordinates group: 'com.example' name: 'demo' version: '1.0.0').
+	project
+		language: 'java';
+		projects: projects;
+		dependencies: { dependency }.
+	propertiesFile := rootDirectory / 'managed-properties.json'.
+
+	self shouldnt: [ propertiesFile writeStreamDo: [ :stream | project writePropertiesOn: stream ] ] raise: Error.
+	loadedProperties := propertiesFile readStreamDo: [ :stream | STON fromStream: stream ].
+	loadedProject := MooseNexusProject fromProperties: propertiesFile.
+
+	self assert: (loadedProperties at: #resolvedDependencies) size equals: 1.
+	self assert: loadedProject dependencies equals: project dependencies.
+	self assert: loadedProject projects equals: project projects
+]
+
+{ #category : 'tests' }
 MooseNexusProjectIdentityTest >> testProjectPropertiesFlattenCoordinates [
 
 	| project properties |

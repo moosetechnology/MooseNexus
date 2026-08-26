@@ -33,9 +33,7 @@ MooseNexusBuildSpec class >> coordinates: coordinates sourceDirectory: sourceDir
 { #category : 'instance creation' }
 MooseNexusBuildSpec class >> projectSpec: aMooseNexusProjectSpec [
 
-	^ self new
-		  projectSpec: aMooseNexusProjectSpec;
-		  yourself
+	^ self new projectSpec: aMooseNexusProjectSpec
 ]
 
 { #category : 'importing' }

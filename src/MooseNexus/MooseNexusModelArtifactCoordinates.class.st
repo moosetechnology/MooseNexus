@@ -42,8 +42,7 @@ MooseNexusModelArtifactCoordinates class >> projectCoordinates: aMooseNexusCoord
 		  name: aName
 		  format: aFormat
 		  metamodel: aMetamodel
-		  classifier: aClassifier;
-		  yourself
+		  classifier: aClassifier
 ]
 
 { #category : 'comparing' }

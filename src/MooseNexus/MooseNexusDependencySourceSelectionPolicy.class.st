@@ -23,9 +23,7 @@ MooseNexusDependencySourceSelectionPolicy class >> all [
 { #category : 'instance creation' }
 MooseNexusDependencySourceSelectionPolicy class >> includedScopes: scopes [
 
-	^ self new
-		  initializeIncludedScopes: scopes;
-		  yourself
+	^ self new initializeIncludedScopes: scopes
 ]
 
 { #category : 'instance creation' }

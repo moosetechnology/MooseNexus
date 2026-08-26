@@ -18,9 +18,7 @@ Class {
 { #category : 'instance creation' }
 MooseNexusDependencyConflictDecision class >> conflict: aMooseNexusDependencyConflict selectedDependency: aMooseNexusDependencyDescriptor [
 
-	^ self new
-		  initializeConflict: aMooseNexusDependencyConflict selectedDependency: aMooseNexusDependencyDescriptor;
-		  yourself
+	^ self new initializeConflict: aMooseNexusDependencyConflict selectedDependency: aMooseNexusDependencyDescriptor
 ]
 
 { #category : 'instance creation' }

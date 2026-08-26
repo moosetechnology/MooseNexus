@@ -28,9 +28,7 @@ MooseNexusManagedProjectDescriptor class >> fromDictionary: aDictionary [
 { #category : 'instance creation' }
 MooseNexusManagedProjectDescriptor class >> version: aVersion path: aPath dependencyGraph: aMooseNexusDependencyGraph [
 
-	^ self new
-		  initializeVersion: aVersion path: aPath dependencyGraph: aMooseNexusDependencyGraph;
-		  yourself
+	^ self new initializeVersion: aVersion path: aPath dependencyGraph: aMooseNexusDependencyGraph
 ]
 
 { #category : 'comparing' }

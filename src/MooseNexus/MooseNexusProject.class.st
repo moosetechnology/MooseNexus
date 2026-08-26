@@ -34,9 +34,7 @@ Class {
 { #category : 'instance creation' }
 MooseNexusProject class >> coordinates: aMooseNexusCoordinates [
 
-	^ self new
-		  initializeCoordinates: aMooseNexusCoordinates;
-		  yourself
+	^ self new initializeCoordinates: aMooseNexusCoordinates
 ]
 
 { #category : 'instance creation' }

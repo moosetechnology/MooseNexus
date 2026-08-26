@@ -22,9 +22,7 @@ Class {
 { #category : 'instance creation' }
 MooseNexusRepository class >> backend: aMooseNexusRepositoryBackend [
 
-	^ self new
-		  backend: aMooseNexusRepositoryBackend;
-		  yourself
+	^ self new backend: aMooseNexusRepositoryBackend
 ]
 
 { #category : 'accessing' }

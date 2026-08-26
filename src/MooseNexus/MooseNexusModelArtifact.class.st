@@ -24,8 +24,7 @@ MooseNexusModelArtifact class >> artifactCoordinates: aMooseNexusModelArtifactCo
 		  initializeArtifactCoordinates: aMooseNexusModelArtifactCoordinates
 		  path: aPath
 		  comment: aComment
-		  timestamp: aTimestamp;
-		  yourself
+		  timestamp: aTimestamp
 ]
 
 { #category : 'instance creation' }

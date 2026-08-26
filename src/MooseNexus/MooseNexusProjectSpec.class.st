@@ -20,8 +20,7 @@ MooseNexusProjectSpec class >> coordinates: coordinates sourceDirectory: sourceD
 
 	^ self new
 		  coordinates: coordinates;
-		  sourceDirectory: sourceDirectory;
-		  yourself
+		  sourceDirectory: sourceDirectory
 ]
 
 { #category : 'instance creation' }
