@@ -17,9 +17,7 @@ Class {
 { #category : 'instance creation' }
 MooseNexusDependencyGraph class >> dependencies: dependencyDescriptors [
 
-	^ self new
-		  initializeDependencies: dependencyDescriptors;
-		  yourself
+	^ self new initializeDependencies: dependencyDescriptors
 ]
 
 { #category : 'instance creation' }

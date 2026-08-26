@@ -22,8 +22,7 @@ MooseNexusModelBuildResult class >> project: aMooseNexusProject modelArtifact: a
 	^ self new
 		  initializeProject: aMooseNexusProject
 		  modelArtifact: aMooseNexusModelArtifact
-		  dependencyResolutionResult: aMooseNexusDependencyResolutionResult;
-		  yourself
+		  dependencyResolutionResult: aMooseNexusDependencyResolutionResult
 ]
 
 { #category : 'accessing' }

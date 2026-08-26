@@ -45,8 +45,7 @@ MooseNexusModelArtifactManifest class >> modelArtifact: aMooseNexusModelArtifact
 		  initializeModelArtifact: aMooseNexusModelArtifact
 		  dependencyResolutionResult: aMooseNexusDependencyResolutionResult
 		  generatedFiles: generatedFileDescriptors
-		  createdTimestamp: aTimestamp;
-		  yourself
+		  createdTimestamp: aTimestamp
 ]
 
 { #category : 'comparing' }

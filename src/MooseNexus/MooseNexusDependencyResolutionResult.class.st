@@ -49,8 +49,7 @@ MooseNexusDependencyResolutionResult class >> project: aMooseNexusProject depend
 		  initializeProject: aMooseNexusProject
 		  dependencies: dependencies
 		  warnings: warnings
-		  decisions: decisions;
-		  yourself
+		  decisions: decisions
 ]
 
 { #category : 'comparing' }

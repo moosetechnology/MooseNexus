@@ -17,9 +17,7 @@ Class {
 { #category : 'instance creation' }
 MooseNexusRemoteRepositoryBackend class >> baseUrl: aString [
 
-	^ self new
-		  baseUrl: aString;
-		  yourself
+	^ self new baseUrl: aString
 ]
 
 { #category : 'artifacts' }

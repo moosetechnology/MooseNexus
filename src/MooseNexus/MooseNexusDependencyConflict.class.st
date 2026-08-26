@@ -18,9 +18,7 @@ Class {
 { #category : 'instance creation' }
 MooseNexusDependencyConflict class >> conflictId: aString candidates: dependencyDescriptors [
 
-	^ self new
-		  initializeConflictId: aString candidates: dependencyDescriptors;
-		  yourself
+	^ self new initializeConflictId: aString candidates: dependencyDescriptors
 ]
 
 { #category : 'instance creation' }

@@ -34,8 +34,7 @@ MooseNexusRequirementValidationResult class >> requirement: aMooseNexusRequireme
 		  initializeRequirement: aMooseNexusRequirement
 		  available: aBoolean
 		  details: aString
-		  versionDetails: versionString;
-		  yourself
+		  versionDetails: versionString
 ]
 
 { #category : 'comparing' }

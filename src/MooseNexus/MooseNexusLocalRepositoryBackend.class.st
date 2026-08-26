@@ -17,9 +17,7 @@ Class {
 { #category : 'instance creation' }
 MooseNexusLocalRepositoryBackend class >> directory: aFileReference [
 
-	^ self new
-		  directory: aFileReference;
-		  yourself
+	^ self new directory: aFileReference
 ]
 
 { #category : 'artifacts' }

@@ -26,8 +26,7 @@ MooseNexusDependencyDescriptor class >> coordinates: aMooseNexusCoordinates type
 		  initializeCoordinates: aMooseNexusCoordinates
 		  type: aType
 		  scopes: aCollection
-		  path: aPath;
-		  yourself
+		  path: aPath
 ]
 
 { #category : 'instance creation' }
@@ -59,7 +58,7 @@ MooseNexusDependencyDescriptor >> asDictionary [
 		              with: #name -> self name
 		              with: #version -> self version
 		              with: #type -> type
-		              with: #scopes -> scopes
+		              with: #scopes -> scopes copy
 		              with: #path -> path.
 	self group ifNotNil: [ :group | dictionary at: #group put: group ].
 	^ dictionary

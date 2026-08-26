@@ -30,9 +30,7 @@ MooseNexusUnresolvedDependencyPolicy class >> ignoreScopes: scopes [
 { #category : 'instance creation' }
 MooseNexusUnresolvedDependencyPolicy class >> mode: aSymbol ignoredScopes: scopes [
 
-	^ self new
-		  initializeMode: aSymbol ignoredScopes: scopes;
-		  yourself
+	^ self new initializeMode: aSymbol ignoredScopes: scopes
 ]
 
 { #category : 'instance creation' }

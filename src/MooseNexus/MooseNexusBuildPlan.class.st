@@ -22,9 +22,7 @@ Class {
 { #category : 'instance creation' }
 MooseNexusBuildPlan class >> buildSpec: aMooseNexusBuildSpec repository: aMooseNexusRepository [
 
-	^ self new
-		  initializeBuildSpec: aMooseNexusBuildSpec repository: aMooseNexusRepository;
-		  yourself
+	^ self new initializeBuildSpec: aMooseNexusBuildSpec repository: aMooseNexusRepository
 ]
 
 { #category : 'accessing' }
