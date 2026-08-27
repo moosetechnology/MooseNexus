@@ -109,6 +109,7 @@ MooseNexusModelBuilderTest >> testBuildSpecExecutesUnmanagedProjectPlan [
 	modelFile := rootDirectory / 'nexus' / 'repository' / 'com.example' / 'demo' / '1.0.0' / 'artifacts' / 'models'
 	             / 'unmanaged-model.json'.
 	self assert: plan projectImporter identicalTo: importer.
+	self assert: importer directory pathString equals: sourceProjectDirectory pathString.
 	self assert: result project class equals: MooseNexusUnmanagedProject.
 	self assert: result project isRecorded.
 	self assert: result project language equals: 'java'.

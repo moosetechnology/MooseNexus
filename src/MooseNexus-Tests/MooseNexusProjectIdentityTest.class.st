@@ -93,16 +93,14 @@ MooseNexusProjectIdentityTest >> testBuildSpecConfiguresDependencyPolicies [
 ]
 
 { #category : 'tests' }
-MooseNexusProjectIdentityTest >> testBuildSpecConfiguresExplicitProjectImporterDirectory [
+MooseNexusProjectIdentityTest >> testBuildSpecConfiguresImporterDirectory [
 
 	| buildSpec importer |
 	buildSpec := MooseNexusBuildSpec
 		             coordinates: (MooseNexusCoordinates group: 'com.example' name: 'demo' version: '1.0.0')
 		             sourceDirectory: sourceDirectory.
 	importer := MooseNexusUnmanagedProjectImporter new.
-	buildSpec
-		projectImporter: importer;
-		configureImporter: importer.
+	buildSpec configureImporter: importer.
 
 	self assert: importer directory pathString equals: sourceDirectory pathString
 ]
