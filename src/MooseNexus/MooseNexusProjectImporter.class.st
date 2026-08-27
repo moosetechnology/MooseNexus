@@ -60,9 +60,8 @@ MooseNexusProjectImporter >> buildToolName [
 
 { #category : 'configuring' }
 MooseNexusProjectImporter >> configureFromBuildSpec: aMooseNexusBuildSpec [
-	"Default importers do not need build-spec configuration."
 
-	
+	self directory: aMooseNexusBuildSpec sourceDirectory
 ]
 
 { #category : 'querying' }

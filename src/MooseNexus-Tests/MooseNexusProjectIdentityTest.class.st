@@ -93,6 +93,19 @@ MooseNexusProjectIdentityTest >> testBuildSpecConfiguresDependencyPolicies [
 ]
 
 { #category : 'tests' }
+MooseNexusProjectIdentityTest >> testBuildSpecConfiguresImporterDirectory [
+
+	| buildSpec importer |
+	buildSpec := MooseNexusBuildSpec
+		             coordinates: (MooseNexusCoordinates group: 'com.example' name: 'demo' version: '1.0.0')
+		             sourceDirectory: sourceDirectory.
+	importer := MooseNexusUnmanagedProjectImporter new.
+	buildSpec configureImporter: importer.
+
+	self assert: importer directory pathString equals: sourceDirectory pathString
+]
+
+{ #category : 'tests' }
 MooseNexusProjectIdentityTest >> testBuildSpecConfiguresManagedImporter [
 
 	| buildSpec importer localRepositories resolver |
@@ -124,6 +137,19 @@ MooseNexusProjectIdentityTest >> testBuildSpecCreatesBuildPlan [
 
 	self assert: plan buildSpec identicalTo: buildSpec.
 	self assert: plan repository identicalTo: repository
+]
+
+{ #category : 'tests' }
+MooseNexusProjectIdentityTest >> testBuildSpecUsesExplicitProjectImporter [
+
+	| buildSpec importer |
+	buildSpec := MooseNexusBuildSpec
+		             coordinates: (MooseNexusCoordinates group: 'com.example' name: 'demo' version: '1.0.0')
+		             sourceDirectory: sourceDirectory.
+	importer := MooseNexusUnmanagedProjectImporter new.
+	buildSpec projectImporter: importer.
+
+	self assert: buildSpec projectImporter identicalTo: importer
 ]
 
 { #category : 'tests' }
@@ -516,4 +542,60 @@ MooseNexusProjectIdentityTest >> testRepositoryRejectsLoadedProjectWithDifferent
 		             sourceDirectory: sourceDirectory.
 
 	self should: [ repository recordLoadedProject: project describedBy: buildSpec ] raise: Error
+]
+
+{ #category : 'tests' }
+MooseNexusProjectIdentityTest >> testUnmanagedImporterCreatesProjectFromExplicitConfiguration [
+
+	| importer coordinates dependency project |
+	coordinates := MooseNexusCoordinates group: 'com.example' name: 'demo' version: '1.0.0'.
+	dependency := MooseNexusDependencyDescriptor
+		              coordinates: (MooseNexusCoordinates group: 'org.example' name: 'dep' version: '2.0.0')
+		              type: 'jar'
+		              scopes: #( 'compile' )
+		              path: 'repository/dep-2.0.0.jar'.
+	importer := MooseNexusUnmanagedProjectImporter new
+		            language: 'java';
+		            dependencies: { dependency }.
+
+	project := importer importWithCoordinates: coordinates.
+
+	self assert: project class equals: MooseNexusUnmanagedProject.
+	self assert: project coordinates equals: coordinates.
+	self assert: project language equals: 'java'.
+	self assert: project dependencies equals: { dependency }.
+	self assert: importer dependencyResolutionResult dependencies equals: { dependency }
+]
+
+{ #category : 'tests' }
+MooseNexusProjectIdentityTest >> testUnmanagedImporterRequiresExplicitLanguage [
+
+	| importer coordinates |
+	coordinates := MooseNexusCoordinates group: 'com.example' name: 'demo' version: '1.0.0'.
+	importer := MooseNexusUnmanagedProjectImporter new.
+
+	self should: [ importer importWithCoordinates: coordinates ] raise: Error
+]
+
+{ #category : 'tests' }
+MooseNexusProjectIdentityTest >> testUnmanagedProjectPropertiesRoundTripFromFile [
+
+	| project loadedProject propertiesFile dependency |
+	project := MooseNexusUnmanagedProject coordinates: (MooseNexusCoordinates group: 'com.example' name: 'demo' version: '1.0.0').
+	project language: 'java'.
+	dependency := MooseNexusDependencyDescriptor
+		              coordinates: (MooseNexusCoordinates group: 'org.example' name: 'dep' version: '2.0.0')
+		              type: 'jar'
+		              scopes: #( 'compile' )
+		              path: 'repository/dep-2.0.0.jar'.
+	project dependencies: { dependency }.
+	propertiesFile := rootDirectory / 'unmanaged-properties.json'.
+	propertiesFile writeStreamDo: [ :stream | project writePropertiesOn: stream ].
+
+	loadedProject := MooseNexusProject fromProperties: propertiesFile.
+
+	self assert: loadedProject class equals: MooseNexusUnmanagedProject.
+	self assert: loadedProject coordinates equals: project coordinates.
+	self assert: loadedProject language equals: 'java'.
+	self assert: loadedProject dependencies equals: project dependencies
 ]

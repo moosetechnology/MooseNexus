@@ -17,7 +17,8 @@ Class {
 		'localRepositories',
 		'dependencyConflictResolver',
 		'dependencySourceSelectionPolicy',
-		'unresolvedDependencyPolicy'
+		'unresolvedDependencyPolicy',
+		'projectImporter'
 	],
 	#category : 'MooseNexus-Project',
 	#package : 'MooseNexus',
@@ -168,10 +169,16 @@ MooseNexusBuildSpec >> planIn: aMooseNexusRepository [
 	^ MooseNexusBuildPlan buildSpec: self repository: aMooseNexusRepository
 ]
 
-{ #category : 'importing' }
+{ #category : 'accessing' }
 MooseNexusBuildSpec >> projectImporter [
 
-	^ MooseNexusProjectImporter fromDirectory: self sourceDirectory pathString
+	^ projectImporter ifNil: [ MooseNexusProjectImporter fromDirectory: self sourceDirectory pathString ]
+]
+
+{ #category : 'accessing' }
+MooseNexusBuildSpec >> projectImporter: aMooseNexusProjectImporter [
+
+	projectImporter := aMooseNexusProjectImporter
 ]
 
 { #category : 'accessing' }

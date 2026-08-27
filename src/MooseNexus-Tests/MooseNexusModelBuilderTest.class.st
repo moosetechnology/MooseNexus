@@ -84,6 +84,44 @@ MooseNexusModelBuilderTest >> testBuildSpecExecutesPlanAndAnswersModelBuildResul
 ]
 
 { #category : 'tests' }
+MooseNexusModelBuilderTest >> testBuildSpecExecutesUnmanagedProjectPlan [
+
+	| sourceProjectDirectory spec importer dependency plan result modelFile |
+	sourceProjectDirectory := (rootDirectory / 'unmanaged-source-project') ensureCreateDirectory.
+	dependency := MooseNexusDependencyDescriptor
+		              coordinates: (MooseNexusCoordinates group: 'org.example' name: 'dep' version: '2.0.0')
+		              type: 'jar'
+		              scopes: #( 'compile' )
+		              path: 'repository/dep-2.0.0.jar'.
+	importer := MooseNexusUnmanagedProjectImporter new
+		            language: 'java';
+		            dependencies: { dependency }.
+	spec := MooseNexusBuildSpec coordinates: project coordinates sourceDirectory: sourceProjectDirectory.
+	spec
+		projectImporter: importer;
+		withDependencies: false;
+		modelName: 'unmanaged-model';
+		extractor: MooseNexusTestModelExtractor new.
+
+	plan := spec planIn: (MooseNexusRepository new directory: rootDirectory / 'nexus').
+	result := plan execute.
+
+	modelFile := rootDirectory / 'nexus' / 'repository' / 'com.example' / 'demo' / '1.0.0' / 'artifacts' / 'models'
+	             / 'unmanaged-model.json'.
+	self assert: plan projectImporter identicalTo: importer.
+	self assert: importer directory pathString equals: sourceProjectDirectory pathString.
+	self assert: result project class equals: MooseNexusUnmanagedProject.
+	self assert: result project isRecorded.
+	self assert: result project language equals: 'java'.
+	self assert: result project dependencies equals: { dependency }.
+	self assert: result dependencyResolutionResult dependencies equals: { dependency }.
+	self assert: result modelName equals: 'unmanaged-model'.
+	self assert: result modelArtifact path equals: 'artifacts/models/unmanaged-model.json'.
+	self assert: modelFile exists.
+	self assert: modelFile contents equals: '{ }'
+]
+
+{ #category : 'tests' }
 MooseNexusModelBuilderTest >> testBuildSpecKeepsModelBuilderDefaultsWhenOptionsAreAbsent [
 
 	| spec builder |

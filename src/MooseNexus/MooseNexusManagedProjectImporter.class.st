@@ -57,6 +57,7 @@ MooseNexusManagedProjectImporter >> analyze [
 { #category : 'configuring' }
 MooseNexusManagedProjectImporter >> configureFromBuildSpec: aMooseNexusBuildSpec [
 
+	super configureFromBuildSpec: aMooseNexusBuildSpec.
 	aMooseNexusBuildSpec localRepositories ifNotNil: [ :repositories | self localRepositories: repositories ].
 	aMooseNexusBuildSpec dependencyConflictResolver ifNotNil: [ :resolver | self dependencyConflictResolver: resolver ].
 	aMooseNexusBuildSpec unresolvedDependencyPolicy ifNotNil: [ :policy | self unresolvedDependencyPolicy: policy ]
