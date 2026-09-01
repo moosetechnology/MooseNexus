@@ -19,6 +19,22 @@ MooseNexusOciReferenceMapper class >> registry: registryName harborProject: proj
 	^ self new initializeRegistry: registryName harborProject: projectName
 ]
 
+{ #category : 'mapping' }
+MooseNexusOciReferenceMapper >> coordinatesFromReference: reference [
+
+	| referenceString segments markerIndex group nameAndVersion |
+	referenceString := reference asString.
+	(referenceString includes: $@) ifTrue: [ Error signal: 'Cannot infer MooseNexus coordinates from digest reference' ].
+	segments := referenceString substrings: '/'.
+	markerIndex := segments indexOf: 'moosenexus'.
+	(markerIndex = 0 or: [ markerIndex + 2 > segments size ]) ifTrue: [
+		Error signal: 'OCI reference does not use the MooseNexus path layout' ].
+	group := segments at: markerIndex + 1.
+	nameAndVersion := segments at: markerIndex + 2.
+	(nameAndVersion includes: $:) ifFalse: [ Error signal: 'OCI reference must include a version tag' ].
+	^ MooseNexusCoordinates group: group name: (nameAndVersion copyUpTo: $:) version: (nameAndVersion copyAfterLast: $:)
+]
+
 { #category : 'accessing' }
 MooseNexusOciReferenceMapper >> harborProject [
 

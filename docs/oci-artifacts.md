@@ -10,6 +10,7 @@ An OCI bundle contains:
 
 - the exported model payload;
 - the original source project archived as `sources.zip`;
+- the recorded MooseNexus project properties as `moosenexus-project-properties.json`;
 - the MooseNexus model artifact manifest as `moosenexus-artifact-manifest.json`.
 
 Sources are part of the bundle because they are required to inspect, reproduce, or rebuild a model artifact. The model payload is currently an exported model file. Future bundle variants can use the same publication path for other payloads, such as a Pharo image containing an imported model.
@@ -83,18 +84,37 @@ MooseNexus passes `--disable-path-validation` to `oras push`. ORAS rejects absol
 
 ## Pulling
 
-`MooseNexusOrasTransport` can pull an OCI reference into a generated temporary directory:
+Use `MooseNexusOciArtifactPuller` to pull an OCI artifact and install it into a local MooseNexus repository:
 
 ```st
+| mapper transport repository puller project |
+
+mapper := MooseNexusOciReferenceMapper
+	registry: 'harbor.example.com'
+	harborProject: 'moose'.
 transport := MooseNexusOrasTransport new.
-pulledDirectory := transport pull: 'harbor.example.com/moose/moosenexus/com.example/demo:1.0.0'.
+repository := MooseNexusRepository default.
+puller := MooseNexusOciArtifactPuller
+	referenceMapper: mapper
+	transport: transport
+	repository: repository.
+
+project := puller pull: 'harbor.example.com/moose/moosenexus/com.example/demo:1.0.0'.
 ```
 
 The pull reference must include a tag or digest. For MooseNexus artifacts, the tag is the project version.
 
-Use `pull:into:` only when you want to inspect or control the pull directory explicitly.
+Pulling is local-first when the reference encodes MooseNexus coordinates. If the project already exists in the local repository, the puller returns the local project without contacting the remote registry.
 
-This currently downloads the OCI artifact files. It does not yet restore the artifact into a MooseNexus repository, validate checksums, or resolve dependencies from a local cache.
+Use `force: true` to fetch and reinstall from the remote registry even when a local project already exists:
+
+```st
+project := puller
+	pull: 'harbor.example.com/moose/moosenexus/com.example/demo:1.0.0'
+	force: true.
+```
+
+`MooseNexusOrasTransport >> pull:` remains available when you only want to download the OCI artifact files into a generated temporary directory. Use `pull:into:` when you want to inspect or control that directory explicitly.
 
 ## Current Boundary
 

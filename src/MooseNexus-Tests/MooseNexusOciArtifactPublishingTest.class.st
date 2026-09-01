@@ -26,6 +26,21 @@ MooseNexusOciArtifactPublishingTest >> artifactCoordinates [
 ]
 
 { #category : 'private' }
+MooseNexusOciArtifactPublishingTest >> copyBundle: bundleDirectory intoPullDirectoryFromArguments: arguments [
+
+	| outputDirectory configFile |
+	outputDirectory := (arguments at: 4) asFileReference.
+	configFile := (arguments at: 6) asFileReference.
+	outputDirectory ensureCreateDirectory.
+	bundleDirectory / MooseNexusOciArtifactBundleBuilder manifestFileName copyTo: configFile.
+	bundleDirectory / MooseNexusOciArtifactBundleBuilder projectPropertiesFileName copyTo:
+		outputDirectory / MooseNexusOciArtifactBundleBuilder projectPropertiesFileName.
+	bundleDirectory / 'model.json' copyTo: outputDirectory / 'model.json'.
+	bundleDirectory / MooseNexusOciArtifactBundleBuilder sourceArchiveFileName copyTo:
+		outputDirectory / MooseNexusOciArtifactBundleBuilder sourceArchiveFileName
+]
+
+{ #category : 'private' }
 MooseNexusOciArtifactPublishingTest >> manifestForModelPath: modelPath [
 
 	| artifact |
@@ -39,6 +54,12 @@ MooseNexusOciArtifactPublishingTest >> manifestForModelPath: modelPath [
 		  dependencyResolutionResult: (MooseNexusDependencyResolutionResult forProject: project)
 		  generatedFiles: #(  )
 		  createdTimestamp: artifact timestamp
+]
+
+{ #category : 'private' }
+MooseNexusOciArtifactPublishingTest >> repositoryDirectoryForTestRepository: aMooseNexusRepository [
+
+	^ aMooseNexusRepository directory / 'repository' / 'com.example' / 'demo' / '1.0.0'
 ]
 
 { #category : 'running' }
@@ -69,23 +90,46 @@ MooseNexusOciArtifactPublishingTest >> tearDown [
 ]
 
 { #category : 'tests' }
-MooseNexusOciArtifactPublishingTest >> testBundleBuilderCopiesModelAndArchivesSources [
+MooseNexusOciArtifactPublishingTest >> testBundleBuilderCopiesModelPropertiesAndArchivesSources [
 
-	| bundle bundleDirectory modelLayer sourceLayer manifestDictionary |
+	| bundle bundleDirectory propertiesLayer modelLayer sourceLayer manifestDictionary propertiesDictionary |
 	bundleDirectory := rootDirectory / 'bundle'.
 
 	bundle := (MooseNexusOciArtifactBundleBuilder project: project manifest: manifest directory: bundleDirectory) build.
 
-	modelLayer := bundle layers first.
-	sourceLayer := bundle layers second.
+	propertiesLayer := bundle layers first.
+	modelLayer := bundle layers second.
+	sourceLayer := bundle layers third.
 	self assert: bundle artifactType equals: MooseNexusOciArtifactBundleBuilder artifactType.
 	self assert: bundle configMediaType equals: MooseNexusOciArtifactBundleBuilder configMediaType.
+	self assert: propertiesLayer mediaType equals: MooseNexusOciArtifactBundleBuilder projectPropertiesMediaType.
+	propertiesDictionary := propertiesLayer file readStreamDo: [ :stream | STON fromStream: stream ].
+	self assert: (propertiesDictionary at: #nature) equals: 'MooseNexusTestProject'.
 	self assert: modelLayer mediaType equals: 'application/vnd.moose.famix+json'.
 	self assert: modelLayer file contents equals: '{ }'.
 	self assert: sourceLayer mediaType equals: MooseNexusOciArtifactBundleBuilder sourceArchiveMediaType.
 	self assert: (ZipArchive isZipArchive: sourceLayer file).
 	manifestDictionary := bundle configFile readStreamDo: [ :stream | STON fromStream: stream ].
 	self assert: ((manifestDictionary at: 'modelArtifact') at: 'path') equals: 'artifacts/models/demo-model.json'
+]
+
+{ #category : 'tests' }
+MooseNexusOciArtifactPublishingTest >> testInstallerRestoresPulledBundleIntoLocalRepository [
+
+	| bundleDirectory repository installedProject projectDirectory |
+	bundleDirectory := rootDirectory / 'bundle'.
+	(MooseNexusOciArtifactBundleBuilder project: project manifest: manifest directory: bundleDirectory) build.
+	repository := MooseNexusRepository new directory: rootDirectory / 'installed'.
+
+	installedProject := MooseNexusOciArtifactInstaller new installBundleFrom: bundleDirectory in: repository.
+
+	projectDirectory := self repositoryDirectoryForTestRepository: repository.
+	self assert: installedProject class equals: MooseNexusTestProject.
+	self assert: installedProject coordinates equals: project coordinates.
+	self assert: installedProject dependencies equals: project dependencies.
+	self assert: (projectDirectory / 'sources' / 'project' / 'src' / 'Demo.java') contents equals: 'class Demo { }'.
+	self assert: (projectDirectory / 'artifacts' / 'models' / 'demo-model.json') contents equals: '{ }'.
+	self assert: installedProject modelManifests first equals: manifest
 ]
 
 { #category : 'tests' }
@@ -115,6 +159,8 @@ MooseNexusOciArtifactPublishingTest >> testOrasTransportBuildsPullArguments [
 				'pull'.
 				'--output'.
 				outputDirectory pathString.
+				'--config'.
+				(outputDirectory / MooseNexusOciArtifactBundleBuilder manifestFileName) pathString.
 				'harbor.example.com/team/moosenexus/com.example/demo:1.0.0' }
 ]
 
@@ -249,6 +295,47 @@ MooseNexusOciArtifactPublishingTest >> testPublisherUsesUniqueTemporaryBundleDir
 	self assert: (bundle configFile parent basename beginsWith: 'moosenexus-oci-bundle-').
 	self assert: bundle configFile exists.
 	self assert: pushedArguments equals: (transport pushArgumentsFor: bundle)
+]
+
+{ #category : 'tests' }
+MooseNexusOciArtifactPublishingTest >> testPullerForceInstallsPulledBundle [
+
+	| bundleDirectory repository mapper transport puller pulledProject projectDirectory |
+	bundleDirectory := rootDirectory / 'bundle'.
+	(MooseNexusOciArtifactBundleBuilder project: project manifest: manifest directory: bundleDirectory) build.
+	repository := MooseNexusRepository new directory: rootDirectory / 'installed'.
+	mapper := MooseNexusOciReferenceMapper registry: 'harbor.example.com' harborProject: 'team'.
+	transport := MooseNexusOrasTransport new.
+	transport commandRunner: [ :arguments |
+			self copyBundle: bundleDirectory intoPullDirectoryFromArguments: arguments.
+			0 ].
+	puller := MooseNexusOciArtifactPuller referenceMapper: mapper transport: transport repository: repository.
+
+	pulledProject := puller pull: 'harbor.example.com/team/moosenexus/com.example/demo:1.0.0' force: true.
+
+	projectDirectory := self repositoryDirectoryForTestRepository: repository.
+	self assert: pulledProject coordinates equals: project coordinates.
+	self assert: (projectDirectory / 'sources' / 'project' / 'src' / 'Demo.java') contents equals: 'class Demo { }'.
+	self assert: (projectDirectory / 'artifacts' / 'models' / 'demo-model.json') contents equals: '{ }'
+]
+
+{ #category : 'tests' }
+MooseNexusOciArtifactPublishingTest >> testPullerReturnsLocalProjectWhenAlreadyInstalled [
+
+	| bundleDirectory repository mapper transport puller installedProject pulledProject |
+	bundleDirectory := rootDirectory / 'bundle'.
+	(MooseNexusOciArtifactBundleBuilder project: project manifest: manifest directory: bundleDirectory) build.
+	repository := MooseNexusRepository new directory: rootDirectory / 'installed'.
+	installedProject := MooseNexusOciArtifactInstaller new installBundleFrom: bundleDirectory in: repository.
+	mapper := MooseNexusOciReferenceMapper registry: 'harbor.example.com' harborProject: 'team'.
+	transport := MooseNexusOrasTransport new.
+	transport commandRunner: [ :arguments | self fail: 'Pull should not contact ORAS when the project already exists locally' ].
+	puller := MooseNexusOciArtifactPuller referenceMapper: mapper transport: transport repository: repository.
+
+	pulledProject := puller pull: 'harbor.example.com/team/moosenexus/com.example/demo:1.0.0'.
+
+	self assert: pulledProject coordinates equals: installedProject coordinates.
+	self assert: pulledProject modelManifests first equals: manifest
 ]
 
 { #category : 'tests' }

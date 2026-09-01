@@ -50,6 +50,7 @@ MooseNexusOrasTransport >> executable: aString [
 { #category : 'initialization' }
 MooseNexusOrasTransport >> initialize [
 
+	super initialize.
 	executable := 'oras'.
 	commandRunner := [ :arguments | self runCommandArguments: arguments ]
 ]
@@ -78,6 +79,8 @@ MooseNexusOrasTransport >> pullArgumentsFor: reference into: outputDirectory [
 		  'pull'.
 		  '--output'.
 		  outputDirectory asFileReference pathString.
+		  '--config'.
+		  (outputDirectory asFileReference / MooseNexusOciArtifactBundleBuilder manifestFileName) pathString.
 		  reference }
 ]
 
