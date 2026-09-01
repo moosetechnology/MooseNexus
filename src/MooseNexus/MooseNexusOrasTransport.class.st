@@ -52,7 +52,7 @@ MooseNexusOrasTransport >> initialize [
 
 	super initialize.
 	executable := 'oras'.
-	commandRunner := [ :arguments | self runCommandArguments: arguments ]
+	commandRunner := [ :arguments :workingDirectory | self runCommandArguments: arguments inDirectory: workingDirectory ]
 ]
 
 { #category : 'fetching' }
@@ -77,7 +77,6 @@ MooseNexusOrasTransport >> pullArgumentsFor: reference into: outputDirectory [
 	^ {
 		  executable.
 		  'pull'.
-		  '--allow-path-traversal'.
 		  '--output'.
 		  outputDirectory asFileReference pathString.
 		  '--config'.
@@ -93,7 +92,6 @@ MooseNexusOrasTransport >> pushArgumentsFor: aMooseNexusOciArtifactBundle [
 	arguments
 		add: executable;
 		add: 'push';
-		add: '--disable-path-validation';
 		add: '--artifact-type';
 		add: aMooseNexusOciArtifactBundle artifactType;
 		add: '--config';
@@ -111,14 +109,23 @@ MooseNexusOrasTransport >> pushArgumentsFor: aMooseNexusOciArtifactBundle [
 MooseNexusOrasTransport >> pushBundle: aMooseNexusOciArtifactBundle [
 
 	aMooseNexusOciArtifactBundle reference ifNil: [ Error signal: 'Cannot push an OCI artifact bundle without a reference' ].
-	^ self runArguments: (self pushArgumentsFor: aMooseNexusOciArtifactBundle) failureMessage: 'Failed to push OCI artifact bundle'
+	^ self
+		  runArguments: (self pushArgumentsFor: aMooseNexusOciArtifactBundle)
+		  failureMessage: 'Failed to push OCI artifact bundle'
+		  inDirectory: aMooseNexusOciArtifactBundle configFile parent
 ]
 
 { #category : 'private' }
 MooseNexusOrasTransport >> runArguments: arguments failureMessage: message [
 
+	^ self runArguments: arguments failureMessage: message inDirectory: nil
+]
+
+{ #category : 'private' }
+MooseNexusOrasTransport >> runArguments: arguments failureMessage: message inDirectory: workingDirectory [
+
 	| returnCode |
-	returnCode := commandRunner value: arguments.
+	returnCode := commandRunner cull: arguments cull: workingDirectory.
 	returnCode = 0 ifFalse: [
 		Error signal: message , ', error code: ' , returnCode asString , '. Command: ' , (self shellCommandFromArguments: arguments) ].
 	^ returnCode
@@ -127,7 +134,22 @@ MooseNexusOrasTransport >> runArguments: arguments failureMessage: message [
 { #category : 'private' }
 MooseNexusOrasTransport >> runCommandArguments: arguments [
 
-	^ LibC runCommand: (self shellCommandFromArguments: arguments)
+	^ self runCommandArguments: arguments inDirectory: nil
+]
+
+{ #category : 'private' }
+MooseNexusOrasTransport >> runCommandArguments: arguments inDirectory: workingDirectory [
+
+	| command |
+	command := self shellCommandFromArguments: arguments.
+	workingDirectory ifNotNil: [
+			command := String streamContents: [ :stream |
+					           stream
+						           nextPutAll: 'cd ';
+						           nextPutAll: (self shellQuote: workingDirectory asFileReference pathString);
+						           nextPutAll: ' && ';
+						           nextPutAll: command ] ].
+	^ LibC runCommand: command
 ]
 
 { #category : 'private' }

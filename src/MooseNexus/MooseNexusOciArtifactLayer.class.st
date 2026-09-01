@@ -24,7 +24,7 @@ MooseNexusOciArtifactLayer >> asOrasArgument [
 
 	^ String streamContents: [ :stream |
 			  stream
-				  nextPutAll: file pathString;
+				  nextPutAll: file basename;
 				  nextPut: $:;
 				  nextPutAll: mediaType ]
 ]

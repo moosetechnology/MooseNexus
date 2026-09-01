@@ -102,12 +102,25 @@ MooseNexusOciArtifactPublishingTest >> testBundleBuilderCopiesModelPropertiesAnd
 	sourceLayer := bundle layers third.
 	self assert: bundle artifactType equals: MooseNexusOciArtifactBundleBuilder artifactType.
 	self assert: bundle configMediaType equals: MooseNexusOciArtifactBundleBuilder configMediaType.
+	self
+		assert: bundle configArgument
+		equals: MooseNexusOciArtifactBundleBuilder manifestFileName , ':' , MooseNexusOciArtifactBundleBuilder configMediaType.
 	self assert: propertiesLayer mediaType equals: MooseNexusOciArtifactBundleBuilder projectPropertiesMediaType.
+	self
+		assert: propertiesLayer asOrasArgument
+		equals:
+		MooseNexusOciArtifactBundleBuilder projectPropertiesFileName , ':'
+		, MooseNexusOciArtifactBundleBuilder projectPropertiesMediaType.
 	propertiesDictionary := propertiesLayer file readStreamDo: [ :stream | STON fromStream: stream ].
 	self assert: (propertiesDictionary at: #nature) equals: 'MooseNexusTestProject'.
 	self assert: modelLayer mediaType equals: 'application/vnd.moose.famix+json'.
+	self assert: modelLayer asOrasArgument equals: 'model.json:application/vnd.moose.famix+json'.
 	self assert: modelLayer file contents equals: '{ }'.
 	self assert: sourceLayer mediaType equals: MooseNexusOciArtifactBundleBuilder sourceArchiveMediaType.
+	self
+		assert: sourceLayer asOrasArgument
+		equals:
+		MooseNexusOciArtifactBundleBuilder sourceArchiveFileName , ':' , MooseNexusOciArtifactBundleBuilder sourceArchiveMediaType.
 	self assert: (ZipArchive isZipArchive: sourceLayer file).
 	manifestDictionary := bundle configFile readStreamDo: [ :stream | STON fromStream: stream ].
 	self assert: ((manifestDictionary at: 'modelArtifact') at: 'path') equals: 'artifacts/models/demo-model.json'
@@ -157,7 +170,6 @@ MooseNexusOciArtifactPublishingTest >> testOrasTransportBuildsPullArguments [
 		equals: {
 				'oras'.
 				'pull'.
-				'--allow-path-traversal'.
 				'--output'.
 				outputDirectory pathString.
 				'--config'.
@@ -176,13 +188,13 @@ MooseNexusOciArtifactPublishingTest >> testOrasTransportBuildsPushArguments [
 	arguments := transport pushArgumentsFor: bundle.
 
 	self assert: arguments first equals: 'oras'.
-	self assert: (arguments copyFrom: 2 to: 7) equals: {
+	self assert: (arguments copyFrom: 2 to: 6) equals: {
 			'push'.
-			'--disable-path-validation'.
 			'--artifact-type'.
 			MooseNexusOciArtifactBundleBuilder artifactType.
 			'--config'.
 			bundle configArgument }.
+	self deny: (arguments includes: '--disable-path-validation').
 	self assert: (arguments includes: 'harbor.example.com/team/moosenexus/com.example/demo:1.0.0').
 	self assert: (arguments includes: bundle layers first asOrasArgument).
 	self assert: (arguments includes: bundle layers second asOrasArgument)
@@ -215,6 +227,22 @@ MooseNexusOciArtifactPublishingTest >> testOrasTransportPullUsesUniqueTemporaryD
 
 	self assert: (pulledDirectory basename beginsWith: 'moosenexus-oci-pull-').
 	self assert: (pushedArguments includes: pulledDirectory pathString)
+]
+
+{ #category : 'tests' }
+MooseNexusOciArtifactPublishingTest >> testOrasTransportPushRunsFromBundleDirectory [
+
+	| bundle transport workingDirectory |
+	bundle := (MooseNexusOciArtifactBundleBuilder project: project manifest: manifest directory: rootDirectory / 'bundle') build.
+	bundle reference: 'harbor.example.com/team/moosenexus/com.example/demo:1.0.0'.
+	transport := MooseNexusOrasTransport new.
+	transport commandRunner: [ :arguments :directory |
+			workingDirectory := directory.
+			0 ].
+
+	transport pushBundle: bundle.
+
+	self assert: workingDirectory pathString equals: bundle configFile parent pathString
 ]
 
 { #category : 'tests' }
