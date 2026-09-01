@@ -64,7 +64,7 @@ MooseNexusRequirementValidationResult >> errorMessage [
 			  stream
 				  nextPutAll: self requirementName;
 				  nextPutAll: ' is not available. Availability validation `';
-				  nextPutAll: requirement availabilityValidation asString;
+				  print: requirement availabilityValidation;
 				  nextPutAll: '` returned: ';
 				  nextPutAll: details ]
 ]

@@ -86,7 +86,7 @@ MooseNexusManagedProjectDescriptor >> printOn: aStream [
 	aStream
 		nextPutAll: self class name;
 		nextPut: $(;
-		nextPutAll: version asString;
+		print: version;
 		nextPut: $)
 ]
 

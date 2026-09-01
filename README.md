@@ -45,6 +45,8 @@ result := spec executeIn: MooseNexusRepository default.
 
 See [Build Spec](docs/build-spec.md) for managed and unmanaged project build examples.
 
+See [OCI Artifacts](docs/oci-artifacts.md) for publishing model artifacts and source archives to an OCI registry such as Harbor through ORAS.
+
 Retrieve an existing project from a Nexus repository:
 
 ```st
