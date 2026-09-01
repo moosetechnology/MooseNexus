@@ -55,11 +55,19 @@ MooseNexusOrasTransport >> initialize [
 ]
 
 { #category : 'fetching' }
+MooseNexusOrasTransport >> pull: reference [
+
+	^ self pull: reference into: self temporaryPullDirectory
+]
+
+{ #category : 'fetching' }
 MooseNexusOrasTransport >> pull: reference into: outputDirectory [
 
-	^ self
-		  runArguments: (self pullArgumentsFor: reference into: outputDirectory)
-		  failureMessage: 'Failed to pull OCI artifact bundle'
+	| targetDirectory |
+	self validateReferenceIncludesTagOrDigest: reference.
+	targetDirectory := outputDirectory asFileReference.
+	self runArguments: (self pullArgumentsFor: reference into: targetDirectory) failureMessage: 'Failed to pull OCI artifact bundle'.
+	^ targetDirectory
 ]
 
 { #category : 'fetching' }
@@ -135,4 +143,21 @@ MooseNexusOrasTransport >> shellQuote: aString [
 						  ifTrue: [ stream nextPutAll: '''"''"''' ]
 						  ifFalse: [ stream nextPut: character ] ].
 			  stream nextPut: $' ]
+]
+
+{ #category : 'private' }
+MooseNexusOrasTransport >> temporaryPullDirectory [
+
+	^ FileLocator temp / ('moosenexus-oci-pull-' , UUID new asString)
+]
+
+{ #category : 'private' }
+MooseNexusOrasTransport >> validateReferenceIncludesTagOrDigest: reference [
+
+	| referenceString lastPathSegment |
+	referenceString := reference asString.
+	(referenceString includes: $@) ifTrue: [ ^ self ].
+	lastPathSegment := referenceString copyAfterLast: $/.
+	(lastPathSegment includes: $:) ifFalse: [
+		Error signal: 'OCI reference must include a tag or digest, for example name:version or name@digest' ]
 ]

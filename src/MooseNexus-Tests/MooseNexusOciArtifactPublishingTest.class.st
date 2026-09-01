@@ -89,6 +89,19 @@ MooseNexusOciArtifactPublishingTest >> testBundleBuilderCopiesModelAndArchivesSo
 ]
 
 { #category : 'tests' }
+MooseNexusOciArtifactPublishingTest >> testOrasTransportAcceptsPullReferenceWithDigest [
+
+	| transport outputDirectory pulledDirectory |
+	transport := MooseNexusOrasTransport new.
+	transport commandRunner: [ :arguments | 0 ].
+	outputDirectory := rootDirectory / 'pulled'.
+
+	pulledDirectory := transport pull: 'harbor.example.com/team/moosenexus/com.example/demo@sha256:abcdef' into: outputDirectory.
+
+	self assert: pulledDirectory pathString equals: outputDirectory pathString
+]
+
+{ #category : 'tests' }
 MooseNexusOciArtifactPublishingTest >> testOrasTransportBuildsPullArguments [
 
 	| transport outputDirectory |
@@ -126,6 +139,49 @@ MooseNexusOciArtifactPublishingTest >> testOrasTransportBuildsPushArguments [
 	self assert: (arguments includes: 'harbor.example.com/team/moosenexus/com.example/demo:1.0.0').
 	self assert: (arguments includes: bundle layers first asOrasArgument).
 	self assert: (arguments includes: bundle layers second asOrasArgument)
+]
+
+{ #category : 'tests' }
+MooseNexusOciArtifactPublishingTest >> testOrasTransportPullReturnsExplicitOutputDirectory [
+
+	| transport outputDirectory pulledDirectory |
+	transport := MooseNexusOrasTransport new.
+	transport commandRunner: [ :arguments | 0 ].
+	outputDirectory := rootDirectory / 'pulled'.
+
+	pulledDirectory := transport pull: 'harbor.example.com/team/moosenexus/com.example/demo:1.0.0' into: outputDirectory.
+
+	self assert: pulledDirectory pathString equals: outputDirectory pathString
+]
+
+{ #category : 'tests' }
+MooseNexusOciArtifactPublishingTest >> testOrasTransportPullUsesUniqueTemporaryDirectory [
+
+	| transport pulledDirectory pushedArguments |
+	pushedArguments := #(  ).
+	transport := MooseNexusOrasTransport new.
+	transport commandRunner: [ :arguments |
+			pushedArguments := arguments.
+			0 ].
+
+	pulledDirectory := transport pull: 'harbor.example.com/team/moosenexus/com.example/demo:1.0.0'.
+
+	self assert: (pulledDirectory basename beginsWith: 'moosenexus-oci-pull-').
+	self assert: (pushedArguments includes: pulledDirectory pathString)
+]
+
+{ #category : 'tests' }
+MooseNexusOciArtifactPublishingTest >> testOrasTransportRejectsPullReferenceWithoutTagOrDigest [
+
+	| transport |
+	transport := MooseNexusOrasTransport new.
+	transport commandRunner: [ :arguments | self fail: 'Invalid references should fail before running ORAS' ].
+
+	self
+		should: [ transport pull: 'harbor.example.com/team/moosenexus/com.example/demo' ]
+		raise: Error
+		whoseDescriptionIncludes: 'OCI reference must include a tag or digest'
+		description: 'Pull references must include the version tag or a digest'
 ]
 
 { #category : 'tests' }

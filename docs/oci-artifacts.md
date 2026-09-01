@@ -83,14 +83,16 @@ MooseNexus passes `--disable-path-validation` to `oras push`. ORAS rejects absol
 
 ## Pulling
 
-`MooseNexusOrasTransport` can pull an OCI reference into a directory:
+`MooseNexusOrasTransport` can pull an OCI reference into a generated temporary directory:
 
 ```st
 transport := MooseNexusOrasTransport new.
-transport
-	pull: 'harbor.example.com/moose/moosenexus/com.example/demo:1.0.0'
-	into: FileLocator temp / 'moosenexus-pulled-artifact'.
+pulledDirectory := transport pull: 'harbor.example.com/moose/moosenexus/com.example/demo:1.0.0'.
 ```
+
+The pull reference must include a tag or digest. For MooseNexus artifacts, the tag is the project version.
+
+Use `pull:into:` only when you want to inspect or control the pull directory explicitly.
 
 This currently downloads the OCI artifact files. It does not yet restore the artifact into a MooseNexus repository, validate checksums, or resolve dependencies from a local cache.
 
