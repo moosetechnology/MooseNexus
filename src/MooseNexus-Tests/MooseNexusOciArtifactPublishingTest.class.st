@@ -234,8 +234,9 @@ MooseNexusOciArtifactPublishingTest >> testOrasTransportPushRunsFromBundleDirect
 
 	| bundle transport workingDirectory |
 	bundle := (MooseNexusOciArtifactBundleBuilder project: project manifest: manifest directory: rootDirectory / 'bundle') build.
-	bundle reference: 'harbor.example.com/team/moosenexus/com.example/demo:1.0.0'.
+	bundle reference: 'registry.example.com/team/moosenexus/com.example/demo:1.0.0'.
 	transport := MooseNexusOrasTransport new.
+	workingDirectory := nil.
 	transport commandRunner: [ :arguments :directory |
 			workingDirectory := directory.
 			0 ].
@@ -294,7 +295,7 @@ MooseNexusOciArtifactPublishingTest >> testPublisherBuildsBundleAssignsReference
 
 	| mapper transport publisher pushedArguments bundle |
 	pushedArguments := #(  ).
-	mapper := MooseNexusOciReferenceMapper registry: 'harbor.example.com' harborProject: 'Moose Team'.
+	mapper := MooseNexusOciReferenceMapper registry: 'registry.example.com' namespace: 'Moose Team'.
 	transport := MooseNexusOrasTransport new.
 	transport commandRunner: [ :arguments |
 			pushedArguments := arguments.
@@ -303,7 +304,7 @@ MooseNexusOciArtifactPublishingTest >> testPublisherBuildsBundleAssignsReference
 
 	bundle := publisher publishManifest: manifest of: project in: rootDirectory / 'bundle'.
 
-	self assert: bundle reference equals: 'harbor.example.com/moose-team/moosenexus/com.example/demo:1.0.0'.
+	self assert: bundle reference equals: 'registry.example.com/moose-team/moosenexus/com.example/demo:1.0.0'.
 	self assert: pushedArguments equals: (transport pushArgumentsFor: bundle)
 ]
 
@@ -312,7 +313,7 @@ MooseNexusOciArtifactPublishingTest >> testPublisherUsesUniqueTemporaryBundleDir
 
 	| mapper transport publisher pushedArguments bundle |
 	pushedArguments := #(  ).
-	mapper := MooseNexusOciReferenceMapper registry: 'harbor.example.com' harborProject: 'Moose Team'.
+	mapper := MooseNexusOciReferenceMapper registry: 'registry.example.com' namespace: 'Moose Team'.
 	transport := MooseNexusOrasTransport new.
 	transport commandRunner: [ :arguments |
 			pushedArguments := arguments.
@@ -333,14 +334,14 @@ MooseNexusOciArtifactPublishingTest >> testPullerForceInstallsPulledBundle [
 	bundleDirectory := rootDirectory / 'bundle'.
 	(MooseNexusOciArtifactBundleBuilder project: project manifest: manifest directory: bundleDirectory) build.
 	repository := MooseNexusRepository new directory: rootDirectory / 'installed'.
-	mapper := MooseNexusOciReferenceMapper registry: 'harbor.example.com' harborProject: 'team'.
+	mapper := MooseNexusOciReferenceMapper registry: 'registry.example.com' namespace: 'team'.
 	transport := MooseNexusOrasTransport new.
 	transport commandRunner: [ :arguments |
 			self copyBundle: bundleDirectory intoPullDirectoryFromArguments: arguments.
 			0 ].
 	puller := MooseNexusOciArtifactPuller referenceMapper: mapper transport: transport repository: repository.
 
-	pulledProject := puller pull: 'harbor.example.com/team/moosenexus/com.example/demo:1.0.0' force: true.
+	pulledProject := puller pull: 'registry.example.com/team/moosenexus/com.example/demo:1.0.0' force: true.
 
 	projectDirectory := self repositoryDirectoryForTestRepository: repository.
 	self assert: pulledProject coordinates equals: project coordinates.
@@ -356,24 +357,24 @@ MooseNexusOciArtifactPublishingTest >> testPullerReturnsLocalProjectWhenAlreadyI
 	(MooseNexusOciArtifactBundleBuilder project: project manifest: manifest directory: bundleDirectory) build.
 	repository := MooseNexusRepository new directory: rootDirectory / 'installed'.
 	installedProject := MooseNexusOciArtifactInstaller new installBundleFrom: bundleDirectory in: repository.
-	mapper := MooseNexusOciReferenceMapper registry: 'harbor.example.com' harborProject: 'team'.
+	mapper := MooseNexusOciReferenceMapper registry: 'registry.example.com' namespace: 'team'.
 	transport := MooseNexusOrasTransport new.
 	transport commandRunner: [ :arguments | self fail: 'Pull should not contact ORAS when the project already exists locally' ].
 	puller := MooseNexusOciArtifactPuller referenceMapper: mapper transport: transport repository: repository.
 
-	pulledProject := puller pull: 'harbor.example.com/team/moosenexus/com.example/demo:1.0.0'.
+	pulledProject := puller pull: 'registry.example.com/team/moosenexus/com.example/demo:1.0.0'.
 
 	self assert: pulledProject coordinates equals: installedProject coordinates.
 	self assert: pulledProject modelManifests first equals: manifest
 ]
 
 { #category : 'tests' }
-MooseNexusOciArtifactPublishingTest >> testReferenceMapperNormalizesHarborReference [
+MooseNexusOciArtifactPublishingTest >> testReferenceMapperNormalizesNamespaceReference [
 
 	| mapper |
-	mapper := MooseNexusOciReferenceMapper registry: 'harbor.example.com' harborProject: 'Moose Team'.
+	mapper := MooseNexusOciReferenceMapper registry: 'registry.example.com' namespace: 'Moose Team'.
 
 	self
 		assert: (mapper referenceFor: self artifactCoordinates)
-		equals: 'harbor.example.com/moose-team/moosenexus/com.example/demo:1.0.0'
+		equals: 'registry.example.com/moose-team/moosenexus/com.example/demo:1.0.0'
 ]

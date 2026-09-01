@@ -1,12 +1,14 @@
 "
-I map MooseNexus artifact coordinates to Harbor OCI references.
+I map MooseNexus artifact coordinates to backend-agnostic OCI references.
+
+The namespace is the repository path prefix inside an OCI registry. Depending on the registry product this may correspond to a Harbor project, a Nexus repository path, an Artifactory repository, or another registry namespace.
 "
 Class {
 	#name : 'MooseNexusOciReferenceMapper',
 	#superclass : 'Object',
 	#instVars : [
 		'registry',
-		'harborProject'
+		'namespace'
 	],
 	#category : 'MooseNexus-Artifact',
 	#package : 'MooseNexus',
@@ -14,9 +16,9 @@ Class {
 }
 
 { #category : 'instance creation' }
-MooseNexusOciReferenceMapper class >> registry: registryName harborProject: projectName [
+MooseNexusOciReferenceMapper class >> registry: registryName namespace: namespaceName [
 
-	^ self new initializeRegistry: registryName harborProject: projectName
+	^ self new initializeRegistry: registryName namespace: namespaceName
 ]
 
 { #category : 'mapping' }
@@ -35,17 +37,17 @@ MooseNexusOciReferenceMapper >> coordinatesFromReference: reference [
 	^ MooseNexusCoordinates group: group name: (nameAndVersion copyUpTo: $:) version: (nameAndVersion copyAfterLast: $:)
 ]
 
-{ #category : 'accessing' }
-MooseNexusOciReferenceMapper >> harborProject [
-
-	^ harborProject
-]
-
 { #category : 'initialization' }
-MooseNexusOciReferenceMapper >> initializeRegistry: registryName harborProject: projectName [
+MooseNexusOciReferenceMapper >> initializeRegistry: registryName namespace: namespaceName [
 
 	registry := registryName.
-	harborProject := projectName
+	namespace := namespaceName
+]
+
+{ #category : 'accessing' }
+MooseNexusOciReferenceMapper >> namespace [
+
+	^ namespace
 ]
 
 { #category : 'private' }
@@ -65,7 +67,7 @@ MooseNexusOciReferenceMapper >> referenceFor: artifactCoordinates [
 			  stream
 				  nextPutAll: registry;
 				  nextPut: $/;
-				  nextPutAll: (self normalized: harborProject);
+				  nextPutAll: (self normalized: namespace);
 				  nextPutAll: '/moosenexus/';
 				  nextPutAll: (self normalized: artifactCoordinates group);
 				  nextPut: $/;

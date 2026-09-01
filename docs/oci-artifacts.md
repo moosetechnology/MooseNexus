@@ -2,7 +2,7 @@
 
 MooseNexus can package a recorded model artifact as an OCI artifact bundle and publish it through ORAS.
 
-This is intended for repositories such as Harbor that support OCI artifacts. MooseNexus keeps the artifact shape independent from Harbor-specific APIs: Harbor stores the artifact, while MooseNexus defines the bundle contents and reference layout.
+This is intended for repositories that support OCI artifacts, such as Harbor, Sonatype Nexus, Artifactory, or plain OCI registries. MooseNexus keeps the artifact shape independent from backend-specific APIs: the registry stores the artifact, while MooseNexus defines the bundle contents and reference layout.
 
 ## Bundle Contents
 
@@ -17,7 +17,7 @@ Sources are part of the bundle because they are required to inspect, reproduce, 
 
 ## References
 
-`MooseNexusOciReferenceMapper` maps model artifact coordinates to a Harbor-compatible OCI reference.
+`MooseNexusOciReferenceMapper` maps model artifact coordinates to an OCI reference under a registry namespace.
 
 For example, these coordinates:
 
@@ -29,13 +29,13 @@ model name:      demo-model
 classifier:      main
 ```
 
-published to registry `harbor.example.com` and Harbor project `moose` produce:
+published to registry `registry.example.com` and namespace `moose` produce:
 
 ```text
-harbor.example.com/moose/moosenexus/com.example/demo:1.0.0
+registry.example.com/moose/moosenexus/com.example/demo:1.0.0
 ```
 
-The OCI repository reference is based on the MooseNexus project coordinates: group, name, and version. The model name is stored as MooseNexus metadata and as an OCI annotation, but it is not part of the Harbor path.
+The OCI repository reference is based on the MooseNexus project coordinates: group, name, and version. The model name is stored as MooseNexus metadata and as an OCI annotation, but it is not part of the OCI repository path.
 
 The registry must be logged in before publishing. With ORAS, that is usually done outside MooseNexus:
 
@@ -66,8 +66,8 @@ manifest := result project modelManifests
 	detect: [ :each | each modelArtifact = result modelArtifact ].
 
 mapper := MooseNexusOciReferenceMapper
-	registry: 'harbor.example.com'
-	harborProject: 'moose'.
+	registry: 'registry.example.com'
+	namespace: 'moose'.
 transport := MooseNexusOrasTransport new.
 publisher := MooseNexusOciArtifactPublisher
 	referenceMapper: mapper
@@ -90,8 +90,8 @@ Use `MooseNexusOciArtifactPuller` to pull an OCI artifact and install it into a 
 | mapper transport repository puller project |
 
 mapper := MooseNexusOciReferenceMapper
-	registry: 'harbor.example.com'
-	harborProject: 'moose'.
+	registry: 'registry.example.com'
+	namespace: 'moose'.
 transport := MooseNexusOrasTransport new.
 repository := MooseNexusRepository default.
 puller := MooseNexusOciArtifactPuller
@@ -99,7 +99,7 @@ puller := MooseNexusOciArtifactPuller
 	transport: transport
 	repository: repository.
 
-project := puller pull: 'harbor.example.com/moose/moosenexus/com.example/demo:1.0.0'.
+project := puller pull: 'registry.example.com/moose/moosenexus/com.example/demo:1.0.0'.
 ```
 
 The pull reference must include a tag or digest. For MooseNexus artifacts, the tag is the project version.
@@ -110,7 +110,7 @@ Use `force: true` to fetch and reinstall from the remote registry even when a lo
 
 ```st
 project := puller
-	pull: 'harbor.example.com/moose/moosenexus/com.example/demo:1.0.0'
+	pull: 'registry.example.com/moose/moosenexus/com.example/demo:1.0.0'
 	force: true.
 ```
 
@@ -124,7 +124,8 @@ The current implementation deliberately keeps OCI support client-side:
 
 - ORAS handles registry transport;
 - MooseNexus defines the bundle contents;
-- Harbor is used as an OCI registry, not through Harbor-specific APIs;
-- publishing is explicit and never happens automatically after a build.
+- registry products such as Harbor are used as OCI registries, not through backend-specific APIs;
+- publishing is explicit and never happens automatically after a build;
+- pulling installs the artifact into a local MooseNexus repository and is local-first when the OCI reference encodes MooseNexus coordinates.
 
-Repository-chain behavior such as local-first fetch, remote selection, cache refresh, and restoring pulled bundles into a local MooseNexus repository still belongs to future repository backend work.
+Richer repository-chain behavior such as remote selection policy and cache refresh still belongs to future repository backend work.
