@@ -117,8 +117,9 @@ MooseNexusOciArtifactPublishingTest >> testOrasTransportBuildsPushArguments [
 	arguments := transport pushArgumentsFor: bundle.
 
 	self assert: arguments first equals: 'oras'.
-	self assert: (arguments copyFrom: 2 to: 6) equals: {
+	self assert: (arguments copyFrom: 2 to: 7) equals: {
 			'push'.
+			'--disable-path-validation'.
 			'--artifact-type'.
 			MooseNexusOciArtifactBundleBuilder artifactType.
 			'--config'.
@@ -126,6 +127,37 @@ MooseNexusOciArtifactPublishingTest >> testOrasTransportBuildsPushArguments [
 	self assert: (arguments includes: 'harbor.example.com/team/moosenexus/com.example/demo/demo-model:1.0.0-main').
 	self assert: (arguments includes: bundle layers first asOrasArgument).
 	self assert: (arguments includes: bundle layers second asOrasArgument)
+]
+
+{ #category : 'tests' }
+MooseNexusOciArtifactPublishingTest >> testOrasTransportSignalsPullFailure [
+
+	| transport |
+	transport := MooseNexusOrasTransport new.
+	transport commandRunner: [ :arguments | 256 ].
+
+	self
+		should: [
+		transport pull: 'harbor.example.com/team/moosenexus/com.example/demo/demo-model:1.0.0-main' into: rootDirectory / 'pulled' ]
+		raise: Error
+		whoseDescriptionIncludes: 'Failed to pull OCI artifact bundle, error code: 256'
+		description: 'ORAS failures should be reported to the caller'
+]
+
+{ #category : 'tests' }
+MooseNexusOciArtifactPublishingTest >> testOrasTransportSignalsPushFailure [
+
+	| bundle transport |
+	bundle := (MooseNexusOciArtifactBundleBuilder project: project manifest: manifest directory: rootDirectory / 'bundle') build.
+	bundle reference: 'harbor.example.com/team/moosenexus/com.example/demo/demo-model:1.0.0-main'.
+	transport := MooseNexusOrasTransport new.
+	transport commandRunner: [ :arguments | 256 ].
+
+	self
+		should: [ transport pushBundle: bundle ]
+		raise: Error
+		whoseDescriptionIncludes: 'Failed to push OCI artifact bundle, error code: 256'
+		description: 'ORAS failures should be reported to the caller'
 ]
 
 { #category : 'tests' }

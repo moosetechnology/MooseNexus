@@ -57,7 +57,9 @@ MooseNexusOrasTransport >> initialize [
 { #category : 'fetching' }
 MooseNexusOrasTransport >> pull: reference into: outputDirectory [
 
-	^ commandRunner value: (self pullArgumentsFor: reference into: outputDirectory)
+	^ self
+		  runArguments: (self pullArgumentsFor: reference into: outputDirectory)
+		  failureMessage: 'Failed to pull OCI artifact bundle'
 ]
 
 { #category : 'fetching' }
@@ -79,6 +81,7 @@ MooseNexusOrasTransport >> pushArgumentsFor: aMooseNexusOciArtifactBundle [
 	arguments
 		add: executable;
 		add: 'push';
+		add: '--disable-path-validation';
 		add: '--artifact-type';
 		add: aMooseNexusOciArtifactBundle artifactType;
 		add: '--config';
@@ -96,7 +99,17 @@ MooseNexusOrasTransport >> pushArgumentsFor: aMooseNexusOciArtifactBundle [
 MooseNexusOrasTransport >> pushBundle: aMooseNexusOciArtifactBundle [
 
 	aMooseNexusOciArtifactBundle reference ifNil: [ Error signal: 'Cannot push an OCI artifact bundle without a reference' ].
-	^ commandRunner value: (self pushArgumentsFor: aMooseNexusOciArtifactBundle)
+	^ self runArguments: (self pushArgumentsFor: aMooseNexusOciArtifactBundle) failureMessage: 'Failed to push OCI artifact bundle'
+]
+
+{ #category : 'private' }
+MooseNexusOrasTransport >> runArguments: arguments failureMessage: message [
+
+	| returnCode |
+	returnCode := commandRunner value: arguments.
+	returnCode = 0 ifFalse: [
+		Error signal: message , ', error code: ' , returnCode asString , '. Command: ' , (self shellCommandFromArguments: arguments) ].
+	^ returnCode
 ]
 
 { #category : 'private' }

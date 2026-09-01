@@ -77,6 +77,8 @@ publisher
 
 The publisher builds the local bundle files, assigns the OCI reference, and delegates the push to ORAS.
 
+MooseNexus passes `--disable-path-validation` to `oras push`. ORAS rejects absolute file paths by default because pushing absolute paths can accidentally expose local filesystem structure or unintended files. MooseNexus intentionally builds the bundle in a known local directory, often under the system temporary directory, so the model payload and source archive are passed to ORAS as absolute paths.
+
 ## Pulling
 
 `MooseNexusOrasTransport` can pull an OCI reference into a directory:
