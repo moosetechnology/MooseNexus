@@ -96,14 +96,13 @@ MooseNexusOciArtifactPublishingTest >> testOrasTransportBuildsPullArguments [
 	outputDirectory := rootDirectory / 'pulled'.
 
 	self
-		assert:
-		(transport pullArgumentsFor: 'harbor.example.com/team/moosenexus/com.example/demo/demo-model:1.0.0-main' into: outputDirectory)
+		assert: (transport pullArgumentsFor: 'harbor.example.com/team/moosenexus/com.example/demo:1.0.0' into: outputDirectory)
 		equals: {
 				'oras'.
 				'pull'.
 				'--output'.
 				outputDirectory pathString.
-				'harbor.example.com/team/moosenexus/com.example/demo/demo-model:1.0.0-main' }
+				'harbor.example.com/team/moosenexus/com.example/demo:1.0.0' }
 ]
 
 { #category : 'tests' }
@@ -111,7 +110,7 @@ MooseNexusOciArtifactPublishingTest >> testOrasTransportBuildsPushArguments [
 
 	| bundle transport arguments |
 	bundle := (MooseNexusOciArtifactBundleBuilder project: project manifest: manifest directory: rootDirectory / 'bundle') build.
-	bundle reference: 'harbor.example.com/team/moosenexus/com.example/demo/demo-model:1.0.0-main'.
+	bundle reference: 'harbor.example.com/team/moosenexus/com.example/demo:1.0.0'.
 	transport := MooseNexusOrasTransport new.
 
 	arguments := transport pushArgumentsFor: bundle.
@@ -124,7 +123,7 @@ MooseNexusOciArtifactPublishingTest >> testOrasTransportBuildsPushArguments [
 			MooseNexusOciArtifactBundleBuilder artifactType.
 			'--config'.
 			bundle configArgument }.
-	self assert: (arguments includes: 'harbor.example.com/team/moosenexus/com.example/demo/demo-model:1.0.0-main').
+	self assert: (arguments includes: 'harbor.example.com/team/moosenexus/com.example/demo:1.0.0').
 	self assert: (arguments includes: bundle layers first asOrasArgument).
 	self assert: (arguments includes: bundle layers second asOrasArgument)
 ]
@@ -137,8 +136,7 @@ MooseNexusOciArtifactPublishingTest >> testOrasTransportSignalsPullFailure [
 	transport commandRunner: [ :arguments | 256 ].
 
 	self
-		should: [
-		transport pull: 'harbor.example.com/team/moosenexus/com.example/demo/demo-model:1.0.0-main' into: rootDirectory / 'pulled' ]
+		should: [ transport pull: 'harbor.example.com/team/moosenexus/com.example/demo:1.0.0' into: rootDirectory / 'pulled' ]
 		raise: Error
 		whoseDescriptionIncludes: 'Failed to pull OCI artifact bundle, error code: 256'
 		description: 'ORAS failures should be reported to the caller'
@@ -149,7 +147,7 @@ MooseNexusOciArtifactPublishingTest >> testOrasTransportSignalsPushFailure [
 
 	| bundle transport |
 	bundle := (MooseNexusOciArtifactBundleBuilder project: project manifest: manifest directory: rootDirectory / 'bundle') build.
-	bundle reference: 'harbor.example.com/team/moosenexus/com.example/demo/demo-model:1.0.0-main'.
+	bundle reference: 'harbor.example.com/team/moosenexus/com.example/demo:1.0.0'.
 	transport := MooseNexusOrasTransport new.
 	transport commandRunner: [ :arguments | 256 ].
 
@@ -174,7 +172,26 @@ MooseNexusOciArtifactPublishingTest >> testPublisherBuildsBundleAssignsReference
 
 	bundle := publisher publishManifest: manifest of: project in: rootDirectory / 'bundle'.
 
-	self assert: bundle reference equals: 'harbor.example.com/moose-team/moosenexus/com.example/demo/demo-model:1.0.0-main'.
+	self assert: bundle reference equals: 'harbor.example.com/moose-team/moosenexus/com.example/demo:1.0.0'.
+	self assert: pushedArguments equals: (transport pushArgumentsFor: bundle)
+]
+
+{ #category : 'tests' }
+MooseNexusOciArtifactPublishingTest >> testPublisherUsesUniqueTemporaryBundleDirectory [
+
+	| mapper transport publisher pushedArguments bundle |
+	pushedArguments := #(  ).
+	mapper := MooseNexusOciReferenceMapper registry: 'harbor.example.com' harborProject: 'Moose Team'.
+	transport := MooseNexusOrasTransport new.
+	transport commandRunner: [ :arguments |
+			pushedArguments := arguments.
+			0 ].
+	publisher := MooseNexusOciArtifactPublisher referenceMapper: mapper transport: transport.
+
+	bundle := publisher publishManifest: manifest of: project.
+
+	self assert: (bundle configFile parent basename beginsWith: 'moosenexus-oci-bundle-').
+	self assert: bundle configFile exists.
 	self assert: pushedArguments equals: (transport pushArgumentsFor: bundle)
 ]
 
@@ -186,5 +203,5 @@ MooseNexusOciArtifactPublishingTest >> testReferenceMapperNormalizesHarborRefere
 
 	self
 		assert: (mapper referenceFor: self artifactCoordinates)
-		equals: 'harbor.example.com/moose-team/moosenexus/com.example/demo/demo-model:1.0.0-main'
+		equals: 'harbor.example.com/moose-team/moosenexus/com.example/demo:1.0.0'
 ]

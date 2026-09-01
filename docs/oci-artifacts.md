@@ -31,8 +31,10 @@ classifier:      main
 published to registry `harbor.example.com` and Harbor project `moose` produce:
 
 ```text
-harbor.example.com/moose/moosenexus/com.example/demo/demo-model:1.0.0-main
+harbor.example.com/moose/moosenexus/com.example/demo:1.0.0
 ```
+
+The OCI repository reference is based on the MooseNexus project coordinates: group, name, and version. The model name is stored as MooseNexus metadata and as an OCI annotation, but it is not part of the Harbor path.
 
 The registry must be logged in before publishing. With ORAS, that is usually done outside MooseNexus:
 
@@ -55,6 +57,7 @@ coordinates := MooseNexusCoordinates
 spec := MooseNexusBuildSpec
 	coordinates: coordinates
 	sourceDirectory: '/path/to/source/project' asFileReference.
+spec modelName: 'demo-model'.
 
 result := spec execute.
 
@@ -69,15 +72,14 @@ publisher := MooseNexusOciArtifactPublisher
 	referenceMapper: mapper
 	transport: transport.
 
-publisher
-	publishManifest: manifest
-	of: result project
-	in: FileLocator temp / 'moosenexus-oci-bundle'.
+publisher publishManifest: manifest of: result project.
 ```
 
 The publisher builds the local bundle files, assigns the OCI reference, and delegates the push to ORAS.
 
-MooseNexus passes `--disable-path-validation` to `oras push`. ORAS rejects absolute file paths by default because pushing absolute paths can accidentally expose local filesystem structure or unintended files. MooseNexus intentionally builds the bundle in a known local directory, often under the system temporary directory, so the model payload and source archive are passed to ORAS as absolute paths.
+`publishManifest:of:` stages the bundle in a generated temporary directory whose name includes a UUID. Use `publishManifest:of:in:` only when you want to inspect or control the staging directory explicitly.
+
+MooseNexus passes `--disable-path-validation` to `oras push`. ORAS rejects absolute file paths by default because pushing absolute paths can accidentally expose local filesystem structure or unintended files. MooseNexus intentionally builds the bundle in a known generated temporary directory, so the model payload and source archive are passed to ORAS as absolute paths.
 
 ## Pulling
 
@@ -86,7 +88,7 @@ MooseNexus passes `--disable-path-validation` to `oras push`. ORAS rejects absol
 ```st
 transport := MooseNexusOrasTransport new.
 transport
-	pull: 'harbor.example.com/moose/moosenexus/com.example/demo/demo-model:1.0.0-main'
+	pull: 'harbor.example.com/moose/moosenexus/com.example/demo:1.0.0'
 	into: FileLocator temp / 'moosenexus-pulled-artifact'.
 ```
 

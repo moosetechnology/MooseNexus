@@ -54,12 +54,8 @@ MooseNexusOciReferenceMapper >> referenceFor: artifactCoordinates [
 				  nextPutAll: (self normalized: artifactCoordinates group);
 				  nextPut: $/;
 				  nextPutAll: (self normalized: artifactCoordinates projectCoordinates name);
-				  nextPut: $/;
-				  nextPutAll: (self normalized: artifactCoordinates name);
 				  nextPut: $:;
-				  nextPutAll: (self normalized: artifactCoordinates version);
-				  nextPut: $-;
-				  nextPutAll: (self normalized: artifactCoordinates classifier) ]
+				  nextPutAll: (self normalized: artifactCoordinates version) ]
 ]
 
 { #category : 'accessing' }
