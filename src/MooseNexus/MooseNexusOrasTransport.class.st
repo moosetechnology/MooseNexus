@@ -77,6 +77,7 @@ MooseNexusOrasTransport >> pullArgumentsFor: reference into: outputDirectory [
 	^ {
 		  executable.
 		  'pull'.
+		  '--allow-path-traversal'.
 		  '--output'.
 		  outputDirectory asFileReference pathString.
 		  '--config'.

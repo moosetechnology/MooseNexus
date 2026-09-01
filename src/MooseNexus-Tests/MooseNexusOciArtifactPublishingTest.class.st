@@ -29,8 +29,8 @@ MooseNexusOciArtifactPublishingTest >> artifactCoordinates [
 MooseNexusOciArtifactPublishingTest >> copyBundle: bundleDirectory intoPullDirectoryFromArguments: arguments [
 
 	| outputDirectory configFile |
-	outputDirectory := (arguments at: 4) asFileReference.
-	configFile := (arguments at: 6) asFileReference.
+	outputDirectory := (arguments at: (arguments indexOf: '--output') + 1) asFileReference.
+	configFile := (arguments at: (arguments indexOf: '--config') + 1) asFileReference.
 	outputDirectory ensureCreateDirectory.
 	bundleDirectory / MooseNexusOciArtifactBundleBuilder manifestFileName copyTo: configFile.
 	bundleDirectory / MooseNexusOciArtifactBundleBuilder projectPropertiesFileName copyTo:
@@ -157,6 +157,7 @@ MooseNexusOciArtifactPublishingTest >> testOrasTransportBuildsPullArguments [
 		equals: {
 				'oras'.
 				'pull'.
+				'--allow-path-traversal'.
 				'--output'.
 				outputDirectory pathString.
 				'--config'.
