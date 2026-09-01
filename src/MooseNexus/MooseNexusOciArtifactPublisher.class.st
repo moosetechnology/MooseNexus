@@ -29,6 +29,12 @@ MooseNexusOciArtifactPublisher >> initializeReferenceMapper: aMooseNexusOciRefer
 ]
 
 { #category : 'publishing' }
+MooseNexusOciArtifactPublisher >> publishManifest: aMooseNexusModelArtifactManifest of: aMooseNexusProject [
+
+	^ self publishManifest: aMooseNexusModelArtifactManifest of: aMooseNexusProject in: self temporaryBundleDirectory
+]
+
+{ #category : 'publishing' }
 MooseNexusOciArtifactPublisher >> publishManifest: aMooseNexusModelArtifactManifest of: aMooseNexusProject in: bundleDirectory [
 
 	| bundle |
@@ -45,6 +51,12 @@ MooseNexusOciArtifactPublisher >> publishManifest: aMooseNexusModelArtifactManif
 MooseNexusOciArtifactPublisher >> referenceMapper [
 
 	^ referenceMapper
+]
+
+{ #category : 'private' }
+MooseNexusOciArtifactPublisher >> temporaryBundleDirectory [
+
+	^ FileLocator temp / ('moosenexus-oci-bundle-' , UUID new asString)
 ]
 
 { #category : 'accessing' }

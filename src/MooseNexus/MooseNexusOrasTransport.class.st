@@ -50,14 +50,25 @@ MooseNexusOrasTransport >> executable: aString [
 { #category : 'initialization' }
 MooseNexusOrasTransport >> initialize [
 
+	super initialize.
 	executable := 'oras'.
-	commandRunner := [ :arguments | self runCommandArguments: arguments ]
+	commandRunner := [ :arguments :workingDirectory | self runCommandArguments: arguments inDirectory: workingDirectory ]
+]
+
+{ #category : 'fetching' }
+MooseNexusOrasTransport >> pull: reference [
+
+	^ self pull: reference into: self temporaryPullDirectory
 ]
 
 { #category : 'fetching' }
 MooseNexusOrasTransport >> pull: reference into: outputDirectory [
 
-	^ commandRunner value: (self pullArgumentsFor: reference into: outputDirectory)
+	| targetDirectory |
+	self validateReferenceIncludesTagOrDigest: reference.
+	targetDirectory := outputDirectory asFileReference.
+	self runArguments: (self pullArgumentsFor: reference into: targetDirectory) failureMessage: 'Failed to pull OCI artifact bundle'.
+	^ targetDirectory
 ]
 
 { #category : 'fetching' }
@@ -68,6 +79,8 @@ MooseNexusOrasTransport >> pullArgumentsFor: reference into: outputDirectory [
 		  'pull'.
 		  '--output'.
 		  outputDirectory asFileReference pathString.
+		  '--config'.
+		  (outputDirectory asFileReference / MooseNexusOciArtifactBundleBuilder manifestFileName) pathString.
 		  reference }
 ]
 
@@ -96,13 +109,47 @@ MooseNexusOrasTransport >> pushArgumentsFor: aMooseNexusOciArtifactBundle [
 MooseNexusOrasTransport >> pushBundle: aMooseNexusOciArtifactBundle [
 
 	aMooseNexusOciArtifactBundle reference ifNil: [ Error signal: 'Cannot push an OCI artifact bundle without a reference' ].
-	^ commandRunner value: (self pushArgumentsFor: aMooseNexusOciArtifactBundle)
+	^ self
+		  runArguments: (self pushArgumentsFor: aMooseNexusOciArtifactBundle)
+		  failureMessage: 'Failed to push OCI artifact bundle'
+		  inDirectory: aMooseNexusOciArtifactBundle configFile parent
+]
+
+{ #category : 'private' }
+MooseNexusOrasTransport >> runArguments: arguments failureMessage: message [
+
+	^ self runArguments: arguments failureMessage: message inDirectory: nil
+]
+
+{ #category : 'private' }
+MooseNexusOrasTransport >> runArguments: arguments failureMessage: message inDirectory: workingDirectory [
+
+	| returnCode |
+	returnCode := commandRunner cull: arguments cull: workingDirectory.
+	returnCode = 0 ifFalse: [
+		Error signal: message , ', error code: ' , returnCode asString , '. Command: ' , (self shellCommandFromArguments: arguments) ].
+	^ returnCode
 ]
 
 { #category : 'private' }
 MooseNexusOrasTransport >> runCommandArguments: arguments [
 
-	^ LibC runCommand: (self shellCommandFromArguments: arguments)
+	^ self runCommandArguments: arguments inDirectory: nil
+]
+
+{ #category : 'private' }
+MooseNexusOrasTransport >> runCommandArguments: arguments inDirectory: workingDirectory [
+
+	| command |
+	command := self shellCommandFromArguments: arguments.
+	workingDirectory ifNotNil: [
+			command := String streamContents: [ :stream |
+					           stream
+						           nextPutAll: 'cd ';
+						           nextPutAll: (self shellQuote: workingDirectory asFileReference pathString);
+						           nextPutAll: ' && ';
+						           nextPutAll: command ] ].
+	^ LibC runCommand: command
 ]
 
 { #category : 'private' }
@@ -122,4 +169,21 @@ MooseNexusOrasTransport >> shellQuote: aString [
 						  ifTrue: [ stream nextPutAll: '''"''"''' ]
 						  ifFalse: [ stream nextPut: character ] ].
 			  stream nextPut: $' ]
+]
+
+{ #category : 'private' }
+MooseNexusOrasTransport >> temporaryPullDirectory [
+
+	^ FileLocator temp / ('moosenexus-oci-pull-' , UUID new asString)
+]
+
+{ #category : 'private' }
+MooseNexusOrasTransport >> validateReferenceIncludesTagOrDigest: reference [
+
+	| referenceString lastPathSegment |
+	referenceString := reference asString.
+	(referenceString includes: $@) ifTrue: [ ^ self ].
+	lastPathSegment := referenceString copyAfterLast: $/.
+	(lastPathSegment includes: $:) ifFalse: [
+		Error signal: 'OCI reference must include a tag or digest, for example name:version or name@digest' ]
 ]

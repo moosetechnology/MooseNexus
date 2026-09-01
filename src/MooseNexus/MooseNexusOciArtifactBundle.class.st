@@ -51,7 +51,7 @@ MooseNexusOciArtifactBundle >> configArgument [
 
 	^ String streamContents: [ :stream |
 			  stream
-				  nextPutAll: configFile pathString;
+				  nextPutAll: configFile basename;
 				  nextPut: $:;
 				  nextPutAll: configMediaType ]
 ]

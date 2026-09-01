@@ -46,6 +46,18 @@ MooseNexusOciArtifactBundleBuilder class >> project: aMooseNexusProject manifest
 ]
 
 { #category : 'constants' }
+MooseNexusOciArtifactBundleBuilder class >> projectPropertiesFileName [
+
+	^ 'moosenexus-project-properties.json'
+]
+
+{ #category : 'constants' }
+MooseNexusOciArtifactBundleBuilder class >> projectPropertiesMediaType [
+
+	^ 'application/vnd.moosenexus.project-properties.alpha+json'
+]
+
+{ #category : 'constants' }
 MooseNexusOciArtifactBundleBuilder class >> sourceArchiveFileName [
 
 	^ 'sources.zip'
@@ -90,9 +102,10 @@ MooseNexusOciArtifactBundleBuilder >> archiveSourceTo: archiveFile [
 { #category : 'building' }
 MooseNexusOciArtifactBundleBuilder >> build [
 
-	| manifestFile modelFile sourceArchiveFile modelArtifact |
+	| manifestFile propertiesFile modelFile sourceArchiveFile modelArtifact |
 	directory ensureCreateDirectory.
 	manifestFile := self writeManifest.
+	propertiesFile := self writeProjectProperties.
 	modelArtifact := manifest modelArtifact.
 	modelFile := self copyModelPayload: modelArtifact.
 	sourceArchiveFile := self archiveSourceTo: directory / self class sourceArchiveFileName.
@@ -101,6 +114,7 @@ MooseNexusOciArtifactBundleBuilder >> build [
 		  configFile: manifestFile
 		  configMediaType: self class configMediaType
 		  layers: {
+				  (MooseNexusOciArtifactLayer file: propertiesFile mediaType: self class projectPropertiesMediaType).
 				  (MooseNexusOciArtifactLayer file: modelFile mediaType: (self class modelMediaTypeFor: modelArtifact)).
 				  (MooseNexusOciArtifactLayer file: sourceArchiveFile mediaType: self class sourceArchiveMediaType) }
 		  annotations: self annotations
@@ -131,4 +145,13 @@ MooseNexusOciArtifactBundleBuilder >> writeManifest [
 	manifestFile := directory / self class manifestFileName.
 	manifestFile writeStreamDo: [ :stream | STON put: manifest asDictionary asJsonOnStream: stream ].
 	^ manifestFile
+]
+
+{ #category : 'private' }
+MooseNexusOciArtifactBundleBuilder >> writeProjectProperties [
+
+	| propertiesFile |
+	propertiesFile := directory / self class projectPropertiesFileName.
+	propertiesFile writeStreamDo: [ :stream | project writePropertiesOn: stream ].
+	^ propertiesFile
 ]
