@@ -417,14 +417,17 @@ MooseNexusProjectIdentityTest >> testProjectSpecHoldsRecordingIntent [
 { #category : 'tests' }
 MooseNexusProjectIdentityTest >> testRecordedProjectRejectsCoordinateChanges [
 
-	| project coordinates |
+	| project coordinates repositoryBackend |
 	coordinates := MooseNexusCoordinates group: 'com.example' name: 'demo' version: '1.0.0'.
 	project := MooseNexusTestProject coordinates: coordinates.
-	project directory: 'nexus/repository/com.example/demo/1.0.0'.
+	repositoryBackend := MooseNexusLocalRepositoryBackend directory: rootDirectory.
+	project repositoryBackend: repositoryBackend path: 'com.example/demo/1.0.0'.
 
 	self
 		should: [ project initializeCoordinates: (MooseNexusCoordinates group: 'org.example' name: 'demo' version: '1.0.0') ]
 		raise: Error
+		whoseDescriptionIncludes: 'Cannot change project coordinates after recording'
+		description: nil
 ]
 
 { #category : 'tests' }
@@ -441,7 +444,9 @@ MooseNexusProjectIdentityTest >> testRepositoryCanLoadRecordedProjectFromMetadat
 
 	self assert: loadedProject class equals: MooseNexusTestProject.
 	self assert: loadedProject coordinates equals: project coordinates.
-	self assert: loadedProject directory equals: project directory
+	self assert: loadedProject repositoryPath equals: 'com.example/demo/1.0.0'.
+	self assert: loadedProject repositoryPath equals: project repositoryPath.
+	self assert: loadedProject repositoryBackend identicalTo: repository localProjectBackend
 ]
 
 { #category : 'tests' }
@@ -481,7 +486,7 @@ MooseNexusProjectIdentityTest >> testRepositoryDirectoryConfiguresLocalFilesyste
 { #category : 'tests' }
 MooseNexusProjectIdentityTest >> testRepositoryListsProjectsFromMetadataDirectory [
 
-	| project spec projects |
+	| project spec projects loadedProject |
 	project := MooseNexusTestProject new.
 	spec := MooseNexusProjectSpec
 		        coordinates: (MooseNexusCoordinates group: 'com.example' name: 'demo' version: '1.0.0')
@@ -489,9 +494,12 @@ MooseNexusProjectIdentityTest >> testRepositoryListsProjectsFromMetadataDirector
 	repository recordLoadedProject: project describedBy: spec.
 
 	projects := repository projects.
+	loadedProject := projects first.
 
 	self assert: projects size equals: 1.
-	self assert: projects first coordinates equals: project coordinates
+	self assert: loadedProject coordinates equals: project coordinates.
+	self assert: loadedProject repositoryPath equals: 'com.example/demo/1.0.0'.
+	self assert: loadedProject repositoryBackend identicalTo: repository localProjectBackend
 ]
 
 { #category : 'tests' }
@@ -507,6 +515,9 @@ MooseNexusProjectIdentityTest >> testRepositoryRecordFromSpecSetsIdentityBeforeR
 	self assert: recordedProject identicalTo: project.
 	self assert: project coordinates equals: coordinates.
 	self assert: project isRecorded.
+	self assert: project repositoryPath equals: 'com.example/demo/1.0.0'.
+	self assert: project repositoryBackend identicalTo: repository localProjectBackend.
+	self assert: project repositoryDirectory pathString equals: projectDirectory pathString.
 	self assert: (projectDirectory / 'metadata' / 'properties.json') exists
 ]
 

@@ -151,17 +151,22 @@ MooseNexusImporterExtractorProtocolTest >> testMavenImporterDeclaresCapabilities
 { #category : 'tests' }
 MooseNexusImporterExtractorProtocolTest >> testModelBuilderValidatesExtractorBeforeRunningIt [
 
-	| project extractor builder |
+	| project extractor builder repositoryBackend |
 	(rootDirectory / 'metadata') ensureCreateDirectory.
 	rootDirectory / 'metadata' / 'models.json' writeStreamDo: [ :stream | stream nextPutAll: '[]' ].
 	(rootDirectory / 'sources') ensureCreateDirectory.
+	repositoryBackend := MooseNexusLocalRepositoryBackend directory: rootDirectory parent.
 	project := MooseNexusTestProject coordinates: (MooseNexusCoordinates group: 'com.example' name: 'demo' version: '1.0.0').
-	project directory: (rootDirectory relativeTo: FileLocator home) pathString.
+	project repositoryBackend: repositoryBackend path: rootDirectory basename.
 	extractor := MooseNexusUnavailableToolModelExtractor new.
 	builder := MooseNexusModelBuilder on: project.
 	builder extractor: extractor.
 
-	self should: [ builder build ] raise: Error.
+	self
+		should: [ builder build ]
+		raise: Error
+		whoseDescriptionIncludes: 'Unavailable test extractor tool is not available'
+		description: nil.
 	self deny: extractor didRun
 ]
 

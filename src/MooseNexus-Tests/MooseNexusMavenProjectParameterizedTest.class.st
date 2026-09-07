@@ -170,13 +170,13 @@ MooseNexusMavenProjectParameterizedTest class >> dependencyGroup: group name: de
 MooseNexusMavenProjectParameterizedTest class >> initializeCase: aCase withMavenOutput: mavenOutput andDirectories: directories [
 	"Some case data is computed here instead of being hard-coded, such as paths."
 
-	| projectName dependencies projects root repositoryPath importer project projectDirectory dependencyResolutionResult |
+	| projectName dependencies projects root repositoryPath importer project projectDirectory dependencyResolutionResult repositoryBackend |
 	projectName := aCase at: #name.
 	dependencies := aCase at: #dependencies.
 	projects := aCase at: #projects.
 
 	root := 'pharo-local/nexus/tests' asFileReference.
-	projectDirectory := (root / projectName) pathString.
+	projectDirectory := (root / 'repository' / projectName) pathString.
 
 	"initialize mock Maven repository"
 	repositoryPath := (root / 'mavenRepository') ensureCreateDirectory absolutePath pathString.
@@ -212,10 +212,11 @@ MooseNexusMavenProjectParameterizedTest class >> initializeCase: aCase withMaven
 								  (MooseNexusManagedProjectImporter new sortedDependencyDescriptors: projectDependencies))) ] ].
 
 	"create the project subdirectories, mostly used to determine the language"
-	directories do: [ :path | (root / projectName / 'sources/project' / path) ensureCreateDirectory ].
+	directories do: [ :path | (root / 'repository' / projectName / 'sources/project' / path) ensureCreateDirectory ].
 
 	"initialize the MooseNexusProject and its importer"
 	project := aCase at: #project put: MooseNexusMavenProject new.
+	repositoryBackend := MooseNexusLocalRepositoryBackend directory: root.
 
 	importer := aCase at: #importer put: MooseNexusMavenProjectImporter new.
 	importer project: project.
@@ -224,7 +225,7 @@ MooseNexusMavenProjectParameterizedTest class >> initializeCase: aCase withMaven
 
 	importer parse: mavenOutput.
 	project initializeCoordinates: importer determineCoordinates.
-	project directory: projectDirectory.
+	project repositoryBackend: repositoryBackend path: projectName.
 	dependencyResolutionResult := importer resolveDependencies.
 	project dependencies: dependencyResolutionResult dependencies.
 

@@ -54,7 +54,7 @@ MooseNexusOciArtifactInstaller >> installBundleFrom: bundleDirectory in: aMooseN
 	projectDirectory / 'metadata' / 'properties.json' writeStreamDo: [ :stream | STON put: projectProperties asJsonOnStream: stream ].
 	projectDirectory / 'metadata' / 'models.json' writeStreamDo: [ :stream |
 		STON put: { manifest asDictionary } asJsonOnStream: stream ].
-	^ MooseNexusProject fromNexusDirectory: projectDirectory
+	^ MooseNexusProject fromNexusDirectory: projectDirectory inBackend: aMooseNexusRepository localProjectBackend
 ]
 
 { #category : 'private' }

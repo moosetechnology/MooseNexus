@@ -65,11 +65,11 @@ MooseNexusLocalRepositoryBackend >> group: group project: project version: versi
 	"Search the repository for the project with the specified group, project name and version."
 
 	| dir |
-	dir := directory / 'repository' / group ifAbsent: [ NotFound signal: 'Group `' , group , '`, not found in repository' ].
+	dir := self storageDirectory / group ifAbsent: [ NotFound signal: 'Group `' , group , '`, not found in repository' ].
 	dir := dir / project ifAbsent: [ NotFound signal: 'Project `' , project , '` not found in group `' , group , '`' ].
 	dir := dir / version ifAbsent: [
 		       NotFound signal: 'Version `' , version , '` not found for project `' , project , '` in group `' , group , '`' ].
-	^ MooseNexusProject fromNexusDirectory: dir
+	^ MooseNexusProject fromNexusDirectory: dir inBackend: self
 ]
 
 { #category : 'accessing' }
@@ -122,22 +122,53 @@ MooseNexusLocalRepositoryBackend >> printProjects [
 ]
 
 { #category : 'enumerating' }
-MooseNexusLocalRepositoryBackend >> projectProperties [
-	"Returns the properties files of all managed projects."
+MooseNexusLocalRepositoryBackend >> projectDirectories [
+	"Returns the directories of all projects recorded by this repository."
 
-	| properties |
-	properties := OrderedCollection new.
-	(directory / 'repository') directories do: [ :groupDirectory |
+	| directories |
+	directories := OrderedCollection new.
+	self storageDirectory directories do: [ :groupDirectory |
 			groupDirectory directories do: [ :nameDirectory |
-				nameDirectory directories do: [ :versionDirectory | properties add: versionDirectory / 'metadata' / 'properties.json' ] ] ].
-	^ properties
+				nameDirectory directories do: [ :versionDirectory | directories add: versionDirectory ] ] ].
+	^ directories
+]
+
+{ #category : 'enumerating' }
+MooseNexusLocalRepositoryBackend >> projectDirectoryFor: aMooseNexusProject [
+
+	^ self storageDirectory / aMooseNexusProject repositoryPath
+]
+
+{ #category : 'enumerating' }
+MooseNexusLocalRepositoryBackend >> projectPathFor: aMooseNexusProjectSpec [
+
+	^ String streamContents: [ :stream |
+			  stream
+				  nextPutAll: aMooseNexusProjectSpec group;
+				  nextPut: $/;
+				  nextPutAll: aMooseNexusProjectSpec name;
+				  nextPut: $/;
+				  nextPutAll: aMooseNexusProjectSpec version ]
+]
+
+{ #category : 'enumerating' }
+MooseNexusLocalRepositoryBackend >> projectPathForDirectory: projectDirectory [
+
+	^ (projectDirectory relativeTo: self storageDirectory) pathString
+]
+
+{ #category : 'enumerating' }
+MooseNexusLocalRepositoryBackend >> projectProperties [
+	"Returns the properties files of all projects recorded by this repository."
+
+	^ self projectDirectories collect: [ :projectDirectory | projectDirectory / 'metadata' / 'properties.json' ]
 ]
 
 { #category : 'enumerating' }
 MooseNexusLocalRepositoryBackend >> projects [
-	"Returns all the projects managed by this repository."
+	"Returns all the projects recorded by this repository."
 
-	^ self projectProperties collect: [ :properties | MooseNexusProject fromProperties: properties ]
+	^ self projectDirectories collect: [ :projectDirectory | MooseNexusProject fromNexusDirectory: projectDirectory inBackend: self ]
 ]
 
 { #category : 'adding' }
@@ -151,7 +182,7 @@ MooseNexusLocalRepositoryBackend >> recordLoadedProject: project describedBy: aM
 				Error signal: 'Cannot record a MooseNexus project with coordinates different from its spec' ] ].
 	projectDirectory := self prepareDirectoryFor: aMooseNexusProjectSpec.
 	metadataDirectory := projectDirectory / 'metadata'.
-	project directory: (projectDirectory relativeTo: FileLocator home) pathString.
+	project repositoryBackend: self path: (self projectPathFor: aMooseNexusProjectSpec).
 
 	aMooseNexusProjectSpec sourceDirectory copyAllTo: projectDirectory / 'sources' / 'project'.
 	(metadataDirectory / 'properties.json') ensureCreateFile writeStreamDo: [ :stream | project writePropertiesOn: stream ].
@@ -163,7 +194,13 @@ MooseNexusLocalRepositoryBackend >> recordLoadedProject: project describedBy: aM
 { #category : 'enumerating' }
 MooseNexusLocalRepositoryBackend >> resolveDirectoryFor: aMooseNexusProjectSpec [
 
-	^ directory / 'repository' / aMooseNexusProjectSpec group / aMooseNexusProjectSpec name / aMooseNexusProjectSpec version
+	^ self storageDirectory / (self projectPathFor: aMooseNexusProjectSpec)
+]
+
+{ #category : 'enumerating' }
+MooseNexusLocalRepositoryBackend >> storageDirectory [
+
+	^ directory / 'repository'
 ]
 
 { #category : 'artifacts' }

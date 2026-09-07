@@ -22,3 +22,15 @@ MooseNexusRepositoryBackend >> artifactExistsAt: repositoryRelativePath [
 
 	self subclassResponsibility
 ]
+
+{ #category : 'enumerating' }
+MooseNexusRepositoryBackend >> projectDirectoryFor: aMooseNexusProject [
+
+	Error signal: 'Repository backend does not expose local project directories'
+]
+
+{ #category : 'enumerating' }
+MooseNexusRepositoryBackend >> projectPathForDirectory: projectDirectory [
+
+	Error signal: 'Repository backend does not expose local project directories'
+]

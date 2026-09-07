@@ -12,17 +12,39 @@ Class {
 	#package : 'MooseNexus-Tests'
 }
 
+{ #category : 'helpers' }
+MooseNexusModelBuilderTest >> modelArtifactNamed: modelName [
+
+	^ MooseNexusModelArtifact
+		  artifactCoordinates: (MooseNexusModelArtifactCoordinates
+				   projectCoordinates: project coordinates
+				   name: modelName
+				   format: 'json'
+				   metamodel: 'unknown'
+				   classifier: 'main')
+		  path: (String streamContents: [ :stream |
+					   stream
+						   nextPutAll: 'artifacts/models/';
+						   nextPutAll: modelName;
+						   nextPutAll: '.json' ])
+		  comment: ''
+		  timestamp: '2026-09-07T00:00:00+02:00'
+]
+
 { #category : 'running' }
 MooseNexusModelBuilderTest >> setUp [
 
+	| repositoryBackend projectDirectory |
 	super setUp.
 	rootDirectory := FileLocator temp / ('MooseNexus-' , UUID new asString).
-	(rootDirectory / 'sources') ensureCreateDirectory.
-	(rootDirectory / 'artifacts' / 'models') ensureCreateDirectory.
-	(rootDirectory / 'metadata') ensureCreateDirectory.
-	rootDirectory / 'metadata' / 'models.json' writeStreamDo: [ :stream | stream nextPutAll: '[]' ].
+	projectDirectory := rootDirectory / 'repository' / 'com.example' / 'demo' / '1.0.0'.
+	(projectDirectory / 'sources') ensureCreateDirectory.
+	(projectDirectory / 'artifacts' / 'models') ensureCreateDirectory.
+	(projectDirectory / 'metadata') ensureCreateDirectory.
+	projectDirectory / 'metadata' / 'models.json' writeStreamDo: [ :stream | stream nextPutAll: '[]' ].
+	repositoryBackend := MooseNexusLocalRepositoryBackend directory: rootDirectory.
 	project := MooseNexusTestProject coordinates: (MooseNexusCoordinates group: 'com.example' name: 'demo' version: '1.0.0').
-	project directory: (rootDirectory relativeTo: FileLocator home) pathString
+	project repositoryBackend: repositoryBackend path: 'com.example/demo/1.0.0'
 ]
 
 { #category : 'running' }
@@ -137,6 +159,19 @@ MooseNexusModelBuilderTest >> testBuildSpecKeepsModelBuilderDefaultsWhenOptionsA
 ]
 
 { #category : 'tests' }
+MooseNexusModelBuilderTest >> testImportModelStoresRepositorySourceDirectoryAsRootFolder [
+
+	| modelFile artifact importedModel |
+	modelFile := project repositoryDirectory / 'artifacts' / 'models' / 'demo-model.json'.
+	modelFile writeStreamDo: [ :stream | FamixJavaModel new exportToJSONStream: stream ].
+	artifact := self modelArtifactNamed: 'demo-model'.
+
+	importedModel := project importModel: artifact.
+
+	[ self assert: importedModel rootFolder pathString equals: project sourceDirectory pathString ] ensure: [ importedModel remove ]
+]
+
+{ #category : 'tests' }
 MooseNexusModelBuilderTest >> testModelArtifactCoordinatesAreValueObjects [
 
 	| coordinates sameCoordinates otherCoordinates |
@@ -235,15 +270,16 @@ MooseNexusModelBuilderTest >> testModelArtifactManifestDictionaryRoundTrip [
 { #category : 'tests' }
 MooseNexusModelBuilderTest >> testRegisterModelCopiesOutputIntoModelArtifactPayloadDirectory [
 
-	| builder source target models modelArtifact serializedModels serializedManifest serializedArtifact artifactCoordinates generatedFile |
-	source := rootDirectory / 'sources' / 'mooseNexusModel.json'.
+	| builder source target models modelArtifact serializedModels serializedManifest serializedArtifact artifactCoordinates generatedFile projectDirectory |
+	projectDirectory := project repositoryDirectory.
+	source := projectDirectory / 'sources' / 'mooseNexusModel.json'.
 	source writeStreamDo: [ :stream | stream nextPutAll: '{ }' ].
 	builder := MooseNexusModelBuilder on: project.
 	builder modelName: 'demo-model'.
 
 	modelArtifact := builder registerModel: 'sources/mooseNexusModel.json'.
 
-	target := rootDirectory / 'artifacts' / 'models' / 'demo-model.json'.
+	target := projectDirectory / 'artifacts' / 'models' / 'demo-model.json'.
 	self deny: source exists.
 	self assert: target exists.
 	self assert: target contents equals: '{ }'.
@@ -256,7 +292,7 @@ MooseNexusModelBuilderTest >> testRegisterModelCopiesOutputIntoModelArtifactPayl
 	models := project models.
 	self assert: models size equals: 1.
 	self assert: models first equals: modelArtifact.
-	serializedModels := rootDirectory / 'metadata' / 'models.json' readStreamDo: [ :stream | STON fromStream: stream ].
+	serializedModels := projectDirectory / 'metadata' / 'models.json' readStreamDo: [ :stream | STON fromStream: stream ].
 	self assert: serializedModels size equals: 1.
 	serializedManifest := serializedModels first.
 	serializedArtifact := serializedManifest at: 'modelArtifact'.
