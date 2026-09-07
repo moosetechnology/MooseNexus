@@ -127,6 +127,12 @@ spec extractor: MooseNexusLocalVerveineJRunner new.
 
 The extractor must validate its requirements and produce a model file under the recorded project's repository directory.
 
+## Model Import
+
+`project importModel` imports a recorded model artifact into the Pharo image and registers it in `MooseModel root`.
+
+The imported Moose model root folder is the recorded project's `sourceDirectory`. That directory is resolved by the repository backend that hosts the project, so the same project can use the default repository under the user's MooseNexus home, a custom local repository, or an image-relative local repository.
+
 ## Execution
 
 Execute in the default repository:

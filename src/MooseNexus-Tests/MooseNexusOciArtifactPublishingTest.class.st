@@ -65,19 +65,20 @@ MooseNexusOciArtifactPublishingTest >> repositoryDirectoryForTestRepository: aMo
 { #category : 'running' }
 MooseNexusOciArtifactPublishingTest >> setUp [
 
-	| repositoryDirectory modelFile |
+	| repositoryDirectory modelFile repositoryBackend |
 	super setUp.
 	rootDirectory := FileLocator temp / ('MooseNexus-' , UUID new asString).
 	repositoryDirectory := rootDirectory / 'repository' / 'com.example' / 'demo' / '1.0.0'.
+	(repositoryDirectory / 'metadata') ensureCreateDirectory.
 	(repositoryDirectory / 'sources' / 'project' / 'src') ensureCreateDirectory.
 	(repositoryDirectory / 'artifacts' / 'models') ensureCreateDirectory.
-	(repositoryDirectory / 'metadata') ensureCreateDirectory.
 	repositoryDirectory / 'sources' / 'project' / 'src' / 'Demo.java' writeStreamDo: [ :stream | stream nextPutAll: 'class Demo { }' ].
 	modelFile := repositoryDirectory / 'artifacts' / 'models' / 'demo-model.json'.
 	modelFile writeStreamDo: [ :stream | stream nextPutAll: '{ }' ].
+	repositoryBackend := MooseNexusLocalRepositoryBackend directory: rootDirectory.
 	project := MooseNexusTestProject coordinates: (MooseNexusCoordinates group: 'com.example' name: 'demo' version: '1.0.0').
 	project
-		directory: (repositoryDirectory relativeTo: FileLocator home) pathString;
+		repositoryBackend: repositoryBackend path: 'com.example/demo/1.0.0';
 		dependencies: #(  ).
 	manifest := self manifestForModelPath: 'artifacts/models/demo-model.json'
 ]

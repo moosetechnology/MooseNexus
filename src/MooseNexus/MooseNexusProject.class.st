@@ -1,5 +1,5 @@
 "
-I represent a MooseNexus project loaded in memory or recorded in a repository.
+I represent a MooseNexus project after its identity and resolved dependencies have been determined.
 
 My properties follow this mapping:
 ```text
@@ -12,9 +12,11 @@ version:               <version>
 resolvedDependencies:  <serializedResolvedDependencySet>
 ```
 The schema version identifies the persisted properties format.
-The nature corresponds to the concrete subclass of MooseNexusProject that handles the source project.
+The nature corresponds to the concrete subclass of MooseNexusProject that handles managed or unmanaged project behavior.
 The group, name, and version are the coordinates that identify the source project as modeled by MooseNexus.
 Resolved dependencies are the exact dependency descriptors selected for this project build.
+
+A recorded project keeps its repositoryPath relative to the backend storage layout that hosts it, for example `<group>/<name>/<version>`. The repository backend owns the repository root, the storage layout segment such as `repository`, and the resolution to concrete filesystem locations.
 
 Use MooseNexusBuildSpec to describe build-time intent and MooseNexusProjectSpec for the narrower source-project coordinates and directory. Coordinate inference belongs to importers; this object only carries the coordinates it was initialized with.
 "
@@ -23,8 +25,9 @@ Class {
 	#superclass : 'Object',
 	#instVars : [
 		'coordinates',
-		'directory',
-		'resolvedDependencySet'
+		'resolvedDependencySet',
+		'repositoryBackend',
+		'repositoryPath'
 	],
 	#category : 'MooseNexus-Project',
 	#package : 'MooseNexus',
@@ -38,9 +41,11 @@ MooseNexusProject class >> coordinates: aMooseNexusCoordinates [
 ]
 
 { #category : 'instance creation' }
-MooseNexusProject class >> fromNexusDirectory: directory [
+MooseNexusProject class >> fromNexusDirectory: projectDirectory inBackend: aMooseNexusRepositoryBackend [
 
-	^ (self fromProperties: directory / 'metadata' / 'properties.json') directory: (directory relativeTo: FileLocator home) pathString
+	^ (self fromProperties: projectDirectory / 'metadata' / 'properties.json')
+		  repositoryBackend: aMooseNexusRepositoryBackend
+		  path: (aMooseNexusRepositoryBackend projectPathForDirectory: projectDirectory)
 ]
 
 { #category : 'instance creation' }
@@ -118,18 +123,6 @@ MooseNexusProject >> dependencies: aCollection [
 ]
 
 { #category : 'accessing' }
-MooseNexusProject >> directory [
-
-	^ directory
-]
-
-{ #category : 'accessing' }
-MooseNexusProject >> directory: pathString [
-
-	directory := pathString
-]
-
-{ #category : 'accessing' }
 MooseNexusProject >> group [
 
 	^ self coordinates group
@@ -155,11 +148,11 @@ MooseNexusProject >> importModel: aMooseNexusModelArtifact [
 
 	FamixJSONFileImporter new
 		model: model;
-		inputFile: FileLocator home / directory / aMooseNexusModelArtifact path;
+		inputFile: self repositoryDirectory / aMooseNexusModelArtifact path;
 		runFilteredBy: FamixJavaImportingContext new importMaximum.
 
 	model install. "add to MooseModel root"
-	model rootFolder: (FileLocator home / directory / 'sources') absolutePath pathString.
+	model rootFolder: self sourceDirectory.
 	^ model
 ]
 
@@ -180,7 +173,7 @@ MooseNexusProject >> isManagedProject [
 { #category : 'testing' }
 MooseNexusProject >> isRecorded [
 
-	^ directory notNil
+	^ repositoryBackend notNil and: [ repositoryPath notNil ]
 ]
 
 { #category : 'accessing' }
@@ -281,10 +274,41 @@ MooseNexusProject >> readProperties: properties [
 		ifPresent: [ :deps | resolvedDependencySet := self resolvedDependencySetFromProperties: deps ]
 ]
 
+{ #category : 'accessing' }
+MooseNexusProject >> repositoryBackend [
+
+	^ repositoryBackend ifNil: [ Error signal: 'MooseNexus project is not attached to a repository backend' ]
+]
+
+{ #category : 'accessing' }
+MooseNexusProject >> repositoryBackend: aMooseNexusRepositoryBackend [
+
+	repositoryBackend := aMooseNexusRepositoryBackend
+]
+
+{ #category : 'accessing' }
+MooseNexusProject >> repositoryBackend: aMooseNexusRepositoryBackend path: repositoryPathString [
+
+	repositoryBackend := aMooseNexusRepositoryBackend.
+	repositoryPath := repositoryPathString
+]
+
 { #category : 'enumerating' }
 MooseNexusProject >> repositoryDirectory [
 
-	^ FileLocator home / directory
+	^ self repositoryBackend projectDirectoryFor: self
+]
+
+{ #category : 'accessing' }
+MooseNexusProject >> repositoryPath [
+
+	^ repositoryPath
+]
+
+{ #category : 'accessing' }
+MooseNexusProject >> repositoryPath: repositoryPathString [
+
+	repositoryPath := repositoryPathString
 ]
 
 { #category : 'accessing' }
