@@ -334,9 +334,7 @@ MooseNexusModelBuilderTest >> testProjectRecordsImageArtifactsByNameAndModelArti
 MooseNexusModelBuilderTest >> testRebaseLoadedModelNamedUsesRepositorySourceDirectory [
 
 	| model |
-	model := FamixJavaModel new
-		         name: 'demo-model';
-		         yourself.
+	model := FamixJavaModel named: 'demo-model'.
 	model install.
 	model rootFolder: rootDirectory.
 

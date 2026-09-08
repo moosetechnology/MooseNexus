@@ -177,9 +177,7 @@ MooseNexusProject >> importModel: aMooseNexusModelArtifact [
 
 	| model |
 	self validateModelImportRequirements.
-	model := FamixJavaModel new
-		         name: aMooseNexusModelArtifact name;
-		         yourself.
+	model := FamixJavaModel named: aMooseNexusModelArtifact name.
 
 	FamixJSONFileImporter new
 		model: model;
