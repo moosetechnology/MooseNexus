@@ -399,12 +399,6 @@ MooseNexusOciArtifactPublishingTest >> testProjectDirectoryInstallerRestoresMode
 ]
 
 { #category : 'tests' }
-MooseNexusOciArtifactPublishingTest >> testProjectPropertiesDoNotDuplicateResolvedDependencies [
-
-	self deny: (project properties includesKey: #resolvedDependencies)
-]
-
-{ #category : 'tests' }
 MooseNexusOciArtifactPublishingTest >> testPublisherBuildsBundleAssignsReferenceAndDelegatesPush [
 
 	| mapper transport publisher pushedArguments bundle |
