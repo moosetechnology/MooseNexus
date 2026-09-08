@@ -361,6 +361,37 @@ MooseNexusOciArtifactPublishingTest >> testOrasTransportSignalsPushFailure [
 ]
 
 { #category : 'tests' }
+MooseNexusOciArtifactPublishingTest >> testProjectDirectoryInstallerForceReplacesADifferentManifest [
+
+	| incomingDirectory repository projectDirectory imageArtifact incomingManifest generatedFile |
+	incomingDirectory := rootDirectory / 'incoming-project'.
+	imageArtifact := MooseNexusImageArtifact named: 'demo-image' forModelArtifactNamed: 'demo-model'.
+	self writePortableProjectAt: incomingDirectory imageArtifact: imageArtifact.
+	repository := MooseNexusRepository new directory: rootDirectory / 'installed'.
+	MooseNexusProjectDirectoryInstaller new installProjectDirectory: incomingDirectory in: repository.
+	generatedFile := Dictionary new
+		                 add: 'path' -> 'artifacts/models/demo-model.json';
+		                 add: 'size' -> 12;
+		                 add: 'checksumAlgorithm' -> 'sha256';
+		                 add: 'checksum' -> 'new checksum';
+		                 yourself.
+	incomingManifest := MooseNexusModelArtifactManifest
+		                    modelArtifact: manifest modelArtifact
+		                    dependencyResolutionResult: manifest dependencyResolutionResult
+		                    generatedFiles: { generatedFile }
+		                    createdTimestamp: manifest createdTimestamp.
+	incomingDirectory / 'metadata' / 'models.json' writeStreamDo: [ :stream |
+		STON put: { incomingManifest asDictionary } asJsonOnStream: stream ].
+	incomingDirectory / 'artifacts' / 'models' / 'demo-model.json' writeStreamDo: [ :stream | stream nextPutAll: 'new model' ].
+
+	MooseNexusProjectDirectoryInstaller new installProjectDirectory: incomingDirectory in: repository force: true.
+
+	projectDirectory := self repositoryDirectoryForTestRepository: repository.
+	self assert: repository projects first modelManifests equals: { incomingManifest }.
+	self assert: (projectDirectory / 'artifacts' / 'models' / 'demo-model.json') contents equals: 'new model'
+]
+
+{ #category : 'tests' }
 MooseNexusOciArtifactPublishingTest >> testProjectDirectoryInstallerForceReplacesIdenticalArtifacts [
 
 	| incomingDirectory repository projectDirectory imageArtifact |

@@ -1,7 +1,7 @@
 "
 I merge a portable MooseNexus project directory into a local repository.
 
-I preserve existing project sources and merge models and image artifacts by their recorded names. Identical incoming artifacts are retained unless the caller explicitly forces replacement; incompatible artifacts with the same name are rejected.
+I preserve existing project sources and merge models and image artifacts by their recorded names. A conflicting artifact is rejected by default. Callers may explicitly force replacement of the recorded artifact with the same name.
 "
 Class {
 	#name : 'MooseNexusProjectDirectoryInstaller',
@@ -62,7 +62,7 @@ MooseNexusProjectDirectoryInstaller >> installModelManifest: incomingManifest fr
 			project addModelManifest: incomingManifest.
 			^ self ].
 	(existingManifest hasSameMetadataAs: incomingManifest) ifFalse: [
-		Error signal: 'Cannot merge MooseNexus model artifact with a different manifest: ' , modelArtifact name ].
+		shouldForce ifFalse: [ Error signal: 'Cannot merge MooseNexus model artifact with a different manifest: ' , modelArtifact name ] ].
 	shouldForce ifTrue: [
 			self copyFile: incomingDirectory / modelArtifact path to: project repositoryDirectory / modelArtifact path.
 			project replaceModelManifest: incomingManifest ]

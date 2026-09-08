@@ -86,13 +86,13 @@ MooseNexusOciArtifactInstaller >> installManifest: incomingManifest from: bundle
 			self copyModelPayloadFrom: bundleDirectory describedBy: incomingManifest to: project repositoryDirectory.
 			project addModelManifest: incomingManifest.
 			^ self ].
-
 	(existingManifest hasSameMetadataAs: incomingManifest) ifFalse: [
-		Error signal: 'Cannot merge pulled MooseNexus model artifact with a different manifest: ' , incomingManifest modelArtifact name ].
-
-	shouldForce ifFalse: [ ^ self ].
-	self copyModelPayloadFrom: bundleDirectory describedBy: incomingManifest to: project repositoryDirectory.
-	project replaceModelManifest: incomingManifest
+			shouldForce ifFalse: [
+				Error signal:
+					'Cannot merge pulled MooseNexus model artifact with a different manifest: ' , incomingManifest modelArtifact name ] ].
+	shouldForce ifTrue: [
+			self copyModelPayloadFrom: bundleDirectory describedBy: incomingManifest to: project repositoryDirectory.
+			project replaceModelManifest: incomingManifest ]
 ]
 
 { #category : 'private' }
