@@ -441,6 +441,12 @@ MooseNexusOciArtifactPublishingTest >> testProjectDirectoryInstallerRestoresMode
 ]
 
 { #category : 'tests' }
+MooseNexusOciArtifactPublishingTest >> testProjectWithoutImageArtifactsAnswersEmpty [
+
+	self assert: project imageArtifacts isEmpty
+]
+
+{ #category : 'tests' }
 MooseNexusOciArtifactPublishingTest >> testPublisherBuildsBundleAssignsReferenceAndDelegatesPush [
 
 	| mapper transport publisher pushedArguments bundle |
