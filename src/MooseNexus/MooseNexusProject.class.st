@@ -177,7 +177,7 @@ MooseNexusProject >> importModel: aMooseNexusModelArtifact [
 
 	| model |
 	self validateModelImportRequirements.
-	model := FamixJavaModel new.
+	model := FamixJavaModel named: aMooseNexusModelArtifact name.
 
 	FamixJSONFileImporter new
 		model: model;
@@ -214,6 +214,13 @@ MooseNexusProject >> language [
 	"Subclasses must return a lowercase string of the project's language name."
 
 	self subclassResponsibility
+]
+
+{ #category : 'enumerating' }
+MooseNexusProject >> mainSourceDirectory [
+	"The directory containing the source tree of the main project represented by these coordinates."
+
+	^ self sourceDirectory / 'main'
 ]
 
 { #category : 'enumerating' }
@@ -275,13 +282,6 @@ MooseNexusProject >> printOn: stream [
 ]
 
 { #category : 'enumerating' }
-MooseNexusProject >> projectSourceDirectory [
-	"The directory containing all of the original project sources."
-
-	^ self sourceDirectory / 'project'
-]
-
-{ #category : 'enumerating' }
 MooseNexusProject >> properties [
 	"Gather the project identity shared by all model artifacts."
 
@@ -307,6 +307,18 @@ MooseNexusProject >> readProperties: properties [
 	self validatePropertiesSchemaVersion: properties.
 	self initializeCoordinates:
 		(MooseNexusCoordinates group: (properties at: #group) name: (properties at: #name) version: (properties at: #version))
+]
+
+{ #category : 'setup' }
+MooseNexusProject >> rebaseLoadedModelNamed: modelName [
+	"Update the source root of the named model already loaded in the current image."
+
+	| model |
+	model := MooseModel root allModels
+		         detect: [ :each | each name = modelName ]
+		         ifNone: [ Error signal: ('Cannot rebase missing loaded MooseNexus model: {1}' format: { modelName }) ].
+	model rootFolder: self sourceDirectory.
+	^ model
 ]
 
 { #category : 'adding' }

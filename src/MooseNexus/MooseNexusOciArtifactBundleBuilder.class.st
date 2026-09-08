@@ -94,7 +94,7 @@ MooseNexusOciArtifactBundleBuilder >> archiveSourceTo: archiveFile [
 
 	| archive |
 	archive := ZipArchive new.
-	archive addTree: project projectSourceDirectory relativeTo: project sourceDirectory match: [ :entry | true ].
+	archive addTree: project sourceDirectory relativeTo: project sourceDirectory match: [ :entry | true ].
 	archive writeToFile: archiveFile.
 	^ archiveFile
 ]
