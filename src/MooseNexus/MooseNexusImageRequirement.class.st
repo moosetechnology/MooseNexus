@@ -26,6 +26,8 @@ MooseNexusImageRequirement >> validate [
 
 	| available versionDetails |
 	available := availabilityValidation value.
-	versionDetails := available ifTrue: [ versionValidation value asString ] ifFalse: [ '' ].
+	versionDetails := available
+		                  ifTrue: [ versionValidation value asString ]
+		                  ifFalse: [ '' ].
 	^ self validationResultAvailable: available details: available asString versionDetails: versionDetails
 ]

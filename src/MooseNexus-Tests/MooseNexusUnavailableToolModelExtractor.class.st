@@ -21,11 +21,11 @@ MooseNexusUnavailableToolModelExtractor >> didRun [
 { #category : 'capabilities' }
 MooseNexusUnavailableToolModelExtractor >> requirements [
 
-	^ { MooseNexusImageRequirement
-		    name: 'Unavailable test extractor tool'
-		    availabilityValidation: [ false ]
-		    versionValidation: [ '' ]
-		    expectedVersionDescription: 'available test extractor tool' }
+	^ { (MooseNexusImageRequirement
+		   name: 'Unavailable test extractor tool'
+		   availabilityValidation: [ false ]
+		   versionValidation: [ '' ]
+		   expectedVersionDescription: 'available test extractor tool') }
 ]
 
 { #category : 'running' }

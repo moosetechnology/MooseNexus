@@ -41,8 +41,8 @@ MooseNexusRequirementValidationResult class >> requirement: aMooseNexusRequireme
 MooseNexusRequirementValidationResult >> = anObject [
 
 	^ self class = anObject class and: [
-		  anObject requirement = requirement and: [
-			  anObject available = available and: [ anObject details = details and: [ anObject versionDetails = versionDetails ] ] ] ]
+			  anObject requirement = requirement and: [
+				  anObject available = available and: [ anObject details = details and: [ anObject versionDetails = versionDetails ] ] ] ]
 ]
 
 { #category : 'accessing' }

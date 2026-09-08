@@ -26,9 +26,7 @@ MooseNexusProjectSpec class >> coordinates: coordinates sourceDirectory: sourceD
 { #category : 'instance creation' }
 MooseNexusProjectSpec class >> group: group projectName: projectName version: version sourceDirectory: sourceDirectory [
 
-	^ self
-		  coordinates: (MooseNexusCoordinates group: group name: projectName version: version)
-		  sourceDirectory: sourceDirectory
+	^ self coordinates: (MooseNexusCoordinates group: group name: projectName version: version) sourceDirectory: sourceDirectory
 ]
 
 { #category : 'accessing' }
