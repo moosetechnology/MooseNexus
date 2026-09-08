@@ -12,7 +12,6 @@ A build spec combines:
 - project import strategy, either autodetected or explicitly configured;
 - dependency-resolution options;
 - model extraction options;
-- the Moose runtime version used to produce the model artifact;
 - the repository where the project and model artifact are recorded.
 
 The build lifecycle is:
@@ -48,7 +47,6 @@ spec := MooseNexusBuildSpec
 spec
 	modelName: 'demo-model';
 	modelComment: 'Generated from the managed source project';
-	mooseVersion: '12.0.0';
 	withDependencies: false.
 
 result := spec executeIn: repository.
@@ -87,7 +85,6 @@ spec := MooseNexusBuildSpec
 spec
 	projectImporter: importer;
 	modelName: 'demo-model';
-	mooseVersion: '12.0.0';
 	withDependencies: false.
 
 result := spec executeIn: repository.
@@ -97,13 +94,9 @@ result := spec executeIn: repository.
 
 ## Build Runtime
 
-Every recorded model artifact includes build provenance: the MooseNexus, Moose, and Pharo versions that produced it. MooseNexus obtains its own version and the Pharo version from the running image. Set `mooseVersion:` explicitly because Moose does not yet expose a stable runtime version API:
+Every recorded model artifact includes build provenance: the MooseNexus, Moose, and Pharo versions that produced it. MooseNexus obtains all three from the running image, including the Moose version through `MooseVersion current versionNumber`.
 
-```st
-spec mooseVersion: '12.0.0'.
-```
-
-This is required even for builds executed directly in an image. It lets artifact consumers select an exact compatible runtime instead of interpreting model metadata with an arbitrary MooseNexus release.
+This lets artifact consumers select an exact compatible runtime instead of interpreting model metadata with an arbitrary MooseNexus release.
 
 ## Unmanaged Dependencies
 

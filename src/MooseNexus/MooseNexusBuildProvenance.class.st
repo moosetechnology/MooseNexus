@@ -1,7 +1,7 @@
 "
 I describe the MooseNexus, Moose, and Pharo runtime that produced a model artifact.
 
-I am persisted in a model artifact manifest so a client can provision a known compatible runtime before installing the artifact. MooseNexus and Pharo versions come from the running image. The caller supplies the Moose version because it is not yet available from a stable Moose runtime API.
+I am persisted in a model artifact manifest so a client can provision a known compatible runtime before installing the artifact. I derive every version from the running image, keeping recorded provenance aligned with the runtime that actually built the model.
 "
 Class {
 	#name : 'MooseNexusBuildProvenance',
@@ -17,13 +17,11 @@ Class {
 }
 
 { #category : 'instance creation' }
-MooseNexusBuildProvenance class >> currentWithMooseVersion: aMooseVersion [
-
-	aMooseVersion ifNil: [ Error signal: 'Moose version is required to record a model artifact' ].
+MooseNexusBuildProvenance class >> current [
 
 	^ self
 		  mooseNexusVersion: MooseNexusVersion current
-		  mooseVersion: aMooseVersion
+		  mooseVersion: MooseVersion current versionNumber
 		  pharoVersion: SystemVersion current major asString
 ]
 

@@ -59,8 +59,7 @@ spec := MooseNexusBuildSpec
 	coordinates: coordinates
 	sourceDirectory: '/path/to/source/project' asFileReference.
 spec
-	modelName: 'demo-model';
-	mooseVersion: '12.0.0'.
+	modelName: 'demo-model'.
 
 result := spec execute.
 

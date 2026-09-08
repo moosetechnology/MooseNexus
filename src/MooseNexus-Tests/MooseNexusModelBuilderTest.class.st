@@ -72,7 +72,6 @@ MooseNexusModelBuilderTest >> testBuildSpecConfiguresModelBuilder [
 		withDependencies: false;
 		modelName: 'configured-model';
 		modelComment: 'configured comment';
-		mooseVersion: '12.0.0';
 		extractor: extractor.
 	builder := MooseNexusModelBuilder on: project.
 
@@ -83,7 +82,7 @@ MooseNexusModelBuilderTest >> testBuildSpecConfiguresModelBuilder [
 	self assert: builder modelName equals: 'configured-model'.
 	self assert: builder modelComment equals: 'configured comment'.
 	self assert: builder extractor identicalTo: extractor.
-	self assert: builder buildProvenance mooseVersion equals: '12.0.0'.
+	self assert: builder buildProvenance mooseVersion equals: MooseVersion current versionNumber.
 	self assert: builder buildProvenance mooseNexusVersion equals: MooseNexusVersion current.
 	self assert: builder buildProvenance pharoVersion equals: SystemVersion current major asString
 ]
@@ -98,7 +97,6 @@ MooseNexusModelBuilderTest >> testBuildSpecExecutesPlanAndAnswersModelBuildResul
 	spec
 		withDependencies: false;
 		modelName: 'planned-model';
-		mooseVersion: '12.0.0';
 		extractor: MooseNexusTestModelExtractor new.
 
 	plan := spec planIn: (MooseNexusRepository new directory: rootDirectory / 'nexus').
@@ -115,7 +113,7 @@ MooseNexusModelBuilderTest >> testBuildSpecExecutesPlanAndAnswersModelBuildResul
 	self assert: result modelArtifact path equals: 'artifacts/models/planned-model.json'.
 	self assert: result modelName equals: 'planned-model'.
 	self assert: result modelFormat equals: 'json'.
-	self assert: result project modelManifests first buildProvenance mooseVersion equals: '12.0.0'.
+	self assert: result project modelManifests first buildProvenance mooseVersion equals: MooseVersion current versionNumber.
 	self assert: modelFile exists.
 	self assert: modelFile contents equals: '{ }'
 ]
@@ -138,7 +136,6 @@ MooseNexusModelBuilderTest >> testBuildSpecExecutesUnmanagedProjectPlan [
 		projectImporter: importer;
 		withDependencies: false;
 		modelName: 'unmanaged-model';
-		mooseVersion: '12.0.0';
 		extractor: MooseNexusTestModelExtractor new.
 
 	plan := spec planIn: (MooseNexusRepository new directory: rootDirectory / 'nexus').
@@ -155,7 +152,7 @@ MooseNexusModelBuilderTest >> testBuildSpecExecutesUnmanagedProjectPlan [
 	self assert: result dependencyResolutionResult dependencies equals: { dependency }.
 	self assert: result modelName equals: 'unmanaged-model'.
 	self assert: result modelArtifact path equals: 'artifacts/models/unmanaged-model.json'.
-	self assert: result project modelManifests first buildProvenance mooseVersion equals: '12.0.0'.
+	self assert: result project modelManifests first buildProvenance mooseVersion equals: MooseVersion current versionNumber.
 	self assert: modelFile exists.
 	self assert: modelFile contents equals: '{ }'
 ]
@@ -165,7 +162,6 @@ MooseNexusModelBuilderTest >> testBuildSpecKeepsModelBuilderDefaultsWhenOptionsA
 
 	| spec builder |
 	spec := MooseNexusBuildSpec projectSpec: (MooseNexusProjectSpec coordinates: project coordinates sourceDirectory: rootDirectory).
-	spec mooseVersion: '12.0.0'.
 	builder := MooseNexusModelBuilder on: project.
 
 	spec configureModelBuilder: builder.
@@ -174,20 +170,6 @@ MooseNexusModelBuilderTest >> testBuildSpecKeepsModelBuilderDefaultsWhenOptionsA
 	self deny: builder withDependencies.
 	self assert: builder modelName equals: project name.
 	self assert: builder modelComment equals: ''
-]
-
-{ #category : 'tests' }
-MooseNexusModelBuilderTest >> testBuildSpecRequiresMooseVersionWhenConfiguringModelBuilder [
-
-	| spec builder |
-	spec := MooseNexusBuildSpec projectSpec: (MooseNexusProjectSpec coordinates: project coordinates sourceDirectory: rootDirectory).
-	builder := MooseNexusModelBuilder on: project.
-
-	self
-		should: [ spec configureModelBuilder: builder ]
-		raise: Error
-		whoseDescriptionIncludes: 'Moose version is required to record a model artifact'
-		description: 'Build specs must identify the Moose runtime used to produce model artifacts'
 ]
 
 { #category : 'tests' }
