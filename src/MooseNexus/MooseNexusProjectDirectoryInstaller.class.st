@@ -67,7 +67,7 @@ MooseNexusProjectDirectoryInstaller >> installModelManifest: incomingManifest fr
 			project addModelManifest: incomingManifest.
 			^ self ].
 
-	((existingManifest hasSameMetadataAs: incomingManifest) or: [ shouldForce ]) ifFalse: [
+	(shouldForce or: [ existingManifest hasSameMetadataAs: incomingManifest ]) ifFalse: [
 		Error signal: 'Cannot merge MooseNexus model artifact with a different manifest: ' , modelArtifact name ].
 
 	shouldForce ifFalse: [ ^ self ].
