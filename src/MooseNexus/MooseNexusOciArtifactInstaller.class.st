@@ -17,11 +17,14 @@ MooseNexusOciArtifactInstaller >> copyModelPayloadFrom: bundleDirectory describe
 	| modelArtifact sourceModelFile targetModelFile |
 	modelArtifact := aMooseNexusModelArtifactManifest modelArtifact.
 	sourceModelFile := bundleDirectory / ('model.' , modelArtifact format).
+
 	sourceModelFile exists ifFalse: [
 		Error signal: 'Cannot install pulled OCI artifact without model payload: ' , sourceModelFile pathString ].
+
 	targetModelFile := projectDirectory / modelArtifact path.
 	targetModelFile parent ensureCreateDirectory.
 	targetModelFile ifExists: [ targetModelFile delete ].
+
 	sourceModelFile copyTo: targetModelFile
 ]
 
@@ -82,15 +85,17 @@ MooseNexusOciArtifactInstaller >> installManifest: incomingManifest from: bundle
 
 	| existingManifest |
 	existingManifest := project modelManifestNamed: incomingManifest modelArtifact name.
+
 	existingManifest ifNil: [
 			self copyModelPayloadFrom: bundleDirectory describedBy: incomingManifest to: project repositoryDirectory.
 			project addModelManifest: incomingManifest.
 			^ self ].
 
-	(existingManifest hasSameMetadataAs: incomingManifest) ifFalse: [
+	(shouldForce or: [ existingManifest hasSameMetadataAs: incomingManifest ]) ifFalse: [
 		Error signal: 'Cannot merge pulled MooseNexus model artifact with a different manifest: ' , incomingManifest modelArtifact name ].
 
 	shouldForce ifFalse: [ ^ self ].
+
 	self copyModelPayloadFrom: bundleDirectory describedBy: incomingManifest to: project repositoryDirectory.
 	project replaceModelManifest: incomingManifest
 ]

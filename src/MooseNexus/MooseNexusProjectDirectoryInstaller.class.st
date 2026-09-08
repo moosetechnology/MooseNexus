@@ -1,7 +1,7 @@
 "
 I merge a portable MooseNexus project directory into a local repository.
 
-I preserve existing project sources and merge models and image artifacts by their recorded names. Identical incoming artifacts are retained unless the caller explicitly forces replacement; incompatible artifacts with the same name are rejected.
+I preserve existing project sources and merge models and image artifacts by their recorded names. A conflicting artifact is rejected by default. Callers may explicitly force replacement of the recorded artifact with the same name.
 "
 Class {
 	#name : 'MooseNexusProjectDirectoryInstaller',
@@ -36,19 +36,23 @@ MooseNexusProjectDirectoryInstaller >> installImageArtifact: incomingArtifact fr
 	sourceImageDirectory := incomingDirectory / 'artifacts' / 'images' / incomingArtifact name.
 	sourceImageDirectory exists ifFalse: [
 		Error signal: 'Cannot install missing MooseNexus image artifact: ' , sourceImageDirectory pathString ].
+
 	targetImageDirectory := project imageArtifactsDirectory / incomingArtifact name.
 	existingArtifact := project imageArtifacts detect: [ :artifact | artifact name = incomingArtifact name ] ifNone: [ nil ].
+
 	existingArtifact ifNil: [
 			targetImageDirectory ensureCreateDirectory.
 			sourceImageDirectory copyAllTo: targetImageDirectory.
 			project addImageArtifact: incomingArtifact.
 			^ self ].
+
 	existingArtifact = incomingArtifact ifFalse: [
 		Error signal: 'Cannot merge MooseNexus image artifact with a different model artifact: ' , incomingArtifact name ].
-	shouldForce ifTrue: [
-			targetImageDirectory ifExists: [ targetImageDirectory deleteAll ].
-			targetImageDirectory ensureCreateDirectory.
-			sourceImageDirectory copyAllTo: targetImageDirectory ]
+
+	shouldForce ifFalse: [ ^ self ].
+	targetImageDirectory ifExists: [ targetImageDirectory deleteAll ].
+	targetImageDirectory ensureCreateDirectory.
+	sourceImageDirectory copyAllTo: targetImageDirectory
 ]
 
 { #category : 'private' }
@@ -57,15 +61,18 @@ MooseNexusProjectDirectoryInstaller >> installModelManifest: incomingManifest fr
 	| existingManifest modelArtifact |
 	modelArtifact := incomingManifest modelArtifact.
 	existingManifest := project modelManifestNamed: modelArtifact name.
+
 	existingManifest ifNil: [
 			self copyFile: incomingDirectory / modelArtifact path to: project repositoryDirectory / modelArtifact path.
 			project addModelManifest: incomingManifest.
 			^ self ].
-	(existingManifest hasSameMetadataAs: incomingManifest) ifFalse: [
+
+	(shouldForce or: [ existingManifest hasSameMetadataAs: incomingManifest ]) ifFalse: [
 		Error signal: 'Cannot merge MooseNexus model artifact with a different manifest: ' , modelArtifact name ].
-	shouldForce ifTrue: [
-			self copyFile: incomingDirectory / modelArtifact path to: project repositoryDirectory / modelArtifact path.
-			project replaceModelManifest: incomingManifest ]
+
+	shouldForce ifFalse: [ ^ self ].
+	self copyFile: incomingDirectory / modelArtifact path to: project repositoryDirectory / modelArtifact path.
+	project replaceModelManifest: incomingManifest
 ]
 
 { #category : 'installing' }
@@ -81,12 +88,15 @@ MooseNexusProjectDirectoryInstaller >> installProjectDirectory: incomingDirector
 	sourceDirectory := incomingDirectory asFileReference.
 	projectProperties := self projectPropertiesFrom: sourceDirectory.
 	projectDirectory := self projectDirectoryForProperties: projectProperties in: aMooseNexusRepository.
+
 	projectDirectory exists ifFalse: [
 			projectDirectory ensureCreateDirectory.
 			sourceDirectory copyAllTo: projectDirectory.
 			^ MooseNexusProject fromNexusDirectory: projectDirectory inBackend: aMooseNexusRepository localProjectBackend ].
+
 	self validateProjectAt: projectDirectory matchesProperties: projectProperties in: aMooseNexusRepository.
 	project := MooseNexusProject fromNexusDirectory: projectDirectory inBackend: aMooseNexusRepository localProjectBackend.
+
 	self mergeProjectDirectory: sourceDirectory into: project force: shouldForce.
 	^ project
 ]
