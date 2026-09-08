@@ -63,13 +63,12 @@ MooseNexusOciArtifactInstaller >> installBundleFrom: bundleDirectory in: aMooseN
 	projectProperties := self projectPropertiesFrom: sourceDirectory.
 	self validateManifest: manifest matchesProperties: projectProperties.
 	projectDirectory := self projectDirectoryForProperties: projectProperties in: aMooseNexusRepository.
-	project := projectDirectory exists
-		           ifTrue: [
-				           self validateProjectAt: projectDirectory matchesProperties: projectProperties in: aMooseNexusRepository.
-				           MooseNexusProject fromNexusDirectory: projectDirectory inBackend: aMooseNexusRepository localProjectBackend ]
-		           ifFalse: [
-				           self initializeProjectDirectory: projectDirectory from: sourceDirectory properties: projectProperties.
-				           MooseNexusProject fromNexusDirectory: projectDirectory inBackend: aMooseNexusRepository localProjectBackend ].
+
+	projectDirectory exists
+		ifTrue: [ self validateProjectAt: projectDirectory matchesProperties: projectProperties in: aMooseNexusRepository ]
+		ifFalse: [ self initializeProjectDirectory: projectDirectory from: sourceDirectory properties: projectProperties ].
+	project := MooseNexusProject fromNexusDirectory: projectDirectory inBackend: aMooseNexusRepository localProjectBackend.
+
 	self
 		installManifest: manifest
 		from: sourceDirectory
@@ -87,11 +86,13 @@ MooseNexusOciArtifactInstaller >> installManifest: incomingManifest from: bundle
 			self copyModelPayloadFrom: bundleDirectory describedBy: incomingManifest to: project repositoryDirectory.
 			project addModelManifest: incomingManifest.
 			^ self ].
+
 	(existingManifest hasSameMetadataAs: incomingManifest) ifFalse: [
 		Error signal: 'Cannot merge pulled MooseNexus model artifact with a different manifest: ' , incomingManifest modelArtifact name ].
-	shouldForce ifTrue: [
-			self copyModelPayloadFrom: bundleDirectory describedBy: incomingManifest to: project repositoryDirectory.
-			project replaceModelManifest: incomingManifest ]
+
+	shouldForce ifFalse: [ ^ self ].
+	self copyModelPayloadFrom: bundleDirectory describedBy: incomingManifest to: project repositoryDirectory.
+	project replaceModelManifest: incomingManifest
 ]
 
 { #category : 'private' }
