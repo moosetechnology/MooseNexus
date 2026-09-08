@@ -1,20 +1,16 @@
 "
-I represent a MooseNexus project after its identity and resolved dependencies have been determined.
+I represent a MooseNexus project after its identity has been determined.
 
 My properties follow this mapping:
 ```text
-schemaVersion:         <propertiesSchemaVersion>
-language:              <language>
-nature:                <subclassOfMooseNexusProject>
-group:                 <group>
-name:                  <name>
-version:               <version>
-resolvedDependencies:  <serializedResolvedDependencySet>
+schemaVersion: <propertiesSchemaVersion>
+language:      <language>
+nature:        <subclassOfMooseNexusProject>
+group:         <group>
+name:          <name>
+version:       <version>
 ```
-The schema version identifies the persisted properties format.
-The nature corresponds to the concrete subclass of MooseNexusProject that handles managed or unmanaged project behavior.
-The group, name, and version are the coordinates that identify the source project as modeled by MooseNexus.
-Resolved dependencies are the exact dependency descriptors selected for this project build.
+The schema version identifies the persisted project-properties format. The nature corresponds to the concrete subclass of MooseNexusProject that handles managed or unmanaged project behavior. The group, name, and version are the coordinates that identify the source project as modeled by MooseNexus. Each model manifest records its own resolved dependency set.
 
 A recorded project keeps its repositoryPath relative to the backend storage layout that hosts it, for example `<group>/<name>/<version>`. The repository backend owns the repository root, the storage layout segment such as `repository`, and the resolution to concrete filesystem locations.
 
@@ -76,6 +72,22 @@ MooseNexusProject class >> supportsPropertiesSchemaVersion: schemaVersion [
 ]
 
 { #category : 'adding' }
+MooseNexusProject >> addImageArtifact: anImageArtifact [
+	"Record an image directory for a model artifact already recorded by this project."
+
+	| existingArtifact |
+	(self modelManifestNamed: anImageArtifact modelArtifactName) ifNil: [
+		Error signal: 'Cannot record MooseNexus image artifact for missing model artifact: ' , anImageArtifact modelArtifactName ].
+	existingArtifact := self imageArtifacts detect: [ :artifact | artifact name = anImageArtifact name ] ifNone: [ nil ].
+	existingArtifact ifNotNil: [
+			existingArtifact = anImageArtifact ifTrue: [ ^ existingArtifact ].
+			Error signal: 'Cannot replace existing MooseNexus image artifact: ' , anImageArtifact name ].
+	(self imageArtifactsDirectory / anImageArtifact name) ensureCreateDirectory.
+	self writeImageArtifacts: (self imageArtifacts copyWith: anImageArtifact).
+	^ anImageArtifact
+]
+
+{ #category : 'adding' }
 MooseNexusProject >> addModel: aMooseNexusModelArtifact [
 	"Add a model artifact to this project with an empty build context. Prefer addModelManifest: when build context is available."
 
@@ -88,14 +100,16 @@ MooseNexusProject >> addModel: aMooseNexusModelArtifact [
 
 { #category : 'adding' }
 MooseNexusProject >> addModelManifest: aMooseNexusModelArtifactManifest [
-	"Add a model artifact manifest to this project, overwriting any manifest for the same model name."
+	"Record a uniquely named model artifact. A different manifest cannot replace an existing model name."
 
-	| manifests serializedManifests |
-	manifests := self modelManifests reject: [ :manifest |
-		             manifest modelArtifact name = aMooseNexusModelArtifactManifest modelArtifact name ].
-	manifests := manifests copyWith: aMooseNexusModelArtifactManifest.
-	serializedManifests := manifests collect: [ :manifest | manifest asDictionary ].
-	self metadataDirectory / 'models.json' writeStreamDo: [ :stream | STON put: serializedManifests asJsonOnStream: stream ]
+	| existingManifest |
+	existingManifest := self modelManifestNamed: aMooseNexusModelArtifactManifest modelArtifact name.
+	existingManifest ifNotNil: [
+			(existingManifest hasSameMetadataAs: aMooseNexusModelArtifactManifest) ifTrue: [ ^ existingManifest ].
+			Error signal: 'Cannot replace existing MooseNexus model artifact with a different manifest: '
+				, aMooseNexusModelArtifactManifest modelArtifact name ].
+	self writeModelManifests: (self modelManifests copyWith: aMooseNexusModelArtifactManifest).
+	^ aMooseNexusModelArtifactManifest
 ]
 
 { #category : 'enumerating' }
@@ -126,6 +140,19 @@ MooseNexusProject >> dependencies: aCollection [
 MooseNexusProject >> group [
 
 	^ self coordinates group
+]
+
+{ #category : 'enumerating' }
+MooseNexusProject >> imageArtifacts [
+
+	^ self metadataDirectory / 'images.json' readStreamDo: [ :stream |
+		  (STON fromStream: stream) collect: [ :dictionary | MooseNexusImageArtifact fromDictionary: dictionary ] ]
+]
+
+{ #category : 'enumerating' }
+MooseNexusProject >> imageArtifactsDirectory [
+
+	^ self artifactPayloadDirectory / 'images'
 ]
 
 { #category : 'setup' }
@@ -208,6 +235,12 @@ MooseNexusProject >> modelImportRequirements [
 ]
 
 { #category : 'enumerating' }
+MooseNexusProject >> modelManifestNamed: modelName [
+
+	^ self modelManifests detect: [ :manifest | manifest modelArtifact name = modelName ] ifNone: [ nil ]
+]
+
+{ #category : 'enumerating' }
 MooseNexusProject >> modelManifests [
 
 	^ self metadataDirectory / 'models.json' readStreamDo: [ :stream |
@@ -244,7 +277,7 @@ MooseNexusProject >> projectSourceDirectory [
 
 { #category : 'enumerating' }
 MooseNexusProject >> properties [
-	"Gather all of the properties of this project in a dictionary."
+	"Gather the project identity shared by all model artifacts."
 
 	^ Dictionary new
 		  add: #schemaVersion -> self propertiesSchemaVersion;
@@ -253,7 +286,6 @@ MooseNexusProject >> properties [
 		  add: #group -> self group;
 		  add: #name -> self name;
 		  add: #version -> self version;
-		  add: #resolvedDependencies -> self serializedResolvedDependencies;
 		  yourself
 ]
 
@@ -268,10 +300,19 @@ MooseNexusProject >> readProperties: properties [
 
 	self validatePropertiesSchemaVersion: properties.
 	self initializeCoordinates:
-		(MooseNexusCoordinates group: (properties at: #group) name: (properties at: #name) version: (properties at: #version)).
-	properties
-		at: #resolvedDependencies
-		ifPresent: [ :deps | resolvedDependencySet := self resolvedDependencySetFromProperties: deps ]
+		(MooseNexusCoordinates group: (properties at: #group) name: (properties at: #name) version: (properties at: #version))
+]
+
+{ #category : 'adding' }
+MooseNexusProject >> replaceModelManifest: aMooseNexusModelArtifactManifest [
+	"Replace the manifest recorded for an existing model name."
+
+	(self modelManifestNamed: aMooseNexusModelArtifactManifest modelArtifact name) ifNil: [
+		Error signal: 'Cannot replace missing MooseNexus model artifact: ' , aMooseNexusModelArtifactManifest modelArtifact name ].
+	self writeModelManifests: (self modelManifests collect: [ :manifest |
+				 manifest modelArtifact name = aMooseNexusModelArtifactManifest modelArtifact name
+					 ifTrue: [ aMooseNexusModelArtifactManifest ]
+					 ifFalse: [ manifest ] ])
 ]
 
 { #category : 'accessing' }
@@ -317,18 +358,6 @@ MooseNexusProject >> resolvedDependencySet [
 	^ resolvedDependencySet ifNil: [ resolvedDependencySet := MooseNexusResolvedDependencySet empty ]
 ]
 
-{ #category : 'properties' }
-MooseNexusProject >> resolvedDependencySetFromProperties: dependencyDictionaries [
-
-	^ MooseNexusResolvedDependencySet fromDictionaries: dependencyDictionaries
-]
-
-{ #category : 'enumerating' }
-MooseNexusProject >> serializedResolvedDependencies [
-
-	^ self resolvedDependencySet asDictionaries
-]
-
 { #category : 'enumerating' }
 MooseNexusProject >> sourceDirectory [
 	"The directory containing all of the sources for this project.
@@ -365,6 +394,20 @@ MooseNexusProject >> validatePropertiesSchemaVersion: properties [
 MooseNexusProject >> version [
 
 	^ self coordinates version
+]
+
+{ #category : 'private' }
+MooseNexusProject >> writeImageArtifacts: imageArtifacts [
+
+	self metadataDirectory / 'images.json' writeStreamDo: [ :stream |
+		STON put: (imageArtifacts collect: [ :artifact | artifact asDictionary ]) asJsonOnStream: stream ]
+]
+
+{ #category : 'private' }
+MooseNexusProject >> writeModelManifests: manifests [
+
+	self metadataDirectory / 'models.json' writeStreamDo: [ :stream |
+		STON put: (manifests collect: [ :manifest | manifest asDictionary ]) asJsonOnStream: stream ]
 ]
 
 { #category : 'properties' }

@@ -34,9 +34,9 @@ MooseNexusOciArtifactPuller >> initializeReferenceMapper: aMooseNexusOciReferenc
 ]
 
 { #category : 'private' }
-MooseNexusOciArtifactPuller >> installPulledBundleFrom: bundleDirectory [
+MooseNexusOciArtifactPuller >> installPulledBundleFrom: bundleDirectory force: shouldForce [
 
-	^ MooseNexusOciArtifactInstaller new installBundleFrom: bundleDirectory in: repository
+	^ MooseNexusOciArtifactInstaller new installBundleFrom: bundleDirectory in: repository force: shouldForce
 ]
 
 { #category : 'private' }
@@ -61,7 +61,7 @@ MooseNexusOciArtifactPuller >> pull: reference [
 MooseNexusOciArtifactPuller >> pull: reference force: shouldForce [
 
 	shouldForce ifFalse: [ self localProjectForReference: reference ifPresent: [ :project | ^ project ] ].
-	^ self installPulledBundleFrom: (transport pull: reference)
+	^ self installPulledBundleFrom: (transport pull: reference) force: shouldForce
 ]
 
 { #category : 'accessing' }

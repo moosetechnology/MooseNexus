@@ -88,6 +88,14 @@ MooseNexusModelArtifact >> format [
 ]
 
 { #category : 'comparing' }
+MooseNexusModelArtifact >> hasSameMetadataAs: anotherArtifact [
+	"Compare artifact metadata independently from the timestamp assigned when it was recorded."
+
+	^ artifactCoordinates = anotherArtifact artifactCoordinates and: [
+		  path = anotherArtifact path and: [ comment = anotherArtifact comment ] ]
+]
+
+{ #category : 'comparing' }
 MooseNexusModelArtifact >> hash [
 
 	^ artifactCoordinates hash bitXor: (path hash bitXor: (comment hash bitXor: timestamp hash))

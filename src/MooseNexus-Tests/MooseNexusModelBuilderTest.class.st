@@ -40,8 +40,10 @@ MooseNexusModelBuilderTest >> setUp [
 	projectDirectory := rootDirectory / 'repository' / 'com.example' / 'demo' / '1.0.0'.
 	(projectDirectory / 'sources') ensureCreateDirectory.
 	(projectDirectory / 'artifacts' / 'models') ensureCreateDirectory.
+	(projectDirectory / 'artifacts' / 'images') ensureCreateDirectory.
 	(projectDirectory / 'metadata') ensureCreateDirectory.
 	projectDirectory / 'metadata' / 'models.json' writeStreamDo: [ :stream | stream nextPutAll: '[]' ].
+	projectDirectory / 'metadata' / 'images.json' writeStreamDo: [ :stream | stream nextPutAll: '[]' ].
 	repositoryBackend := MooseNexusLocalRepositoryBackend directory: rootDirectory.
 	project := MooseNexusTestProject coordinates: (MooseNexusCoordinates group: 'com.example' name: 'demo' version: '1.0.0').
 	project repositoryBackend: repositoryBackend path: 'com.example/demo/1.0.0'
@@ -265,6 +267,27 @@ MooseNexusModelBuilderTest >> testModelArtifactManifestDictionaryRoundTrip [
 
 	self assert: sameManifest equals: manifest.
 	self assert: sameManifest hash equals: manifest hash
+]
+
+{ #category : 'tests' }
+MooseNexusModelBuilderTest >> testProjectRecordsImageArtifactsByNameAndModelArtifactName [
+
+	| modelArtifact manifest imageArtifact serializedArtifacts |
+	modelArtifact := self modelArtifactNamed: 'demo-model'.
+	manifest := MooseNexusModelArtifactManifest
+		            modelArtifact: modelArtifact
+		            dependencyResolutionResult: (MooseNexusDependencyResolutionResult forProject: project)
+		            generatedFiles: #(  )
+		            createdTimestamp: modelArtifact timestamp.
+	project addModelManifest: manifest.
+	imageArtifact := MooseNexusImageArtifact named: 'demo-image' forModelArtifactNamed: modelArtifact name.
+
+	project addImageArtifact: imageArtifact.
+
+	self assert: project imageArtifacts equals: { imageArtifact }.
+	self assert: (project imageArtifactsDirectory / 'demo-image') exists.
+	serializedArtifacts := project metadataDirectory / 'images.json' readStreamDo: [ :stream | STON fromStream: stream ].
+	self assert: serializedArtifacts equals: { imageArtifact asDictionary }
 ]
 
 { #category : 'tests' }

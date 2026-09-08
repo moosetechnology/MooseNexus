@@ -56,6 +56,18 @@ MooseNexusProjectSpec >> name [
 ]
 
 { #category : 'accessing' }
+MooseNexusProjectSpec >> repositoryPath [
+
+	^ String streamContents: [ :stream |
+			  stream
+				  nextPutAll: self group;
+				  nextPut: $/;
+				  nextPutAll: self name;
+				  nextPut: $/;
+				  nextPutAll: self version ]
+]
+
+{ #category : 'accessing' }
 MooseNexusProjectSpec >> sourceDirectory [
 
 	^ sourceDirectory

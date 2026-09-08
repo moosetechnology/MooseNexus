@@ -89,6 +89,15 @@ MooseNexusModelArtifactManifest >> generatedFiles [
 ]
 
 { #category : 'comparing' }
+MooseNexusModelArtifactManifest >> hasSameMetadataAs: anotherManifest [
+	"Compare reproducible build metadata without the recording timestamps."
+
+	^ modelArtifact = anotherManifest modelArtifact and: [
+		  dependencyResolutionResult = anotherManifest dependencyResolutionResult and: [
+			  generatedFiles = anotherManifest generatedFiles ] ]
+]
+
+{ #category : 'comparing' }
 MooseNexusModelArtifactManifest >> hash [
 
 	^ modelArtifact hash bitXor: (dependencyResolutionResult hash bitXor: (generatedFiles hash bitXor: createdTimestamp hash))
