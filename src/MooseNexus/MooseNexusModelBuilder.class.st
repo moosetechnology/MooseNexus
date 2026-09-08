@@ -13,7 +13,8 @@ Class {
 		'modelName',
 		'modelComment',
 		'dependencySourceSelectionPolicy',
-		'dependencyResolutionResult'
+		'dependencyResolutionResult',
+		'buildProvenance'
 	],
 	#category : 'MooseNexus-ModelExtraction',
 	#package : 'MooseNexus',
@@ -34,6 +35,18 @@ MooseNexusModelBuilder >> build [
 		  self validateExtractorRequirements.
 		  self setUp.
 		  self registerModel: self extractor run ] ensure: [ self cleanUp ]
+]
+
+{ #category : 'accessing' }
+MooseNexusModelBuilder >> buildProvenance [
+
+	^ buildProvenance ifNil: [ Error signal: 'Model build provenance must be configured before recording a model artifact' ]
+]
+
+{ #category : 'accessing' }
+MooseNexusModelBuilder >> buildProvenance: aMooseNexusBuildProvenance [
+
+	buildProvenance := aMooseNexusBuildProvenance
 ]
 
 { #category : 'cleanup' }
@@ -154,7 +167,8 @@ MooseNexusModelBuilder >> registerModel: modelPath [
 		            modelArtifact: modelArtifact
 		            dependencyResolutionResult: self dependencyResolutionResult
 		            generatedFiles: { generatedFile }
-		            createdTimestamp: timestamp.
+		            createdTimestamp: timestamp
+		            buildProvenance: self buildProvenance.
 	project addModelManifest: manifest.
 	^ modelArtifact
 ]

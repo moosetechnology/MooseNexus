@@ -11,7 +11,7 @@ An OCI bundle contains:
 - the exported model payload;
 - the original source project archived as `sources.zip`;
 - the recorded MooseNexus project properties as `moosenexus-project-properties.json`;
-- the MooseNexus model artifact manifest as `moosenexus-artifact-manifest.json`.
+- the MooseNexus model artifact manifest as `moosenexus-artifact-manifest.json`, including the MooseNexus, Moose, and Pharo versions used to produce the model.
 
 Sources are part of the bundle because they are required to inspect, reproduce, or rebuild a model artifact. The model payload is currently an exported model file. Future bundle variants can use the same publication path for other payloads, such as a Pharo image containing an imported model.
 
@@ -58,7 +58,9 @@ coordinates := MooseNexusCoordinates
 spec := MooseNexusBuildSpec
 	coordinates: coordinates
 	sourceDirectory: '/path/to/source/project' asFileReference.
-spec modelName: 'demo-model'.
+spec
+	modelName: 'demo-model';
+	mooseVersion: '12.0.0'.
 
 result := spec execute.
 
@@ -117,6 +119,8 @@ project := puller
 `MooseNexusOrasTransport >> pull:` remains available when you only want to download the OCI artifact files into a generated temporary directory. Use `pull:into:` when you want to inspect or control that directory explicitly.
 
 Artifacts published before MooseNexus switched to bundle-local OCI layer paths should be republished. Those older artifacts recorded absolute staging paths and cannot be restored portably by the installer.
+
+Artifacts without complete build provenance should also be republished. A consumer must know the exact MooseNexus, Moose, and Pharo versions that produced a model before it can choose a compatible runtime to install it.
 
 ## Current Boundary
 

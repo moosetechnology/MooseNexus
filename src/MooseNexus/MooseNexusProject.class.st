@@ -88,14 +88,15 @@ MooseNexusProject >> addImageArtifact: anImageArtifact [
 ]
 
 { #category : 'adding' }
-MooseNexusProject >> addModel: aMooseNexusModelArtifact [
-	"Add a model artifact to this project with an empty build context. Prefer addModelManifest: when build context is available."
+MooseNexusProject >> addModel: aMooseNexusModelArtifact buildProvenance: aMooseNexusBuildProvenance [
+	"Add a model artifact with its build provenance. Prefer addModelManifest: when the complete build context is available."
 
 	self addModelManifest: (MooseNexusModelArtifactManifest
 			 modelArtifact: aMooseNexusModelArtifact
 			 dependencyResolutionResult: (MooseNexusDependencyResolutionResult forProject: self)
 			 generatedFiles: #(  )
-			 createdTimestamp: aMooseNexusModelArtifact timestamp)
+			 createdTimestamp: aMooseNexusModelArtifact timestamp
+			 buildProvenance: aMooseNexusBuildProvenance)
 ]
 
 { #category : 'adding' }

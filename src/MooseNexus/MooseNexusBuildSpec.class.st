@@ -18,7 +18,8 @@ Class {
 		'dependencyConflictResolver',
 		'dependencySourceSelectionPolicy',
 		'unresolvedDependencyPolicy',
-		'projectImporter'
+		'projectImporter',
+		'mooseVersion'
 	],
 	#category : 'MooseNexus-Project',
 	#package : 'MooseNexus',
@@ -37,6 +38,12 @@ MooseNexusBuildSpec class >> projectSpec: aMooseNexusProjectSpec [
 	^ self new projectSpec: aMooseNexusProjectSpec
 ]
 
+{ #category : 'accessing' }
+MooseNexusBuildSpec >> buildProvenance [
+
+	^ MooseNexusBuildProvenance currentWithMooseVersion: mooseVersion
+]
+
 { #category : 'importing' }
 MooseNexusBuildSpec >> configureImporter: aMooseNexusProjectImporter [
 
@@ -48,7 +55,9 @@ MooseNexusBuildSpec >> configureModelBuilder: aMooseNexusModelBuilder [
 
 	aMooseNexusModelBuilder
 		withDependencies: withDependencies;
-		modelComment: self modelComment.
+		modelComment: self modelComment;
+		buildProvenance: self buildProvenance.
+
 	dependencySourceSelectionPolicy ifNotNil: [ :policy | aMooseNexusModelBuilder dependencySourceSelectionPolicy: policy ].
 	modelName ifNotNil: [ aMooseNexusModelBuilder modelName: modelName ].
 	extractor ifNotNil: [ aMooseNexusModelBuilder extractor: extractor ]
@@ -155,6 +164,18 @@ MooseNexusBuildSpec >> modelName [
 MooseNexusBuildSpec >> modelName: aString [
 
 	modelName := aString
+]
+
+{ #category : 'accessing' }
+MooseNexusBuildSpec >> mooseVersion [
+
+	^ mooseVersion
+]
+
+{ #category : 'accessing' }
+MooseNexusBuildSpec >> mooseVersion: aString [
+
+	mooseVersion := aString
 ]
 
 { #category : 'accessing' }
