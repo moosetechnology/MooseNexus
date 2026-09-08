@@ -182,7 +182,9 @@ MooseNexusModelBuilderTest >> testImportModelStoresRepositorySourceDirectoryAsRo
 
 	importedModel := project importModel: artifact.
 
-	[ self assert: importedModel rootFolder pathString equals: project sourceDirectory pathString ] ensure: [ importedModel remove ]
+	[
+		self assert: importedModel name equals: artifact name.
+		self assert: importedModel rootFolder pathString equals: project sourceDirectory pathString ] ensure: [ importedModel remove ]
 ]
 
 { #category : 'tests' }
@@ -326,6 +328,21 @@ MooseNexusModelBuilderTest >> testProjectRecordsImageArtifactsByNameAndModelArti
 	self assert: (project imageArtifactsDirectory / 'demo-image') exists.
 	serializedArtifacts := project metadataDirectory / 'images.json' readStreamDo: [ :stream | STON fromStream: stream ].
 	self assert: serializedArtifacts equals: { imageArtifact asDictionary }
+]
+
+{ #category : 'tests' }
+MooseNexusModelBuilderTest >> testRebaseLoadedModelNamedUsesRepositorySourceDirectory [
+
+	| model |
+	model := FamixJavaModel new
+		         name: 'demo-model';
+		         yourself.
+	model install.
+	model rootFolder: rootDirectory.
+
+	[
+		project rebaseLoadedModelNamed: 'demo-model'.
+		self assert: model rootFolder pathString equals: project sourceDirectory pathString ] ensure: [ model remove ]
 ]
 
 { #category : 'tests' }

@@ -461,8 +461,8 @@ MooseNexusProjectIdentityTest >> testRepositoryCreatesLayoutBeforeRecordingProje
 	self assert: (projectDirectory / 'metadata' / 'properties.json') exists.
 	self assert: (projectDirectory / 'metadata' / 'models.json') exists.
 	self assert: (projectDirectory / 'sources') exists.
-	self assert: (projectDirectory / 'sources' / 'project') exists.
-	self assert: (projectDirectory / 'sources' / 'project' / 'README.txt') exists.
+	self assert: (projectDirectory / 'sources' / 'main') exists.
+	self assert: (projectDirectory / 'sources' / 'main' / 'README.txt') exists.
 	self assert: (projectDirectory / 'artifacts') exists.
 	self assert: (projectDirectory / 'artifacts' / 'models') exists
 ]

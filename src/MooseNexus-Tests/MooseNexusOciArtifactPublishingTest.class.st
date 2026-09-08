@@ -77,9 +77,12 @@ MooseNexusOciArtifactPublishingTest >> setUp [
 	rootDirectory := FileLocator temp / ('MooseNexus-' , UUID new asString).
 	repositoryDirectory := rootDirectory / 'repository' / 'com.example' / 'demo' / '1.0.0'.
 	(repositoryDirectory / 'metadata') ensureCreateDirectory.
-	(repositoryDirectory / 'sources' / 'project' / 'src') ensureCreateDirectory.
+	(repositoryDirectory / 'sources' / 'main' / 'src') ensureCreateDirectory.
+	(repositoryDirectory / 'sources' / 'dependencies' / 'example-dependency' / 'src') ensureCreateDirectory.
 	(repositoryDirectory / 'artifacts' / 'models') ensureCreateDirectory.
-	repositoryDirectory / 'sources' / 'project' / 'src' / 'Demo.java' writeStreamDo: [ :stream | stream nextPutAll: 'class Demo { }' ].
+	repositoryDirectory / 'sources' / 'main' / 'src' / 'Demo.java' writeStreamDo: [ :stream | stream nextPutAll: 'class Demo { }' ].
+	repositoryDirectory / 'sources' / 'dependencies' / 'example-dependency' / 'src' / 'Dependency.java' writeStreamDo: [ :stream |
+		stream nextPutAll: 'class Dependency { }' ].
 	modelFile := repositoryDirectory / 'artifacts' / 'models' / 'demo-model.json'.
 	modelFile writeStreamDo: [ :stream | stream nextPutAll: '{ }' ].
 	repositoryBackend := MooseNexusLocalRepositoryBackend directory: rootDirectory.
@@ -220,7 +223,10 @@ MooseNexusOciArtifactPublishingTest >> testInstallerRestoresPulledBundleIntoLoca
 	self assert: installedProject class equals: MooseNexusTestProject.
 	self assert: installedProject coordinates equals: project coordinates.
 	self assert: installedProject dependencies equals: project dependencies.
-	self assert: (projectDirectory / 'sources' / 'project' / 'src' / 'Demo.java') contents equals: 'class Demo { }'.
+	self assert: (projectDirectory / 'sources' / 'main' / 'src' / 'Demo.java') contents equals: 'class Demo { }'.
+	self
+		assert: (projectDirectory / 'sources' / 'dependencies' / 'example-dependency' / 'src' / 'Dependency.java') contents
+		equals: 'class Dependency { }'.
 	self assert: (projectDirectory / 'artifacts' / 'models' / 'demo-model.json') contents equals: '{ }'.
 	self assert: installedProject modelManifests first equals: manifest
 ]
@@ -501,7 +507,10 @@ MooseNexusOciArtifactPublishingTest >> testPullerForceInstallsPulledBundle [
 
 	projectDirectory := self repositoryDirectoryForTestRepository: repository.
 	self assert: pulledProject coordinates equals: project coordinates.
-	self assert: (projectDirectory / 'sources' / 'project' / 'src' / 'Demo.java') contents equals: 'class Demo { }'.
+	self assert: (projectDirectory / 'sources' / 'main' / 'src' / 'Demo.java') contents equals: 'class Demo { }'.
+	self
+		assert: (projectDirectory / 'sources' / 'dependencies' / 'example-dependency' / 'src' / 'Dependency.java') contents
+		equals: 'class Dependency { }'.
 	self assert: (projectDirectory / 'artifacts' / 'models' / 'demo-model.json') contents equals: '{ }'
 ]
 
@@ -539,10 +548,10 @@ MooseNexusOciArtifactPublishingTest >> testReferenceMapperNormalizesNamespaceRef
 MooseNexusOciArtifactPublishingTest >> writePortableProjectAt: projectDirectory imageArtifact: imageArtifact [
 
 	(projectDirectory / 'metadata') ensureCreateDirectory.
-	(projectDirectory / 'sources' / 'project' / 'src') ensureCreateDirectory.
+	(projectDirectory / 'sources' / 'main' / 'src') ensureCreateDirectory.
 	(projectDirectory / 'artifacts' / 'models') ensureCreateDirectory.
 	(projectDirectory / 'artifacts' / 'images' / imageArtifact name) ensureCreateDirectory.
-	projectDirectory / 'sources' / 'project' / 'src' / 'Demo.java' writeStreamDo: [ :stream | stream nextPutAll: 'class Demo { }' ].
+	projectDirectory / 'sources' / 'main' / 'src' / 'Demo.java' writeStreamDo: [ :stream | stream nextPutAll: 'class Demo { }' ].
 	projectDirectory / 'artifacts' / 'models' / 'demo-model.json' writeStreamDo: [ :stream | stream nextPutAll: '{ }' ].
 	projectDirectory / 'artifacts' / 'images' / imageArtifact name / 'Demo.image' writeStreamDo: [ :stream |
 		stream nextPutAll: 'image payload' ].

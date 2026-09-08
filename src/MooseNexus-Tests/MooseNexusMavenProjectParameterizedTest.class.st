@@ -211,8 +211,8 @@ MooseNexusMavenProjectParameterizedTest class >> initializeCase: aCase withMaven
 							 (MooseNexusDependencyGraph dependencies:
 								  (MooseNexusManagedProjectImporter new sortedDependencyDescriptors: projectDependencies))) ] ].
 
-	"create the project subdirectories, mostly used to determine the language"
-	directories do: [ :path | (root / 'repository' / projectName / 'sources/project' / path) ensureCreateDirectory ].
+	"create the main-project source directories, mostly used to determine the language"
+	directories do: [ :path | (root / 'repository' / projectName / 'sources/main' / path) ensureCreateDirectory ].
 
 	"initialize the MooseNexusProject and its importer"
 	project := aCase at: #project put: MooseNexusMavenProject new.

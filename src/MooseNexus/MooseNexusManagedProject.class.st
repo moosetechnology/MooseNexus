@@ -53,7 +53,7 @@ MooseNexusManagedProject >> determineLanguage [
 	knownLanguages := self class knownLanguages.
 	(projects isEmpty or: [ projects anyOne isEmpty ]) ifTrue: [ Error signal: 'Cannot determine language without any project' ].
 	candidates := Set new.
-	sourceDirectory := self projectSourceDirectory.
+	sourceDirectory := self mainSourceDirectory.
 
 	"check if this project directory has sources"
 	sourceDirectory / 'src/main' ifExists: [ :mainDirectory |

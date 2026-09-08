@@ -88,7 +88,7 @@ MooseNexusLocalRepositoryBackend >> prepareDirectoryFor: aMooseNexusProjectSpec 
 			Warning signal: 'This project already exists in given repository, proceed to overwrite it'.
 			projectDirectory deleteAll ].
 	(projectDirectory / 'metadata') ensureCreateDirectory.
-	(projectDirectory / 'sources' / 'project') ensureCreateDirectory.
+	(projectDirectory / 'sources' / 'main') ensureCreateDirectory.
 	(projectDirectory / 'artifacts' / 'models') ensureCreateDirectory.
 	(projectDirectory / 'artifacts' / 'images') ensureCreateDirectory.
 	projectDirectory / 'metadata' / 'images.json' writeStreamDo: [ :stream | stream nextPutAll: '[]' ].
@@ -186,7 +186,7 @@ MooseNexusLocalRepositoryBackend >> recordLoadedProject: project describedBy: aM
 	metadataDirectory := projectDirectory / 'metadata'.
 	project repositoryBackend: self path: (self projectPathFor: aMooseNexusProjectSpec).
 
-	aMooseNexusProjectSpec sourceDirectory copyAllTo: projectDirectory / 'sources' / 'project'.
+	aMooseNexusProjectSpec sourceDirectory copyAllTo: projectDirectory / 'sources' / 'main'.
 	(metadataDirectory / 'properties.json') ensureCreateFile writeStreamDo: [ :stream | project writePropertiesOn: stream ].
 	(metadataDirectory / 'models.json') ensureCreateFile writeStreamDo: [ :stream | stream nextPutAll: '[]' ].
 	^ project
