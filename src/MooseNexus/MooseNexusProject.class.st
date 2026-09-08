@@ -146,8 +146,13 @@ MooseNexusProject >> group [
 { #category : 'enumerating' }
 MooseNexusProject >> imageArtifacts [
 
-	^ self metadataDirectory / 'images.json' readStreamDo: [ :stream |
-		  (STON fromStream: stream) collect: [ :dictionary | MooseNexusImageArtifact fromDictionary: dictionary ] ]
+	| imageArtifactsFile |
+	imageArtifactsFile := self metadataDirectory / 'images.json'.
+	^ imageArtifactsFile
+		  ifExists: [
+				  imageArtifactsFile readStreamDo: [ :stream |
+					  (STON fromStream: stream) collect: [ :dictionary | MooseNexusImageArtifact fromDictionary: dictionary ] ] ]
+		  ifAbsent: [ #(  ) ]
 ]
 
 { #category : 'enumerating' }
