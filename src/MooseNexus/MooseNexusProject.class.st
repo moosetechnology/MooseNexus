@@ -88,14 +88,15 @@ MooseNexusProject >> addImageArtifact: anImageArtifact [
 ]
 
 { #category : 'adding' }
-MooseNexusProject >> addModel: aMooseNexusModelArtifact [
-	"Add a model artifact to this project with an empty build context. Prefer addModelManifest: when build context is available."
+MooseNexusProject >> addModel: aMooseNexusModelArtifact buildProvenance: aMooseNexusBuildProvenance [
+	"Add a model artifact with its build provenance. Prefer addModelManifest: when the complete build context is available."
 
 	self addModelManifest: (MooseNexusModelArtifactManifest
 			 modelArtifact: aMooseNexusModelArtifact
 			 dependencyResolutionResult: (MooseNexusDependencyResolutionResult forProject: self)
 			 generatedFiles: #(  )
-			 createdTimestamp: aMooseNexusModelArtifact timestamp)
+			 createdTimestamp: aMooseNexusModelArtifact timestamp
+			 buildProvenance: aMooseNexusBuildProvenance)
 ]
 
 { #category : 'adding' }
@@ -225,13 +226,13 @@ MooseNexusProject >> modelArtifactsDirectory [
 { #category : 'setup' }
 MooseNexusProject >> modelImportRequirements [
 
-	^ { MooseNexusImageRequirement
-		    name: 'Famix Java JSON import'
-		    availabilityValidation: [
-			    (Smalltalk includesKey: #FamixJavaModel) and: [
-				    (Smalltalk includesKey: #FamixJSONFileImporter) and: [ Smalltalk includesKey: #FamixJavaImportingContext ] ] ]
-		    versionValidation: [ '' ]
-		    expectedVersionDescription: 'loaded Famix Java JSON import support' }
+	^ { (MooseNexusImageRequirement
+		   name: 'Famix Java JSON import'
+		   availabilityValidation: [
+				   (Smalltalk globals includesKey: #FamixJavaModel) and: [
+					   (Smalltalk globals includesKey: #FamixJSONFileImporter) and: [ Smalltalk globals includesKey: #FamixJavaImportingContext ] ] ]
+		   versionValidation: [ '' ]
+		   expectedVersionDescription: 'loaded Famix Java JSON import support') }
 ]
 
 { #category : 'enumerating' }

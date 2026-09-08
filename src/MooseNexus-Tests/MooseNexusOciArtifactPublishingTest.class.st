@@ -26,6 +26,12 @@ MooseNexusOciArtifactPublishingTest >> artifactCoordinates [
 ]
 
 { #category : 'private' }
+MooseNexusOciArtifactPublishingTest >> buildProvenance [
+
+	^ MooseNexusBuildProvenance mooseNexusVersion: '0.5.0' mooseVersion: '12.0.0' pharoVersion: '12'
+]
+
+{ #category : 'private' }
 MooseNexusOciArtifactPublishingTest >> copyBundle: bundleDirectory intoPullDirectoryFromArguments: arguments [
 
 	| outputDirectory configFile |
@@ -54,6 +60,7 @@ MooseNexusOciArtifactPublishingTest >> manifestForModelPath: modelPath [
 		  dependencyResolutionResult: (MooseNexusDependencyResolutionResult forProject: project)
 		  generatedFiles: #(  )
 		  createdTimestamp: artifact timestamp
+		  buildProvenance: self buildProvenance
 ]
 
 { #category : 'private' }
@@ -93,7 +100,7 @@ MooseNexusOciArtifactPublishingTest >> tearDown [
 { #category : 'tests' }
 MooseNexusOciArtifactPublishingTest >> testBundleBuilderCopiesModelPropertiesAndArchivesSources [
 
-	| bundle bundleDirectory propertiesLayer modelLayer sourceLayer manifestDictionary propertiesDictionary |
+	| bundle bundleDirectory propertiesLayer modelLayer sourceLayer manifestDictionary propertiesDictionary provenanceDictionary |
 	bundleDirectory := rootDirectory / 'bundle'.
 
 	bundle := (MooseNexusOciArtifactBundleBuilder project: project manifest: manifest directory: bundleDirectory) build.
@@ -124,7 +131,9 @@ MooseNexusOciArtifactPublishingTest >> testBundleBuilderCopiesModelPropertiesAnd
 		MooseNexusOciArtifactBundleBuilder sourceArchiveFileName , ':' , MooseNexusOciArtifactBundleBuilder sourceArchiveMediaType.
 	self assert: (ZipArchive isZipArchive: sourceLayer file).
 	manifestDictionary := bundle configFile readStreamDo: [ :stream | STON fromStream: stream ].
-	self assert: ((manifestDictionary at: 'modelArtifact') at: 'path') equals: 'artifacts/models/demo-model.json'
+	self assert: ((manifestDictionary at: 'modelArtifact') at: 'path') equals: 'artifacts/models/demo-model.json'.
+	provenanceDictionary := manifestDictionary at: 'buildProvenance'.
+	self assert: provenanceDictionary equals: self buildProvenance asDictionary
 ]
 
 { #category : 'tests' }
@@ -147,7 +156,8 @@ MooseNexusOciArtifactPublishingTest >> testInstallerAddsADistinctlyNamedModel [
 		                  modelArtifact: secondArtifact
 		                  dependencyResolutionResult: (MooseNexusDependencyResolutionResult forProject: project)
 		                  generatedFiles: #(  )
-		                  createdTimestamp: secondArtifact timestamp.
+		                  createdTimestamp: secondArtifact timestamp
+		                  buildProvenance: self buildProvenance.
 	project repositoryDirectory / secondArtifact path writeStreamDo: [ :stream | stream nextPutAll: '{ "other": true }' ].
 	secondBundle := rootDirectory / 'second-bundle'.
 	(MooseNexusOciArtifactBundleBuilder project: project manifest: secondManifest directory: secondBundle) build.
@@ -379,7 +389,8 @@ MooseNexusOciArtifactPublishingTest >> testProjectDirectoryInstallerForceReplace
 		                    modelArtifact: manifest modelArtifact
 		                    dependencyResolutionResult: manifest dependencyResolutionResult
 		                    generatedFiles: { generatedFile }
-		                    createdTimestamp: manifest createdTimestamp.
+		                    createdTimestamp: manifest createdTimestamp
+		                    buildProvenance: manifest buildProvenance.
 	incomingDirectory / 'metadata' / 'models.json' writeStreamDo: [ :stream |
 		STON put: { incomingManifest asDictionary } asJsonOnStream: stream ].
 	incomingDirectory / 'artifacts' / 'models' / 'demo-model.json' writeStreamDo: [ :stream | stream nextPutAll: 'new model' ].

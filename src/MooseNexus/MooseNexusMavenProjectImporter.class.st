@@ -152,9 +152,9 @@ MooseNexusMavenProjectImporter >> requirements [
 
 	| command |
 	command := self findMavenCommand , ' --version'.
-	^ { MooseNexusToolRequirement
-		    name: 'Maven'
-		    availabilityValidation: command
-		    versionValidation: command
-		    expectedVersionDescription: 'Maven CLI compatible with dependency:resolve' }
+	^ { (MooseNexusToolRequirement
+		   name: 'Maven'
+		   availabilityValidation: command
+		   versionValidation: command
+		   expectedVersionDescription: 'Maven CLI compatible with dependency:resolve') }
 ]

@@ -37,6 +37,12 @@ MooseNexusBuildSpec class >> projectSpec: aMooseNexusProjectSpec [
 	^ self new projectSpec: aMooseNexusProjectSpec
 ]
 
+{ #category : 'accessing' }
+MooseNexusBuildSpec >> buildProvenance [
+
+	^ MooseNexusBuildProvenance current
+]
+
 { #category : 'importing' }
 MooseNexusBuildSpec >> configureImporter: aMooseNexusProjectImporter [
 
@@ -48,7 +54,9 @@ MooseNexusBuildSpec >> configureModelBuilder: aMooseNexusModelBuilder [
 
 	aMooseNexusModelBuilder
 		withDependencies: withDependencies;
-		modelComment: self modelComment.
+		modelComment: self modelComment;
+		buildProvenance: self buildProvenance.
+
 	dependencySourceSelectionPolicy ifNotNil: [ :policy | aMooseNexusModelBuilder dependencySourceSelectionPolicy: policy ].
 	modelName ifNotNil: [ aMooseNexusModelBuilder modelName: modelName ].
 	extractor ifNotNil: [ aMooseNexusModelBuilder extractor: extractor ]

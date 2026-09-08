@@ -87,11 +87,13 @@ MooseNexusImporterExtractorProtocolTest >> testImporterValidatesAllRequirements 
 	(rootDirectory / 'pom.xml') ensureCreateFile.
 	importer := MooseNexusMavenProjectImporter new directory: rootDirectory.
 
-	result := importer requirements first validateAvailabilityUsing: [ :command |
-		          self assert: (command includesSubstring: '--version').
-		          0 ] versionUsing: [ :command |
-		          self assert: (command includesSubstring: '--version').
-		          'Apache Maven 3.9.9' ].
+	result := importer requirements first
+		          validateAvailabilityUsing: [ :command |
+				          self assert: (command includesSubstring: '--version').
+				          0 ]
+		          versionUsing: [ :command |
+				          self assert: (command includesSubstring: '--version').
+				          'Apache Maven 3.9.9' ].
 
 	self assert: result isAvailable.
 	self assert: (result versionDetails includesSubstring: '3.9.9')
@@ -103,10 +105,7 @@ MooseNexusImporterExtractorProtocolTest >> testImporterValidationRaisesWhenARequ
 	| importer result |
 	(rootDirectory / 'pom.xml') ensureCreateFile.
 	importer := MooseNexusMavenProjectImporter new directory: rootDirectory.
-	result := MooseNexusRequirementValidationResult
-		          requirement: importer requirements first
-		          available: false
-		          details: '127'.
+	result := MooseNexusRequirementValidationResult requirement: importer requirements first available: false details: '127'.
 
 	self should: [ importer validateRequirements: { result } ] raise: Error
 ]
@@ -195,11 +194,11 @@ MooseNexusImporterExtractorProtocolTest >> testToolRequirementCanValidateAvailab
 
 	result := requirement
 		          validateAvailabilityUsing: [ :command |
-			          self assert: command equals: 'example --help'.
-			          0 ]
+				          self assert: command equals: 'example --help'.
+				          0 ]
 		          versionUsing: [ :command |
-			          self assert: command equals: 'example --version'.
-			          'Example Tool 1.2.3' ].
+				          self assert: command equals: 'example --version'.
+				          'Example Tool 1.2.3' ].
 
 	self assert: result isAvailable.
 	self assert: result requirementName equals: 'Example Tool'.

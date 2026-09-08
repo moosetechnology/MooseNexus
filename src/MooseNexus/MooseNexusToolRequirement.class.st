@@ -15,9 +15,9 @@ Class {
 MooseNexusToolRequirement >> = anObject [
 
 	^ self class = anObject class and: [
-		  anObject name = name and: [
-			  anObject availabilityValidation = availabilityValidation and: [
-				  anObject versionValidation = versionValidation and: [ anObject expectedVersionDescription = expectedVersionDescription ] ] ] ]
+			  anObject name = name and: [
+					  anObject availabilityValidation = availabilityValidation and: [
+						  anObject versionValidation = versionValidation and: [ anObject expectedVersionDescription = expectedVersionDescription ] ] ] ]
 ]
 
 { #category : 'comparing' }
@@ -41,7 +41,9 @@ MooseNexusToolRequirement >> printOn: aStream [
 { #category : 'validating' }
 MooseNexusToolRequirement >> validate [
 
-	^ self validateAvailabilityUsing: [ :command | LibC runCommand: command ] versionUsing: [ :command | LibC resultOfCommand: command ]
+	^ self
+		  validateAvailabilityUsing: [ :command | LibC runCommand: command ]
+		  versionUsing: [ :command | LibC resultOfCommand: command ]
 ]
 
 { #category : 'validating' }

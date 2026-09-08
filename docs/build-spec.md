@@ -92,6 +92,12 @@ result := spec executeIn: repository.
 
 `projectImporter:` is an explicit override. If it is set, directory autodetection is not used.
 
+## Build Runtime
+
+Every recorded model artifact includes build provenance: the MooseNexus, Moose, and Pharo versions that produced it. MooseNexus obtains all three from the running image, including the Moose version through `MooseVersion current versionNumber`.
+
+This lets artifact consumers select an exact compatible runtime instead of interpreting model metadata with an arbitrary MooseNexus release.
+
 ## Unmanaged Dependencies
 
 An unmanaged importer can receive dependency descriptors directly. For now, those descriptors become the project's resolved dependencies.

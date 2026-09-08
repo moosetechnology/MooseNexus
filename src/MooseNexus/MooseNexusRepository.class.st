@@ -60,7 +60,9 @@ MooseNexusRepository >> artifactExistsAt: repositoryRelativePath [
 { #category : 'accessing' }
 MooseNexusRepository >> backend [
 
-	^ backend ifNil: [ self directory: FileLocator home / '.moose'. backend ]
+	^ backend ifNil: [
+			  self directory: FileLocator home / '.moose'.
+			  backend ]
 ]
 
 { #category : 'accessing' }

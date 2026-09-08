@@ -12,6 +12,12 @@ Class {
 	#package : 'MooseNexus-Tests'
 }
 
+{ #category : 'private' }
+MooseNexusModelBuilderTest >> buildProvenance [
+
+	^ MooseNexusBuildProvenance mooseNexusVersion: '0.5.0' mooseVersion: '12.0.0' pharoVersion: '12'
+]
+
 { #category : 'helpers' }
 MooseNexusModelBuilderTest >> modelArtifactNamed: modelName [
 
@@ -75,7 +81,10 @@ MooseNexusModelBuilderTest >> testBuildSpecConfiguresModelBuilder [
 	self deny: builder withDependencies.
 	self assert: builder modelName equals: 'configured-model'.
 	self assert: builder modelComment equals: 'configured comment'.
-	self assert: builder extractor identicalTo: extractor
+	self assert: builder extractor identicalTo: extractor.
+	self assert: builder buildProvenance mooseVersion equals: MooseVersion current versionNumber.
+	self assert: builder buildProvenance mooseNexusVersion equals: MooseNexusVersion current.
+	self assert: builder buildProvenance pharoVersion equals: SystemVersion current major asString
 ]
 
 { #category : 'tests' }
@@ -93,7 +102,8 @@ MooseNexusModelBuilderTest >> testBuildSpecExecutesPlanAndAnswersModelBuildResul
 	plan := spec planIn: (MooseNexusRepository new directory: rootDirectory / 'nexus').
 	result := plan execute.
 
-	modelFile := rootDirectory / 'nexus' / 'repository' / 'com.example' / 'demo' / '1.0.0' / 'artifacts' / 'models' / 'planned-model.json'.
+	modelFile := rootDirectory / 'nexus' / 'repository' / 'com.example' / 'demo' / '1.0.0' / 'artifacts' / 'models'
+	             / 'planned-model.json'.
 	self assert: plan projectImporter class equals: MooseNexusTestProjectImporter.
 	self assert: result project isRecorded.
 	self assert: result dependencyResolutionResult project identicalTo: result project.
@@ -103,6 +113,7 @@ MooseNexusModelBuilderTest >> testBuildSpecExecutesPlanAndAnswersModelBuildResul
 	self assert: result modelArtifact path equals: 'artifacts/models/planned-model.json'.
 	self assert: result modelName equals: 'planned-model'.
 	self assert: result modelFormat equals: 'json'.
+	self assert: result project modelManifests first buildProvenance mooseVersion equals: MooseVersion current versionNumber.
 	self assert: modelFile exists.
 	self assert: modelFile contents equals: '{ }'
 ]
@@ -141,6 +152,7 @@ MooseNexusModelBuilderTest >> testBuildSpecExecutesUnmanagedProjectPlan [
 	self assert: result dependencyResolutionResult dependencies equals: { dependency }.
 	self assert: result modelName equals: 'unmanaged-model'.
 	self assert: result modelArtifact path equals: 'artifacts/models/unmanaged-model.json'.
+	self assert: result project modelManifests first buildProvenance mooseVersion equals: MooseVersion current versionNumber.
 	self assert: modelFile exists.
 	self assert: modelFile contents equals: '{ }'
 ]
@@ -171,6 +183,29 @@ MooseNexusModelBuilderTest >> testImportModelStoresRepositorySourceDirectoryAsRo
 	importedModel := project importModel: artifact.
 
 	[ self assert: importedModel rootFolder pathString equals: project sourceDirectory pathString ] ensure: [ importedModel remove ]
+]
+
+{ #category : 'tests' }
+MooseNexusModelBuilderTest >> testManifestMetadataIncludesBuildProvenance [
+
+	| artifact dependencyResolutionResult firstManifest secondManifest |
+	artifact := self modelArtifactNamed: 'demo-model'.
+	dependencyResolutionResult := MooseNexusDependencyResolutionResult forProject: project.
+	firstManifest := MooseNexusModelArtifactManifest
+		                 modelArtifact: artifact
+		                 dependencyResolutionResult: dependencyResolutionResult
+		                 generatedFiles: #(  )
+		                 createdTimestamp: artifact timestamp
+		                 buildProvenance: self buildProvenance.
+	secondManifest := MooseNexusModelArtifactManifest
+		                  modelArtifact: artifact
+		                  dependencyResolutionResult: dependencyResolutionResult
+		                  generatedFiles: #(  )
+		                  createdTimestamp: artifact timestamp
+		                  buildProvenance:
+		                  (MooseNexusBuildProvenance mooseNexusVersion: '0.5.0' mooseVersion: '13.0.0' pharoVersion: '13').
+
+	self deny: (firstManifest hasSameMetadataAs: secondManifest)
 ]
 
 { #category : 'tests' }
@@ -261,12 +296,14 @@ MooseNexusModelBuilderTest >> testModelArtifactManifestDictionaryRoundTrip [
 		            modelArtifact: artifact
 		            dependencyResolutionResult: resolutionResult
 		            generatedFiles: { generatedFile }
-		            createdTimestamp: artifact timestamp.
+		            createdTimestamp: artifact timestamp
+		            buildProvenance: self buildProvenance.
 
 	sameManifest := MooseNexusModelArtifactManifest fromDictionary: manifest asDictionary.
 
 	self assert: sameManifest equals: manifest.
-	self assert: sameManifest hash equals: manifest hash
+	self assert: sameManifest hash equals: manifest hash.
+	self assert: sameManifest buildProvenance equals: self buildProvenance
 ]
 
 { #category : 'tests' }
@@ -278,7 +315,8 @@ MooseNexusModelBuilderTest >> testProjectRecordsImageArtifactsByNameAndModelArti
 		            modelArtifact: modelArtifact
 		            dependencyResolutionResult: (MooseNexusDependencyResolutionResult forProject: project)
 		            generatedFiles: #(  )
-		            createdTimestamp: modelArtifact timestamp.
+		            createdTimestamp: modelArtifact timestamp
+		            buildProvenance: self buildProvenance.
 	project addModelManifest: manifest.
 	imageArtifact := MooseNexusImageArtifact named: 'demo-image' forModelArtifactNamed: modelArtifact name.
 
@@ -293,12 +331,14 @@ MooseNexusModelBuilderTest >> testProjectRecordsImageArtifactsByNameAndModelArti
 { #category : 'tests' }
 MooseNexusModelBuilderTest >> testRegisterModelCopiesOutputIntoModelArtifactPayloadDirectory [
 
-	| builder source target models modelArtifact serializedModels serializedManifest serializedArtifact artifactCoordinates generatedFile projectDirectory |
+	| builder source target models modelArtifact serializedModels serializedManifest serializedArtifact artifactCoordinates generatedFile projectDirectory provenance |
 	projectDirectory := project repositoryDirectory.
 	source := projectDirectory / 'sources' / 'mooseNexusModel.json'.
 	source writeStreamDo: [ :stream | stream nextPutAll: '{ }' ].
 	builder := MooseNexusModelBuilder on: project.
-	builder modelName: 'demo-model'.
+	builder
+		modelName: 'demo-model';
+		buildProvenance: self buildProvenance.
 
 	modelArtifact := builder registerModel: 'sources/mooseNexusModel.json'.
 
@@ -327,6 +367,8 @@ MooseNexusModelBuilderTest >> testRegisterModelCopiesOutputIntoModelArtifactPayl
 	self assert: ((artifactCoordinates at: 'projectCoordinates') at: 'group') equals: 'com.example'.
 	self assert: (serializedArtifact at: 'path') equals: 'artifacts/models/demo-model.json'.
 	self assert: (serializedManifest includesKey: 'dependencyResolution').
+	provenance := serializedManifest at: 'buildProvenance'.
+	self assert: provenance equals: self buildProvenance asDictionary.
 	generatedFile := (serializedManifest at: 'generatedFiles') first.
 	self assert: (generatedFile at: 'path') equals: 'artifacts/models/demo-model.json'.
 	self assert: (generatedFile at: 'size') equals: 3.
