@@ -318,8 +318,8 @@ MooseNexusProjectIdentityTest >> testManagedProjectPropertiesSerializeSharedDepe
 	loadedProperties := propertiesFile readStreamDo: [ :stream | STON fromStream: stream ].
 	loadedProject := MooseNexusProject fromProperties: propertiesFile.
 
-	self assert: (loadedProperties at: #resolvedDependencies) size equals: 1.
-	self assert: loadedProject dependencies equals: project dependencies.
+	self deny: (loadedProperties includesKey: #resolvedDependencies).
+	self assert: loadedProject dependencies isEmpty.
 	self assert: loadedProject projects equals: project projects
 ]
 
@@ -334,7 +334,7 @@ MooseNexusProjectIdentityTest >> testProjectPropertiesFlattenCoordinates [
 	self assert: (properties at: #group) equals: 'com.example'.
 	self assert: (properties at: #name) equals: 'demo'.
 	self assert: (properties at: #version) equals: '1.0.0'.
-	self assert: (properties includesKey: #resolvedDependencies).
+	self deny: (properties includesKey: #resolvedDependencies).
 	self deny: (properties includesKey: #dependencies).
 	self deny: (properties includesKey: #coordinates)
 ]
@@ -397,7 +397,7 @@ MooseNexusProjectIdentityTest >> testProjectPropertiesRoundTripFromFile [
 
 	self assert: loadedProject class equals: MooseNexusTestProject.
 	self assert: loadedProject coordinates equals: project coordinates.
-	self assert: loadedProject dependencies equals: project dependencies
+	self assert: loadedProject dependencies isEmpty
 ]
 
 { #category : 'tests' }
@@ -608,5 +608,5 @@ MooseNexusProjectIdentityTest >> testUnmanagedProjectPropertiesRoundTripFromFile
 	self assert: loadedProject class equals: MooseNexusUnmanagedProject.
 	self assert: loadedProject coordinates equals: project coordinates.
 	self assert: loadedProject language equals: 'java'.
-	self assert: loadedProject dependencies equals: project dependencies
+	self assert: loadedProject dependencies isEmpty
 ]

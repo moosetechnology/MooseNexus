@@ -128,6 +128,75 @@ MooseNexusOciArtifactPublishingTest >> testBundleBuilderCopiesModelPropertiesAnd
 ]
 
 { #category : 'tests' }
+MooseNexusOciArtifactPublishingTest >> testInstallerAddsADistinctlyNamedModel [
+
+	| firstBundle secondBundle repository secondArtifact secondManifest projectDirectory |
+	firstBundle := rootDirectory / 'first-bundle'.
+	(MooseNexusOciArtifactBundleBuilder project: project manifest: manifest directory: firstBundle) build.
+	secondArtifact := MooseNexusModelArtifact
+		                  artifactCoordinates: (MooseNexusModelArtifactCoordinates
+				                   projectCoordinates: project coordinates
+				                   name: 'other-model'
+				                   format: 'json'
+				                   metamodel: 'Famix-Java'
+				                   classifier: 'main')
+		                  path: 'artifacts/models/other-model.json'
+		                  comment: 'generated for publishing tests'
+		                  timestamp: '2026-09-01T10:00:00+02:00'.
+	secondManifest := MooseNexusModelArtifactManifest
+		                  modelArtifact: secondArtifact
+		                  dependencyResolutionResult: (MooseNexusDependencyResolutionResult forProject: project)
+		                  generatedFiles: #(  )
+		                  createdTimestamp: secondArtifact timestamp.
+	project repositoryDirectory / secondArtifact path writeStreamDo: [ :stream | stream nextPutAll: '{ "other": true }' ].
+	secondBundle := rootDirectory / 'second-bundle'.
+	(MooseNexusOciArtifactBundleBuilder project: project manifest: secondManifest directory: secondBundle) build.
+	repository := MooseNexusRepository new directory: rootDirectory / 'installed'.
+
+	MooseNexusOciArtifactInstaller new installBundleFrom: firstBundle in: repository.
+	MooseNexusOciArtifactInstaller new installBundleFrom: secondBundle in: repository.
+
+	projectDirectory := self repositoryDirectoryForTestRepository: repository.
+	self assert: repository projects first modelManifests size equals: 2.
+	self assert: (projectDirectory / 'artifacts' / 'models' / 'demo-model.json') contents equals: '{ }'.
+	self assert: (projectDirectory / 'artifacts' / 'models' / 'other-model.json') contents equals: '{ "other": true }'
+]
+
+{ #category : 'tests' }
+MooseNexusOciArtifactPublishingTest >> testInstallerForceReplacesAnIdenticalInstalledModel [
+
+	| bundleDirectory repository projectDirectory |
+	bundleDirectory := rootDirectory / 'bundle'.
+	(MooseNexusOciArtifactBundleBuilder project: project manifest: manifest directory: bundleDirectory) build.
+	repository := MooseNexusRepository new directory: rootDirectory / 'installed'.
+	MooseNexusOciArtifactInstaller new installBundleFrom: bundleDirectory in: repository.
+	projectDirectory := self repositoryDirectoryForTestRepository: repository.
+	projectDirectory / 'artifacts' / 'models' / 'demo-model.json' writeStreamDo: [ :stream | stream nextPutAll: 'local model' ].
+
+	MooseNexusOciArtifactInstaller new installBundleFrom: bundleDirectory in: repository force: true.
+
+	self assert: (projectDirectory / 'artifacts' / 'models' / 'demo-model.json') contents equals: '{ }'.
+	self assert: repository projects first modelManifests size equals: 1
+]
+
+{ #category : 'tests' }
+MooseNexusOciArtifactPublishingTest >> testInstallerKeepsAnIdenticalInstalledModelWithoutForce [
+
+	| bundleDirectory repository projectDirectory |
+	bundleDirectory := rootDirectory / 'bundle'.
+	(MooseNexusOciArtifactBundleBuilder project: project manifest: manifest directory: bundleDirectory) build.
+	repository := MooseNexusRepository new directory: rootDirectory / 'installed'.
+	MooseNexusOciArtifactInstaller new installBundleFrom: bundleDirectory in: repository.
+	projectDirectory := self repositoryDirectoryForTestRepository: repository.
+	projectDirectory / 'artifacts' / 'models' / 'demo-model.json' writeStreamDo: [ :stream | stream nextPutAll: 'local model' ].
+
+	MooseNexusOciArtifactInstaller new installBundleFrom: bundleDirectory in: repository.
+
+	self assert: (projectDirectory / 'artifacts' / 'models' / 'demo-model.json') contents equals: 'local model'.
+	self assert: repository projects first modelManifests size equals: 1
+]
+
+{ #category : 'tests' }
 MooseNexusOciArtifactPublishingTest >> testInstallerRestoresPulledBundleIntoLocalRepository [
 
 	| bundleDirectory repository installedProject projectDirectory |
@@ -292,6 +361,50 @@ MooseNexusOciArtifactPublishingTest >> testOrasTransportSignalsPushFailure [
 ]
 
 { #category : 'tests' }
+MooseNexusOciArtifactPublishingTest >> testProjectDirectoryInstallerForceReplacesIdenticalArtifacts [
+
+	| incomingDirectory repository projectDirectory imageArtifact |
+	incomingDirectory := rootDirectory / 'incoming-project'.
+	imageArtifact := MooseNexusImageArtifact named: 'demo-image' forModelArtifactNamed: 'demo-model'.
+	self writePortableProjectAt: incomingDirectory imageArtifact: imageArtifact.
+	repository := MooseNexusRepository new directory: rootDirectory / 'installed'.
+	MooseNexusProjectDirectoryInstaller new installProjectDirectory: incomingDirectory in: repository.
+	projectDirectory := self repositoryDirectoryForTestRepository: repository.
+	projectDirectory / 'artifacts' / 'models' / 'demo-model.json' writeStreamDo: [ :stream | stream nextPutAll: 'local model' ].
+	projectDirectory / 'artifacts' / 'images' / 'demo-image' / 'Demo.image' writeStreamDo: [ :stream |
+		stream nextPutAll: 'local image' ].
+
+	MooseNexusProjectDirectoryInstaller new installProjectDirectory: incomingDirectory in: repository force: true.
+
+	self assert: (projectDirectory / 'artifacts' / 'models' / 'demo-model.json') contents equals: '{ }'.
+	self assert: (projectDirectory / 'artifacts' / 'images' / 'demo-image' / 'Demo.image') contents equals: 'image payload'
+]
+
+{ #category : 'tests' }
+MooseNexusOciArtifactPublishingTest >> testProjectDirectoryInstallerRestoresModelsAndImages [
+
+	| incomingDirectory repository installedProject imageArtifact projectDirectory |
+	incomingDirectory := rootDirectory / 'incoming-project'.
+	imageArtifact := MooseNexusImageArtifact named: 'demo-image' forModelArtifactNamed: 'demo-model'.
+	self writePortableProjectAt: incomingDirectory imageArtifact: imageArtifact.
+	repository := MooseNexusRepository new directory: rootDirectory / 'installed'.
+
+	installedProject := MooseNexusProjectDirectoryInstaller new installProjectDirectory: incomingDirectory in: repository.
+
+	projectDirectory := self repositoryDirectoryForTestRepository: repository.
+	self assert: installedProject modelManifests equals: { manifest }.
+	self assert: installedProject imageArtifacts equals: { imageArtifact }.
+	self assert: (projectDirectory / 'artifacts' / 'models' / 'demo-model.json') contents equals: '{ }'.
+	self assert: (projectDirectory / 'artifacts' / 'images' / 'demo-image' / 'Demo.image') contents equals: 'image payload'
+]
+
+{ #category : 'tests' }
+MooseNexusOciArtifactPublishingTest >> testProjectPropertiesDoNotDuplicateResolvedDependencies [
+
+	self deny: (project properties includesKey: #resolvedDependencies)
+]
+
+{ #category : 'tests' }
 MooseNexusOciArtifactPublishingTest >> testPublisherBuildsBundleAssignsReferenceAndDelegatesPush [
 
 	| mapper transport publisher pushedArguments bundle |
@@ -378,4 +491,22 @@ MooseNexusOciArtifactPublishingTest >> testReferenceMapperNormalizesNamespaceRef
 	self
 		assert: (mapper referenceFor: self artifactCoordinates)
 		equals: 'registry.example.com/moose-team/moosenexus/com.example/demo:1.0.0'
+]
+
+{ #category : 'private' }
+MooseNexusOciArtifactPublishingTest >> writePortableProjectAt: projectDirectory imageArtifact: imageArtifact [
+
+	(projectDirectory / 'metadata') ensureCreateDirectory.
+	(projectDirectory / 'sources' / 'project' / 'src') ensureCreateDirectory.
+	(projectDirectory / 'artifacts' / 'models') ensureCreateDirectory.
+	(projectDirectory / 'artifacts' / 'images' / imageArtifact name) ensureCreateDirectory.
+	projectDirectory / 'sources' / 'project' / 'src' / 'Demo.java' writeStreamDo: [ :stream | stream nextPutAll: 'class Demo { }' ].
+	projectDirectory / 'artifacts' / 'models' / 'demo-model.json' writeStreamDo: [ :stream | stream nextPutAll: '{ }' ].
+	projectDirectory / 'artifacts' / 'images' / imageArtifact name / 'Demo.image' writeStreamDo: [ :stream |
+		stream nextPutAll: 'image payload' ].
+	projectDirectory / 'metadata' / 'properties.json' writeStreamDo: [ :stream | project writePropertiesOn: stream ].
+	projectDirectory / 'metadata' / 'models.json' writeStreamDo: [ :stream |
+		STON put: { manifest asDictionary } asJsonOnStream: stream ].
+	projectDirectory / 'metadata' / 'images.json' writeStreamDo: [ :stream |
+		STON put: { imageArtifact asDictionary } asJsonOnStream: stream ]
 ]

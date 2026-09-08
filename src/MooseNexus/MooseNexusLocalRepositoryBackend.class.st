@@ -90,6 +90,8 @@ MooseNexusLocalRepositoryBackend >> prepareDirectoryFor: aMooseNexusProjectSpec 
 	(projectDirectory / 'metadata') ensureCreateDirectory.
 	(projectDirectory / 'sources' / 'project') ensureCreateDirectory.
 	(projectDirectory / 'artifacts' / 'models') ensureCreateDirectory.
+	(projectDirectory / 'artifacts' / 'images') ensureCreateDirectory.
+	projectDirectory / 'metadata' / 'images.json' writeStreamDo: [ :stream | stream nextPutAll: '[]' ].
 	^ projectDirectory
 ]
 
@@ -187,7 +189,6 @@ MooseNexusLocalRepositoryBackend >> recordLoadedProject: project describedBy: aM
 	aMooseNexusProjectSpec sourceDirectory copyAllTo: projectDirectory / 'sources' / 'project'.
 	(metadataDirectory / 'properties.json') ensureCreateFile writeStreamDo: [ :stream | project writePropertiesOn: stream ].
 	(metadataDirectory / 'models.json') ensureCreateFile writeStreamDo: [ :stream | stream nextPutAll: '[]' ].
-
 	^ project
 ]
 
