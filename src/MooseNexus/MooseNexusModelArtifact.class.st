@@ -88,16 +88,11 @@ MooseNexusModelArtifact >> format [
 ]
 
 { #category : 'comparing' }
-MooseNexusModelArtifact >> hasSameMetadataAs: anotherModelArtifact [
+MooseNexusModelArtifact >> hasSameMetadataAs: anotherArtifact [
 	"Compare artifact metadata independently from the timestamp assigned when it was recorded."
 
-	^ {
-		  artifactCoordinates.
-		  path.
-		  comment } = {
-		  anotherModelArtifact artifactCoordinates.
-		  anotherModelArtifact path.
-		  anotherModelArtifact comment }
+	^ artifactCoordinates = anotherArtifact artifactCoordinates and: [
+		  path = anotherArtifact path and: [ comment = anotherArtifact comment ] ]
 ]
 
 { #category : 'comparing' }

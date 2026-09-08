@@ -92,13 +92,9 @@ MooseNexusModelArtifactManifest >> generatedFiles [
 MooseNexusModelArtifactManifest >> hasSameMetadataAs: anotherManifest [
 	"Compare reproducible build metadata without the recording timestamps."
 
-	^ {
-		  modelArtifact.
-		  dependencyResolutionResult.
-		  generatedFiles } = {
-		  anotherManifest modelArtifact.
-		  anotherManifest dependencyResolutionResult.
-		  anotherManifest generatedFiles }
+	^ modelArtifact = anotherManifest modelArtifact and: [
+		  dependencyResolutionResult = anotherManifest dependencyResolutionResult and: [
+			  generatedFiles = anotherManifest generatedFiles ] ]
 ]
 
 { #category : 'comparing' }
