@@ -193,24 +193,25 @@ MooseNexusGradleProjectImporter >> parse: raw [
 
 { #category : 'reading' }
 MooseNexusGradleProjectImporter >> read [
-	"Gradle does not provide a command to output flat dependencies.
-	Instead of implementing dark magic parsing, we add a task to the build file and run it.
-	Either use the global 'gradle' command or a local 'gradlew' wrapper."
+	"Append the dependency task, run Gradle, and restore the build file even when Gradle fails."
 
-	| buildFile gradleCmd originalSize |
+	| buildFile gradleCmd originalSize command commandResult |
 	buildFile := self findBuildFile.
 	gradleCmd := self findGradleCommand.
-	originalSize := buildFile size. "to restore it later"
+	originalSize := buildFile size.
+	command := String streamContents: [ :stream |
+			           stream << 'cd "' << directory pathString << '" && ' << gradleCmd << ' ' << self class taskName << '; printf "'
+			           << self commandExitStatusMarker << '%s" "$?"' ].
 
-	^ [ "append code to the build file for a task to extract resolved dependencies"
-		  buildFile writeStreamDo: [ :ws |
-				  ws setToEnd crlf << (buildFile extension = 'kts'
+	^ [
+		  buildFile writeStreamDo: [ :stream |
+				  stream setToEnd crlf << (buildFile extension = 'kts'
 					   ifTrue: [ self kotlinCodeForDependencies ]
 					   ifFalse: [ self groovyCodeForDependencies ]) ].
 
-		  "execute the task we inserted and return the raw terminal output"
-		  LibC resultOfCommand: 'cd "' , directory pathString , '" && ' , gradleCmd , ' ' , self class taskName ] ensure: [ "restore the original build file"
-		  (File named: buildFile fullName) writeStreamDo: [ :ws | ws truncate: originalSize ] ]
+		  commandResult := LibC resultOfCommand: command.
+		  self commandOutputFrom: commandResult forToolNamed: 'Gradle' ] ensure: [
+		  (File named: buildFile fullName) writeStreamDo: [ :stream | stream truncate: originalSize ] ]
 ]
 
 { #category : 'capabilities' }

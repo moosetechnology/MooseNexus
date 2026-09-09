@@ -421,7 +421,7 @@ MooseNexusProjectIdentityTest >> testRecordedProjectRejectsCoordinateChanges [
 		should: [ project initializeCoordinates: (MooseNexusCoordinates group: 'org.example' name: 'demo' version: '1.0.0') ]
 		raise: Error
 		whoseDescriptionIncludes: 'Cannot change project coordinates after recording'
-		description: nil
+		description: 'Recording must make project coordinates immutable'
 ]
 
 { #category : 'tests' }

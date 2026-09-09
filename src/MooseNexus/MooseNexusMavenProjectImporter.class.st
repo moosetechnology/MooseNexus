@@ -141,10 +141,14 @@ MooseNexusMavenProjectImporter >> parseProject: raw startingAt: initialStart [
 
 { #category : 'reading' }
 MooseNexusMavenProjectImporter >> read [
-	"Runs the `mvn` command using the `dependency:resolve` plugin.
-	Requires Maven to be installed."
+	"Run Maven dependency resolution and stop immediately when Maven fails."
 
-	^ LibC resultOfCommand: 'cd "' , directory pathString , '" && ' , self findMavenCommand , ' --batch-mode dependency:resolve'
+	| command commandResult |
+	command := String streamContents: [ :stream |
+			           stream << 'cd "' << directory pathString << '" && ' << self findMavenCommand
+			           << ' --batch-mode dependency:resolve; printf "' << self commandExitStatusMarker << '%s" "$?"' ].
+	commandResult := LibC resultOfCommand: command.
+	^ self commandOutputFrom: commandResult forToolNamed: 'Maven'
 ]
 
 { #category : 'capabilities' }
