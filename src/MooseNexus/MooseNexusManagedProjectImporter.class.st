@@ -54,6 +54,25 @@ MooseNexusManagedProjectImporter >> analyze [
 	self parse: self read
 ]
 
+{ #category : 'private' }
+MooseNexusManagedProjectImporter >> commandExitStatusMarker [
+
+	^ '__MOOSE_NEXUS_COMMAND_EXIT_STATUS__:'
+]
+
+{ #category : 'private' }
+MooseNexusManagedProjectImporter >> commandOutputFrom: commandResult forToolNamed: toolName [
+
+	| markerStart commandOutput exitStatus |
+	markerStart := commandResult indexOfSubCollection: self commandExitStatusMarker startingAt: 1.
+	markerStart isZero ifTrue: [ Error signal: toolName , ' command did not report an exit status' ].
+	commandOutput := commandResult copyFrom: 1 to: markerStart - 1.
+	exitStatus := (commandResult copyFrom: markerStart + self commandExitStatusMarker size to: commandResult size) asInteger.
+	exitStatus isZero ifFalse: [
+		Error signal: toolName , ' dependency resolution failed (exit status ' , exitStatus asString , '):' , String cr , commandOutput ].
+	^ commandOutput
+]
+
 { #category : 'configuring' }
 MooseNexusManagedProjectImporter >> configureFromBuildSpec: aMooseNexusBuildSpec [
 

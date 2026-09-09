@@ -64,6 +64,20 @@ MooseNexusImporterExtractorProtocolTest >> testGradleImporterDeclaresCapabilitie
 ]
 
 { #category : 'tests' }
+MooseNexusImporterExtractorProtocolTest >> testGradleImporterSignalsCommandFailure [
+
+	| importer commandResult |
+	importer := MooseNexusGradleProjectImporter new.
+	commandResult := 'FAILURE: Could not resolve dependency' , importer commandExitStatusMarker , '1'.
+
+	self
+		should: [ importer commandOutputFrom: commandResult forToolNamed: 'Gradle' ]
+		raise: Error
+		whoseDescriptionIncludes: 'Could not resolve dependency'
+		description: 'Gradle command failures must preserve the Gradle diagnostic'
+]
+
+{ #category : 'tests' }
 MooseNexusImporterExtractorProtocolTest >> testImageRequirementValidatesMooseFamixCompatibilityInImage [
 
 	| requirement result |
@@ -131,6 +145,16 @@ MooseNexusImporterExtractorProtocolTest >> testLocalVerveineJDeclaresJavaAndWrap
 ]
 
 { #category : 'tests' }
+MooseNexusImporterExtractorProtocolTest >> testMavenImporterAnswersOutputWhenMavenSucceeds [
+
+	| importer commandResult |
+	importer := MooseNexusMavenProjectImporter new.
+	commandResult := 'Maven output' , importer commandExitStatusMarker , '0'.
+
+	self assert: (importer commandOutputFrom: commandResult forToolNamed: 'Maven') equals: 'Maven output'
+]
+
+{ #category : 'tests' }
 MooseNexusImporterExtractorProtocolTest >> testMavenImporterDeclaresCapabilitiesAndRequirements [
 
 	| importer requirement |
@@ -145,6 +169,20 @@ MooseNexusImporterExtractorProtocolTest >> testMavenImporterDeclaresCapabilities
 	self assert: (requirement availabilityValidation includesSubstring: '--version').
 	self assert: (requirement versionValidation includesSubstring: '--version').
 	self assert: (requirement expectedVersionDescription includesSubstring: 'dependency:resolve')
+]
+
+{ #category : 'tests' }
+MooseNexusImporterExtractorProtocolTest >> testMavenImporterSignalsCommandFailure [
+
+	| importer commandResult |
+	importer := MooseNexusMavenProjectImporter new.
+	commandResult := '[ERROR] Could not resolve POM' , importer commandExitStatusMarker , '1'.
+
+	self
+		should: [ importer commandOutputFrom: commandResult forToolNamed: 'Maven' ]
+		raise: Error
+		whoseDescriptionIncludes: 'Could not resolve POM'
+		description: 'Maven command failures must preserve the Maven diagnostic'
 ]
 
 { #category : 'tests' }
@@ -165,7 +203,7 @@ MooseNexusImporterExtractorProtocolTest >> testModelBuilderValidatesExtractorBef
 		should: [ builder build ]
 		raise: Error
 		whoseDescriptionIncludes: 'Unavailable test extractor tool is not available'
-		description: nil.
+		description: 'The model builder must surface an unavailable extractor before it runs'.
 	self deny: extractor didRun
 ]
 
