@@ -88,18 +88,6 @@ MooseNexusProject >> addImageArtifact: anImageArtifact [
 ]
 
 { #category : 'adding' }
-MooseNexusProject >> addModel: aMooseNexusModelArtifact buildProvenance: aMooseNexusBuildProvenance [
-	"Add a model artifact with its build provenance. Prefer addModelManifest: when the complete build context is available."
-
-	self addModelManifest: (MooseNexusModelArtifactManifest
-			 modelArtifact: aMooseNexusModelArtifact
-			 dependencyResolutionResult: (MooseNexusDependencyResolutionResult forProject: self)
-			 generatedFiles: #(  )
-			 createdTimestamp: aMooseNexusModelArtifact timestamp
-			 buildProvenance: aMooseNexusBuildProvenance)
-]
-
-{ #category : 'adding' }
 MooseNexusProject >> addModelManifest: aMooseNexusModelArtifactManifest [
 	"Record a uniquely named model artifact. A different manifest cannot replace an existing model name."
 

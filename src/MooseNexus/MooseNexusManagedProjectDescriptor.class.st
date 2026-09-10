@@ -89,14 +89,6 @@ MooseNexusManagedProjectDescriptor >> hash [
 ]
 
 { #category : 'initialization' }
-MooseNexusManagedProjectDescriptor >> initializeVersion: aVersion path: aPath dependencyGraph: aMooseNexusDependencyGraph [
-
-	version := aVersion.
-	path := aPath.
-	dependencyGraph := aMooseNexusDependencyGraph ifNil: [ MooseNexusDependencyGraph empty ]
-]
-
-{ #category : 'initialization' }
 MooseNexusManagedProjectDescriptor >> initializeVersion: aVersion path: aPath dependencyGraph: aMooseNexusDependencyGraph workspaceDependencies: workspaceDependencyDescriptors [
 
 	version := aVersion.

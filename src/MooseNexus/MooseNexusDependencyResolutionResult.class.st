@@ -107,15 +107,6 @@ MooseNexusDependencyResolutionResult >> hash [
 ]
 
 { #category : 'initialization' }
-MooseNexusDependencyResolutionResult >> initializeProject: aMooseNexusProject dependencies: dependencyDescriptors warnings: buildWarnings decisions: buildDecisions [
-
-	project := aMooseNexusProject.
-	dependencies := dependencyDescriptors.
-	warnings := buildWarnings.
-	decisions := buildDecisions
-]
-
-{ #category : 'initialization' }
 MooseNexusDependencyResolutionResult >> initializeProject: aMooseNexusProject dependencies: dependencyDescriptors warnings: buildWarnings decisions: buildDecisions materializations: materializationResults [
 
 	project := aMooseNexusProject.
