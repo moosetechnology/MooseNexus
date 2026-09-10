@@ -1,7 +1,7 @@
 "
 I describe one recorded model artifact and its import audit.
 
-I am the object persisted in models.json. The model artifact identifies the produced model. Generated files record repository-relative paths and checksums. The dependency-resolution result records the resolved dependency references, warnings, conflict decisions, and any temporary classpath materialization audit. I do not preserve build-tool configuration or a replay environment. This schema is intentionally alpha and may evolve without compatibility adapters.
+I am the object persisted in models.json. I record the produced model artifact, its generated files, dependency-resolution result, creation timestamp, and build provenance. Generated files carry repository-relative paths and checksums. The dependency-resolution result records the resolved dependency references, warnings, conflict decisions, and any temporary classpath materialization audit.
 "
 Class {
 	#name : 'MooseNexusModelArtifactManifest',
@@ -67,7 +67,7 @@ MooseNexusModelArtifactManifest >> = anObject [
 MooseNexusModelArtifactManifest >> asDictionary [
 
 	^ Dictionary new
-		  add: 'schemaVersion' -> 'alpha';
+		  add: 'schemaVersion' -> '1';
 		  add: 'modelArtifact' -> modelArtifact asDictionary;
 		  add: 'generatedFiles' -> generatedFiles;
 		  add: 'dependencyResolution' -> dependencyResolutionResult asDictionary;

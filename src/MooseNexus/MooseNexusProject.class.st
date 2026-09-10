@@ -62,7 +62,7 @@ MooseNexusProject class >> isAbstract [
 { #category : 'properties' }
 MooseNexusProject class >> propertiesSchemaVersion [
 
-	^ 'alpha'
+	^ '1'
 ]
 
 { #category : 'properties' }
