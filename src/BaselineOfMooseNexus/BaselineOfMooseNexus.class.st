@@ -18,12 +18,16 @@ BaselineOfMooseNexus >> baseline: spec [
 			spec
 				package: 'MooseNexus' with: [ spec requires: #( 'XMLParser' ) ];
 				package: 'MooseNexus-UI' with: [ spec requires: #( 'MooseNexus' ) ];
-				package: 'MooseNexus-Tests' with: [ spec requires: #( 'MooseNexus' ) ].
+				package: 'MooseNexus-TestResources' with: [ spec requires: #( 'MooseNexus' ) ];
+				package: 'MooseNexus-Tests' with: [ spec requires: #( 'MooseNexus-TestResources' ) ];
+				package: 'MooseNexus-IntegrationTests' with: [ spec requires: #( 'MooseNexus-TestResources' ) ].
 
 			spec
 				group: 'Core' with: #( 'MooseNexus' );
 				group: 'UI' with: #( 'MooseNexus-UI' );
-				group: 'Tests' with: #( 'MooseNexus-Tests' );
-				group: 'all' with: #( 'default' 'UI' );
-				group: 'default' with: #( 'Core' 'Tests' ) ]
+				group: 'UnitTests' with: #( 'MooseNexus-Tests' );
+				group: 'IntegrationTests' with: #( 'MooseNexus-IntegrationTests' );
+				group: 'Tests' with: #( 'UnitTests' 'IntegrationTests' );
+				group: 'all' with: #( 'Core' 'UI' 'Tests' );
+				group: 'default' with: #( 'Core' 'UnitTests' ) ]
 ]

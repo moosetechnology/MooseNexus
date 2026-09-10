@@ -10,8 +10,9 @@ Class {
 		'artifacts',
 		'fetchCount'
 	],
-	#category : 'MooseNexus-Tests',
-	#package : 'MooseNexus-Tests'
+	#category : 'MooseNexus-TestResources-Repository',
+	#package : 'MooseNexus-TestResources',
+	#tag : 'Repository'
 }
 
 { #category : 'artifacts' }

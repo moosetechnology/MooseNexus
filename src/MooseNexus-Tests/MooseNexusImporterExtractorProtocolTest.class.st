@@ -155,6 +155,25 @@ MooseNexusImporterExtractorProtocolTest >> testMavenImporterAnswersOutputWhenMav
 ]
 
 { #category : 'tests' }
+MooseNexusImporterExtractorProtocolTest >> testMavenImporterCreatesPathlessDependencyReferencesFromTreeNodes [
+
+	| importer descriptor |
+	importer := MooseNexusMavenProjectImporter new.
+
+	descriptor := importer dependencyReferenceForTreeNode: (Dictionary
+			               with: 'groupId' -> 'org.example'
+			               with: 'artifactId' -> 'lib'
+			               with: 'version' -> '1.0.0'
+			               with: 'type' -> 'jar'
+			               with: 'scope' -> 'runtime').
+
+	self assert: descriptor class equals: MooseNexusDependencyDescriptor.
+	self deny: descriptor isLocal.
+	self assert: descriptor scopes equals: #( 'runtime' ).
+	self deny: (descriptor asDictionary includesKey: #path)
+]
+
+{ #category : 'tests' }
 MooseNexusImporterExtractorProtocolTest >> testMavenImporterDeclaresCapabilitiesAndRequirements [
 
 	| importer requirement |
@@ -169,6 +188,34 @@ MooseNexusImporterExtractorProtocolTest >> testMavenImporterDeclaresCapabilities
 	self assert: (requirement availabilityValidation includesSubstring: '--version').
 	self assert: (requirement versionValidation includesSubstring: '--version').
 	self assert: (requirement expectedVersionDescription includesSubstring: '3.6.3')
+]
+
+{ #category : 'tests' }
+MooseNexusImporterExtractorProtocolTest >> testMavenImporterParsesMavenVersionBanners [
+
+	| importer |
+	importer := MooseNexusMavenProjectImporter new.
+
+	self assert: (importer mavenVersionFrom: 'Apache Maven 3.9.11') equals: '3.9.11'.
+	self assert: (importer mavenVersionFrom: 'Apache Maven 3.9.11 (deadbeef)') equals: '3.9.11'.
+	self should: [ importer mavenVersionFrom: 'Maven 3.9.11' ] raise: Error.
+	self should: [ importer mavenVersionFrom: 'Apache Maven ' ] raise: Error
+]
+
+{ #category : 'tests' }
+MooseNexusImporterExtractorProtocolTest >> testMavenImporterParsesSingleAndReactorEffectiveProjects [
+
+	| importer singleProject reactorProjects |
+	importer := MooseNexusMavenProjectImporter new.
+
+	singleProject := importer effectiveProjectElementsFrom: '<project><groupId>org.example</groupId></project>'.
+	reactorProjects := importer effectiveProjectElementsFrom:
+		                   '<projects><project><groupId>org.first</groupId></project><project><groupId>org.second</groupId></project></projects>'.
+
+	self assert: singleProject size equals: 1.
+	self assert: singleProject first name equals: 'project'.
+	self assert: reactorProjects size equals: 2.
+	self assertCollection: (reactorProjects collect: #name) hasSameElements: #( project project )
 ]
 
 { #category : 'tests' }

@@ -1,8 +1,9 @@
 Class {
 	#name : 'MooseNexusTestProject',
 	#superclass : 'MooseNexusProject',
-	#category : 'MooseNexus-Tests',
-	#package : 'MooseNexus-Tests'
+	#category : 'MooseNexus-TestResources-Project',
+	#package : 'MooseNexus-TestResources',
+	#tag : 'Project'
 }
 
 { #category : 'accessing' }

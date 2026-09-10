@@ -77,6 +77,31 @@ MooseNexusDependencyDescriptorTest >> testDependencyResolutionResultPreservesMat
 ]
 
 { #category : 'tests' }
+MooseNexusDependencyDescriptorTest >> testDescriptorCopiesPreserveKindAndArtifactIdentity [
+
+	| remote local copiedRemote copiedLocal |
+	remote := MooseNexusDependencyDescriptor
+		          coordinates: (MooseNexusCoordinates group: 'org.example' name: 'lib' version: '1.0.0')
+		          type: 'jar'
+		          scopes: #( 'compile' ).
+	local := MooseNexusLocalDependencyDescriptor
+		         coordinates: remote coordinates
+		         type: remote type
+		         scopes: remote scopes
+		         path: 'repository/lib.jar'.
+
+	copiedRemote := remote withScopes: #( 'runtime' ).
+	copiedLocal := local withGroup: 'org.other'.
+
+	self assert: (remote hasSameArtifactAs: copiedRemote).
+	self assert: copiedRemote scopes equals: #( 'runtime' ).
+	self assert: copiedLocal class equals: MooseNexusLocalDependencyDescriptor.
+	self assert: copiedLocal group equals: 'org.other'.
+	self assert: copiedLocal path equals: local path.
+	self deny: (remote hasSameArtifactAs: local)
+]
+
+{ #category : 'tests' }
 MooseNexusDependencyDescriptorTest >> testDescriptorIsValueObject [
 
 	| coordinates descriptor sameDescriptor otherDescriptor |
@@ -152,6 +177,25 @@ MooseNexusDependencyDescriptorTest >> testMaterializationFileNamesDifferentiateA
 
 	self deny: first materializationFileName equals: second materializationFileName.
 	self assert: first materializationFileName equals: '9-org.first6-shared5-1.0.0.jar'
+]
+
+{ #category : 'tests' }
+MooseNexusDependencyDescriptorTest >> testMaterializationResultIsValueObjectAndRoundTrips [
+
+	| dependency result reloadedResult |
+	dependency := MooseNexusDependencyDescriptor
+		              coordinates: (MooseNexusCoordinates group: 'org.example' name: 'lib' version: '1.0.0')
+		              type: 'jar'
+		              scopes: #( 'compile' ).
+	result := MooseNexusDependencyMaterializationResult dependency: dependency path: 'dependencies/lib.jar' source: 'maven'.
+
+	reloadedResult := MooseNexusDependencyMaterializationResult fromDictionary: result asDictionary.
+
+	self assert: result equals: reloadedResult.
+	self assert: result hash equals: reloadedResult hash.
+	self assert: result dependency equals: dependency.
+	self assert: result path equals: 'dependencies/lib.jar'.
+	self assert: result source equals: 'maven'
 ]
 
 { #category : 'tests' }
@@ -241,4 +285,20 @@ MooseNexusDependencyDescriptorTest >> testWithGroupAnswersCopy [
 	self assert: descriptor group equals: nil.
 	self assert: groupedDescriptor group equals: 'org.example'.
 	self assert: groupedDescriptor name equals: descriptor name
+]
+
+{ #category : 'tests' }
+MooseNexusDependencyDescriptorTest >> testWorkspaceDescriptorIsValueObjectAndRoundTrips [
+
+	| coordinates descriptor reloadedDescriptor |
+	coordinates := MooseNexusCoordinates group: 'org.example' name: 'workspace-lib' version: '1.0.0'.
+	descriptor := MooseNexusWorkspaceDependencyDescriptor coordinates: coordinates scopes: { 'compile'. nil. 'compile'. 'runtime' }.
+
+	reloadedDescriptor := MooseNexusWorkspaceDependencyDescriptor fromDictionary: descriptor asDictionary.
+
+	self assert: descriptor equals: reloadedDescriptor.
+	self assert: descriptor hash equals: reloadedDescriptor hash.
+	self assert: descriptor coordinates equals: coordinates.
+	self assert: descriptor scopes equals: #( 'compile' 'runtime' ).
+	self assert: descriptor printString equals: 'org.example:workspace-lib:1.0.0'
 ]
