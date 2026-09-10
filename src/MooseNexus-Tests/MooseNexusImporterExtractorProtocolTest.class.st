@@ -168,7 +168,36 @@ MooseNexusImporterExtractorProtocolTest >> testMavenImporterDeclaresCapabilities
 	self assert: requirement name equals: 'Maven'.
 	self assert: (requirement availabilityValidation includesSubstring: '--version').
 	self assert: (requirement versionValidation includesSubstring: '--version').
-	self assert: (requirement expectedVersionDescription includesSubstring: 'dependency:resolve')
+	self assert: (requirement expectedVersionDescription includesSubstring: '3.6.3')
+]
+
+{ #category : 'tests' }
+MooseNexusImporterExtractorProtocolTest >> testMavenImporterRecognizesSupportedMaven3Versions [
+
+	| importer |
+	importer := MooseNexusMavenProjectImporter new.
+
+	#( '3.6.3' '3.8.8' '3.9.11' ) do: [ :version | self assert: (importer isSupportedMavenVersion: version) ].
+	self deny: (importer isSupportedMavenVersion: '3.6.2').
+	self deny: (importer isSupportedMavenVersion: '4.0.0')
+]
+
+{ #category : 'tests' }
+MooseNexusImporterExtractorProtocolTest >> testMavenImporterRejectsUnsupportedVersionsDuringPreflight [
+
+	| importer |
+	importer := MooseNexusMavenProjectImporter new.
+
+	self
+		should: [ importer validateMavenVersion: 'Apache Maven 3.6.2' ]
+		raise: Error
+		whoseDescriptionIncludes: 'Maven 3.6.3 through 3.x'
+		description: 'Maven below the plugin floor must not proceed'.
+	self
+		should: [ importer validateMavenVersion: 'Apache Maven 4.0.0' ]
+		raise: Error
+		whoseDescriptionIncludes: 'Maven 4 is not yet supported'
+		description: 'Untested Maven 4 must not proceed'
 ]
 
 { #category : 'tests' }

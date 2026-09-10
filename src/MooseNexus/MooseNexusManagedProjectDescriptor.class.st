@@ -9,7 +9,8 @@ Class {
 	#instVars : [
 		'version',
 		'path',
-		'dependencyGraph'
+		'dependencyGraph',
+		'workspaceDependencies'
 	],
 	#category : 'MooseNexus-Project',
 	#package : 'MooseNexus',
@@ -23,12 +24,28 @@ MooseNexusManagedProjectDescriptor class >> fromDictionary: aDictionary [
 		  version: (aDictionary at: #version ifAbsent: [ nil ])
 		  path: (aDictionary at: #path ifAbsent: [ nil ])
 		  dependencyGraph: (MooseNexusDependencyGraph fromDictionary: (aDictionary at: #dependencyGraph))
+		  workspaceDependencies: ((aDictionary at: #workspaceDependencies) collect: [ :dependency |
+				   MooseNexusWorkspaceDependencyDescriptor fromDictionary: dependency ])
 ]
 
 { #category : 'instance creation' }
 MooseNexusManagedProjectDescriptor class >> version: aVersion path: aPath dependencyGraph: aMooseNexusDependencyGraph [
 
-	^ self new initializeVersion: aVersion path: aPath dependencyGraph: aMooseNexusDependencyGraph
+	^ self
+		  version: aVersion
+		  path: aPath
+		  dependencyGraph: aMooseNexusDependencyGraph
+		  workspaceDependencies: #(  )
+]
+
+{ #category : 'instance creation' }
+MooseNexusManagedProjectDescriptor class >> version: aVersion path: aPath dependencyGraph: aMooseNexusDependencyGraph workspaceDependencies: workspaceDependencyDescriptors [
+
+	^ self new
+		  initializeVersion: aVersion
+		  path: aPath
+		  dependencyGraph: aMooseNexusDependencyGraph
+		  workspaceDependencies: workspaceDependencyDescriptors
 ]
 
 { #category : 'comparing' }
@@ -36,14 +53,19 @@ MooseNexusManagedProjectDescriptor >> = anObject [
 
 	self == anObject ifTrue: [ ^ true ].
 	anObject class == self class ifFalse: [ ^ false ].
-	^ anObject version = version and: [ anObject path = path and: [ anObject dependencyGraph = dependencyGraph ] ]
+	^ anObject version = version and: [
+			  anObject path = path and: [
+				  anObject dependencyGraph = dependencyGraph and: [ anObject workspaceDependencies = workspaceDependencies ] ] ]
 ]
 
 { #category : 'converting' }
 MooseNexusManagedProjectDescriptor >> asDictionary [
 
 	| dictionary |
-	dictionary := Dictionary with: #version -> version with: #dependencyGraph -> dependencyGraph asDictionary.
+	dictionary := Dictionary
+		              with: #version -> version
+		              with: #dependencyGraph -> dependencyGraph asDictionary
+		              with: #workspaceDependencies -> (workspaceDependencies collect: #asDictionary as: Array).
 	path ifNotNil: [ dictionary at: #path put: path ].
 	^ dictionary
 ]
@@ -63,7 +85,7 @@ MooseNexusManagedProjectDescriptor >> dependencyGraph [
 { #category : 'comparing' }
 MooseNexusManagedProjectDescriptor >> hash [
 
-	^ version hash bitXor: (path hash bitXor: dependencyGraph hash)
+	^ version hash bitXor: (path hash bitXor: (dependencyGraph hash bitXor: workspaceDependencies hash))
 ]
 
 { #category : 'initialization' }
@@ -72,6 +94,15 @@ MooseNexusManagedProjectDescriptor >> initializeVersion: aVersion path: aPath de
 	version := aVersion.
 	path := aPath.
 	dependencyGraph := aMooseNexusDependencyGraph ifNil: [ MooseNexusDependencyGraph empty ]
+]
+
+{ #category : 'initialization' }
+MooseNexusManagedProjectDescriptor >> initializeVersion: aVersion path: aPath dependencyGraph: aMooseNexusDependencyGraph workspaceDependencies: workspaceDependencyDescriptors [
+
+	version := aVersion.
+	path := aPath.
+	dependencyGraph := aMooseNexusDependencyGraph ifNil: [ MooseNexusDependencyGraph empty ].
+	workspaceDependencies := workspaceDependencyDescriptors ifNil: [ #(  ) ] ifNotNil: [ workspaceDependencyDescriptors asArray ]
 ]
 
 { #category : 'accessing' }
@@ -94,4 +125,10 @@ MooseNexusManagedProjectDescriptor >> printOn: aStream [
 MooseNexusManagedProjectDescriptor >> version [
 
 	^ version
+]
+
+{ #category : 'accessing' }
+MooseNexusManagedProjectDescriptor >> workspaceDependencies [
+
+	^ workspaceDependencies
 ]

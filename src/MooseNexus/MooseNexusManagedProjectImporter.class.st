@@ -27,10 +27,7 @@ MooseNexusManagedProjectImporter class >> isAbstract [
 MooseNexusManagedProjectImporter >> addDependency: descriptor to: dependencies group: dependencyGroup [
 
 	| key |
-	key := {
-		       descriptor coordinates.
-		       descriptor type.
-		       descriptor path }.
+	key := descriptor artifactIdentity.
 	dependencies
 		at: dependencyGroup
 		ifPresent: [ :descriptorsByArtifact |
@@ -120,7 +117,14 @@ MooseNexusManagedProjectImporter >> dependencyDescriptor: left sortsBeforeOrAt: 
 	rightName := right printString.
 	leftName = rightName ifFalse: [ ^ leftName < rightName ].
 	left type = right type ifFalse: [ ^ left type < right type ].
-	^ left path <= right path
+	^ left artifactIdentity printString <= right artifactIdentity printString
+]
+
+{ #category : 'querying' }
+MooseNexusManagedProjectImporter >> dependencyDescriptorsForResolution [
+	"Answer the dependency descriptors in the generic managed-project traversal order."
+
+	^ Array streamContents: [ :stream | project projectDependenciesDo: [ :dependencyGroup :dependency | stream nextPut: dependency ] ]
 ]
 
 { #category : 'private' }
@@ -249,14 +253,13 @@ MooseNexusManagedProjectImporter >> resolve: descriptor [
 
 { #category : 'querying' }
 MooseNexusManagedProjectImporter >> resolveDependencies [
-	"Resolve all dependencies of this project into a flat resolved dependency set.
-	A conflict can occur if two managed projects declare the same dependency with different versions."
+	"Resolve all dependencies into a flat set. When managed projects disagree on a version, select using the configured conflict resolver."
 
 	| dependencies conflicts decisions |
-	dependencies := Dictionary new.
-	conflicts := Dictionary new.
+	dependencies := OrderedDictionary new.
+	conflicts := OrderedDictionary new.
 
-	project projectDependenciesDo: [ :dependencyGroup :dependency |
+	self dependencyDescriptorsForResolution do: [ :dependency |
 			| key |
 			key := self conflictIdForDependency: dependency.
 			conflicts at: key ifPresent: [ :conflictList | conflictList add: dependency ] ifAbsent: [

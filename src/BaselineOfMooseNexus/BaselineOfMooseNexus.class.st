@@ -10,8 +10,13 @@ BaselineOfMooseNexus >> baseline: spec [
 
 	<baseline>
 	spec for: #common do: [
+			spec baseline: 'XMLParser' with: [
+					spec
+						loads: #( 'Core' );
+						repository: 'github://pharo-contributions/XML-XMLParser:v3.6.3/src' ].
+
 			spec
-				package: 'MooseNexus' with: [ spec requires: #( 'MooseNexus-UI' ) ];
+				package: 'MooseNexus' with: [ spec requires: #( 'MooseNexus-UI' 'XML-Parser' ) ];
 				package: 'MooseNexus-UI';
 				package: 'MooseNexus-Tests' with: [ spec requires: #( 'MooseNexus' ) ].
 

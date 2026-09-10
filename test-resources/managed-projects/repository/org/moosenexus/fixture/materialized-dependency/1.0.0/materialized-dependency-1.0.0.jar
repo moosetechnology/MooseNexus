@@ -1,0 +1,1 @@
+This is intentionally a minimal fixture payload. The materializers copy it but never inspect its bytecode.

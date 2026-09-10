@@ -8,13 +8,14 @@ Class {
 	#superclass : 'Object',
 	#instVars : [
 		'project',
-		'withDependencies',
 		'extractor',
 		'modelName',
 		'modelComment',
-		'dependencySourceSelectionPolicy',
 		'dependencyResolutionResult',
-		'buildProvenance'
+		'buildProvenance',
+		'materializations',
+		'withDependencyClasspath',
+		'dependencyClasspathSelectionPolicy'
 	],
 	#category : 'MooseNexus-ModelExtraction',
 	#package : 'MooseNexus',
@@ -57,6 +58,21 @@ MooseNexusModelBuilder >> cleanUp [
 ]
 
 { #category : 'accessing' }
+MooseNexusModelBuilder >> dependencyClasspathSelectionPolicy [
+
+	^ dependencyClasspathSelectionPolicy ifNil: [
+			  dependencyClasspathSelectionPolicy := withDependencyClasspath
+				                                        ifTrue: [ MooseNexusDependencyClasspathSelectionPolicy all ]
+				                                        ifFalse: [ MooseNexusDependencyClasspathSelectionPolicy none ] ]
+]
+
+{ #category : 'accessing' }
+MooseNexusModelBuilder >> dependencyClasspathSelectionPolicy: aMooseNexusDependencyClasspathSelectionPolicy [
+
+	dependencyClasspathSelectionPolicy := aMooseNexusDependencyClasspathSelectionPolicy
+]
+
+{ #category : 'accessing' }
 MooseNexusModelBuilder >> dependencyResolutionResult [
 
 	^ dependencyResolutionResult ifNil: [ dependencyResolutionResult := MooseNexusDependencyResolutionResult forProject: project ]
@@ -66,21 +82,6 @@ MooseNexusModelBuilder >> dependencyResolutionResult [
 MooseNexusModelBuilder >> dependencyResolutionResult: aMooseNexusDependencyResolutionResult [
 
 	dependencyResolutionResult := aMooseNexusDependencyResolutionResult
-]
-
-{ #category : 'accessing' }
-MooseNexusModelBuilder >> dependencySourceSelectionPolicy [
-
-	^ dependencySourceSelectionPolicy ifNil: [
-			  dependencySourceSelectionPolicy := withDependencies
-				                                     ifTrue: [ MooseNexusDependencySourceSelectionPolicy all ]
-				                                     ifFalse: [ MooseNexusDependencySourceSelectionPolicy none ] ]
-]
-
-{ #category : 'accessing' }
-MooseNexusModelBuilder >> dependencySourceSelectionPolicy: aMooseNexusDependencySourceSelectionPolicy [
-
-	dependencySourceSelectionPolicy := aMooseNexusDependencySourceSelectionPolicy
 ]
 
 { #category : 'accessing' }
@@ -98,7 +99,14 @@ MooseNexusModelBuilder >> extractor: aMooseNexusModelExtractor [
 { #category : 'initialization' }
 MooseNexusModelBuilder >> initialize [
 
-	withDependencies := true
+	super initialize.
+	withDependencyClasspath := true
+]
+
+{ #category : 'accessing' }
+MooseNexusModelBuilder >> materializations [
+
+	^ materializations ifNil: [ materializations := #(  ) ]
 ]
 
 { #category : 'accessing' }
@@ -176,19 +184,16 @@ MooseNexusModelBuilder >> registerModel: modelPath [
 { #category : 'building' }
 MooseNexusModelBuilder >> setUp [
 
-	| home projectDirectory dependencies selectedDependencies |
-	home := FileLocator home.
+	| projectDirectory dependencies selectedDependencies |
 	projectDirectory := project repositoryDirectory.
 	selectedDependencies := project dependencies select: [ :dependency |
-		                        self dependencySourceSelectionPolicy includesDependency: dependency ].
-
-	selectedDependencies ifNotEmpty: [
-			dependencies := (projectDirectory / 'dependencies') createDirectory.
-			selectedDependencies do: [ :dependency |
-					| artifact |
-					artifact := home / dependency path.
-					artifact copyTo: dependencies / artifact basename ] ].
-
+		                        self dependencyClasspathSelectionPolicy includesDependency: dependency ].
+	materializations := selectedDependencies ifEmpty: [ #(  ) ] ifNotEmpty: [
+			                    dependencies := (projectDirectory / 'dependencies') createDirectory.
+			                    selectedDependencies
+				                    collect: [ :dependency | project materializeDependency: dependency into: dependencies ]
+				                    as: Array ].
+	self dependencyResolutionResult: (self dependencyResolutionResult withMaterializations: self materializations).
 	self extractor target: projectDirectory pathString
 ]
 
@@ -199,16 +204,16 @@ MooseNexusModelBuilder >> validateExtractorRequirements [
 ]
 
 { #category : 'accessing' }
-MooseNexusModelBuilder >> withDependencies [
+MooseNexusModelBuilder >> withDependencyClasspath [
 
-	^ withDependencies
+	^ withDependencyClasspath
 ]
 
 { #category : 'accessing' }
-MooseNexusModelBuilder >> withDependencies: aBoolean [
+MooseNexusModelBuilder >> withDependencyClasspath: aBoolean [
 
-	withDependencies := aBoolean.
-	dependencySourceSelectionPolicy := aBoolean
-		                                   ifTrue: [ MooseNexusDependencySourceSelectionPolicy all ]
-		                                   ifFalse: [ MooseNexusDependencySourceSelectionPolicy none ]
+	withDependencyClasspath := aBoolean.
+	dependencyClasspathSelectionPolicy := aBoolean
+		                                      ifTrue: [ MooseNexusDependencyClasspathSelectionPolicy all ]
+		                                      ifFalse: [ MooseNexusDependencyClasspathSelectionPolicy none ]
 ]

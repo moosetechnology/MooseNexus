@@ -39,6 +39,7 @@ MooseNexusBuildPlan >> configureProjectMetadata [
 	buildSpec configureImporter: projectImporter.
 	projectImporter validateRequirements.
 	project := projectImporter importWithCoordinates: buildSpec coordinates.
+	buildSpec language ifNotNil: [ :configuredLanguage | project language: configuredLanguage ].
 	^ project
 ]
 
@@ -64,6 +65,7 @@ MooseNexusBuildPlan >> executeExtraction [
 	buildSpec configureModelBuilder: modelBuilder.
 	modelBuilder dependencyResolutionResult: dependencyResolutionResult.
 	modelArtifact := modelBuilder build.
+	dependencyResolutionResult := modelBuilder dependencyResolutionResult.
 	modelBuildResult := MooseNexusModelBuildResult
 		                    project: project
 		                    modelArtifact: modelArtifact

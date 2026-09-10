@@ -7,6 +7,34 @@ Class {
 }
 
 { #category : 'tests' }
+MooseNexusDependencyDescriptorTest >> testDependencyClasspathSelectionPolicyExcludesNonMatchingScopes [
+
+	| dependency policy |
+	dependency := MooseNexusDependencyDescriptor
+		              coordinates: (MooseNexusCoordinates group: 'org.example' name: 'dep' version: '1.0.0')
+		              type: 'jar'
+		              scopes: #( 'test' )
+		              path: 'repository/dep-1.0.0.jar'.
+	policy := MooseNexusDependencyClasspathSelectionPolicy includedScopes: #( 'compile' 'runtime' ).
+
+	self deny: (policy includesDependency: dependency)
+]
+
+{ #category : 'tests' }
+MooseNexusDependencyDescriptorTest >> testDependencyClasspathSelectionPolicyIncludesMatchingScopes [
+
+	| dependency policy |
+	dependency := MooseNexusDependencyDescriptor
+		              coordinates: (MooseNexusCoordinates group: 'org.example' name: 'dep' version: '1.0.0')
+		              type: 'jar'
+		              scopes: #( 'compile' 'runtime' )
+		              path: 'repository/dep-1.0.0.jar'.
+	policy := MooseNexusDependencyClasspathSelectionPolicy includedScopes: #( 'runtime' ).
+
+	self assert: (policy includesDependency: dependency)
+]
+
+{ #category : 'tests' }
 MooseNexusDependencyDescriptorTest >> testDependencyGraphDictionaryRoundTrip [
 
 	| dependency graph sameGraph |
@@ -24,31 +52,28 @@ MooseNexusDependencyDescriptorTest >> testDependencyGraphDictionaryRoundTrip [
 ]
 
 { #category : 'tests' }
-MooseNexusDependencyDescriptorTest >> testDependencySourceSelectionPolicyExcludesNonMatchingScopes [
+MooseNexusDependencyDescriptorTest >> testDependencyResolutionResultPreservesMaterializationAudit [
 
-	| dependency policy |
+	| dependency materialization result reloadedResult |
 	dependency := MooseNexusDependencyDescriptor
 		              coordinates: (MooseNexusCoordinates group: 'org.example' name: 'dep' version: '1.0.0')
 		              type: 'jar'
-		              scopes: #( 'test' )
-		              path: 'repository/dep-1.0.0.jar'.
-	policy := MooseNexusDependencySourceSelectionPolicy includedScopes: #( 'compile' 'runtime' ).
+		              scopes: #( 'compile' ).
+	materialization := MooseNexusDependencyMaterializationResult
+		                   dependency: dependency
+		                   path: 'dependencies/staged-dependency.jar'
+		                   source: 'maven'.
+	result := MooseNexusDependencyResolutionResult
+		          project: nil
+		          dependencies: { dependency }
+		          warnings: #(  )
+		          decisions: #(  )
+		          materializations: { materialization }.
 
-	self deny: (policy includesDependency: dependency)
-]
+	reloadedResult := MooseNexusDependencyResolutionResult fromDictionary: result asDictionary.
 
-{ #category : 'tests' }
-MooseNexusDependencyDescriptorTest >> testDependencySourceSelectionPolicyIncludesMatchingScopes [
-
-	| dependency policy |
-	dependency := MooseNexusDependencyDescriptor
-		              coordinates: (MooseNexusCoordinates group: 'org.example' name: 'dep' version: '1.0.0')
-		              type: 'jar'
-		              scopes: #( 'compile' 'runtime' )
-		              path: 'repository/dep-1.0.0.jar'.
-	policy := MooseNexusDependencySourceSelectionPolicy includedScopes: #( 'runtime' ).
-
-	self assert: (policy includesDependency: dependency)
+	self assert: reloadedResult equals: result.
+	self assert: reloadedResult materializations equals: { materialization }
 ]
 
 { #category : 'tests' }
@@ -95,6 +120,41 @@ MooseNexusDependencyDescriptorTest >> testDictionaryRoundTrip [
 ]
 
 { #category : 'tests' }
+MooseNexusDependencyDescriptorTest >> testLocalDescriptorSerializesItsPathSeparately [
+
+	| descriptor reloadedDescriptor |
+	descriptor := MooseNexusLocalDependencyDescriptor
+		              coordinates: (MooseNexusCoordinates group: 'org.example' name: 'lib' version: '1.0.0')
+		              type: 'jar'
+		              scopes: #( 'compile' )
+		              path: '.m2/repository/org/example/lib/1.0.0/lib-1.0.0.jar'.
+
+	reloadedDescriptor := MooseNexusDependencyDescriptor fromDictionary: descriptor asDictionary.
+
+	self assert: descriptor isLocal.
+	self assert: (descriptor asDictionary at: #path) equals: descriptor path.
+	self assert: reloadedDescriptor class equals: MooseNexusLocalDependencyDescriptor.
+	self assert: reloadedDescriptor equals: descriptor
+]
+
+{ #category : 'tests' }
+MooseNexusDependencyDescriptorTest >> testMaterializationFileNamesDifferentiateArtifactCoordinates [
+
+	| first second |
+	first := MooseNexusDependencyDescriptor
+		         coordinates: (MooseNexusCoordinates group: 'org.first' name: 'shared' version: '1.0.0')
+		         type: 'jar'
+		         scopes: #( 'compile' ).
+	second := MooseNexusDependencyDescriptor
+		          coordinates: (MooseNexusCoordinates group: 'org.second' name: 'shared' version: '1.0.0')
+		          type: 'jar'
+		          scopes: #( 'compile' ).
+
+	self deny: first materializationFileName equals: second materializationFileName.
+	self assert: first materializationFileName equals: '9-org.first6-shared5-1.0.0.jar'
+]
+
+{ #category : 'tests' }
 MooseNexusDependencyDescriptorTest >> testMergeAggregatesScopes [
 
 	| coordinates compile runtime mergedDescriptor |
@@ -114,6 +174,23 @@ MooseNexusDependencyDescriptorTest >> testMergeAggregatesScopes [
 
 	self assert: mergedDescriptor coordinates equals: coordinates.
 	self assert: mergedDescriptor scopes equals: #( 'compile' 'runtime' )
+]
+
+{ #category : 'tests' }
+MooseNexusDependencyDescriptorTest >> testRemoteDescriptorDoesNotSerializeLocalPath [
+
+	| descriptor reloadedDescriptor |
+	descriptor := MooseNexusDependencyDescriptor
+		              coordinates: (MooseNexusCoordinates group: 'org.example' name: 'lib' version: '1.0.0')
+		              type: 'jar'
+		              scopes: #( 'compile' ).
+
+	reloadedDescriptor := MooseNexusDependencyDescriptor fromDictionary: descriptor asDictionary.
+
+	self deny: descriptor isLocal.
+	self deny: (descriptor asDictionary includesKey: #path).
+	self assert: reloadedDescriptor class equals: MooseNexusDependencyDescriptor.
+	self assert: reloadedDescriptor equals: descriptor
 ]
 
 { #category : 'tests' }

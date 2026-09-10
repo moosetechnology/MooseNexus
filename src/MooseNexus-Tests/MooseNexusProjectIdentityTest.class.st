@@ -235,7 +235,8 @@ MooseNexusProjectIdentityTest >> testManagedProjectDescriptorDictionaryRoundTrip
 					                with: #version -> '2.0.0'
 					                with: #type -> 'jar'
 					                with: #scopes -> #( 'compile' )
-					                with: #path -> 'repository/dep-2.0.0.jar') }).
+					                with: #path -> 'repository/dep-2.0.0.jar') })
+		              with: #workspaceDependencies -> #(  ).
 	descriptor := MooseNexusManagedProjectDescriptor fromDictionary: dictionary.
 	dependencyGraph := descriptor dependencyGraph.
 	dependency := dependencyGraph dependencies first.
@@ -244,6 +245,7 @@ MooseNexusProjectIdentityTest >> testManagedProjectDescriptorDictionaryRoundTrip
 	self assert: descriptor path equals: '.'.
 	self assert: dependencyGraph size equals: 1.
 	self assert: dependency group equals: 'org.example'.
+	self assert: descriptor workspaceDependencies isEmpty.
 	self assert: descriptor asDictionary equals: dictionary
 ]
 
@@ -319,6 +321,46 @@ MooseNexusProjectIdentityTest >> testManagedProjectPropertiesSerializeSharedDepe
 
 	self assert: loadedProject dependencies isEmpty.
 	self assert: loadedProject projects equals: project projects
+]
+
+{ #category : 'tests' }
+MooseNexusProjectIdentityTest >> testMavenImporterUsesReactorOrderForFirstFoundResolution [
+
+	| project importer firstDependency secondDependency firstDescriptor secondDescriptor result decision |
+	firstDependency := MooseNexusDependencyDescriptor
+		                   coordinates: (MooseNexusCoordinates group: 'org.example' name: 'dep' version: '1.0.0')
+		                   type: 'jar'
+		                   scopes: #( 'compile' )
+		                   path: nil.
+	secondDependency := MooseNexusDependencyDescriptor
+		                    coordinates: (MooseNexusCoordinates group: 'org.example' name: 'dep' version: '2.0.0')
+		                    type: 'jar'
+		                    scopes: #( 'compile' )
+		                    path: nil.
+	firstDescriptor := MooseNexusManagedProjectDescriptor
+		                   version: '1.0.0'
+		                   path: 'first'
+		                   dependencyGraph: (MooseNexusDependencyGraph dependencies: { firstDependency }).
+	secondDescriptor := MooseNexusManagedProjectDescriptor
+		                    version: '1.0.0'
+		                    path: 'second'
+		                    dependencyGraph: (MooseNexusDependencyGraph dependencies: { secondDependency }).
+	project := MooseNexusMavenProject coordinates: (MooseNexusCoordinates group: 'com.example' name: 'demo' version: '1.0.0').
+	project projects:
+		(Dictionary with: 'com.example' -> (Dictionary with: 'first' -> firstDescriptor with: 'second' -> secondDescriptor)).
+	importer := MooseNexusMavenProjectImporter new.
+	importer
+		project: project;
+		reactorProjectOrder: {
+				{ 'com.example'. 'second' }.
+				{ 'com.example'. 'first' } }.
+
+	result := importer resolveDependencies.
+	decision := result decisions first.
+
+	self assert: result dependencies size equals: 1.
+	self assert: result dependencies first version equals: '2.0.0'.
+	self assert: decision selectedDependency equals: result dependencies first
 ]
 
 { #category : 'tests' }

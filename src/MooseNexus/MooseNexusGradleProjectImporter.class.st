@@ -67,34 +67,15 @@ MooseNexusGradleProjectImporter >> findGradleCommand [
 
 { #category : 'constants' }
 MooseNexusGradleProjectImporter >> groovyCodeForDependencies [
-	"Code to insert into a build.gradle file to get the flat list of dependencies."
+	"Code to append to build.gradle for a pathless list of resolved dependency coordinates."
 
 	^ String streamContents: [ :s |
-			  s << 'tasks.register("' << self class taskName << '") {
-	doLast {
-		def rootDirPath = rootDir.canonicalPath
-		allprojects.findAll { it.projectDir.canonicalPath.startsWith(rootDirPath) }.each { project ->
-			println "-${' << self groupCode << '}:${' << self nameCode << '}:${' << self versionCode << '}"
-			def projectDirPath = project.projectDir.canonicalPath
-			if (projectDirPath.equals(rootDirPath)) {
-				println "."
-			} else {
-				println(projectDirPath.substring(rootDirPath.length() + 1))
-			}
-			configurations.findAll { it.canBeResolved }.each { configuration ->
-				def scope = configuration.name
-				configuration.resolvedConfiguration.resolvedArtifacts.each { artifact ->
-					def group = artifact.moduleVersion.id.group
-					def name = artifact.name
-					def type = artifact.extension ?: "jar"
-					def version = artifact.moduleVersion.id.version
-					def path = artifact.file.absolutePath // forces artifact download
-					println "$group:$name:$type:$version:$scope:$path"
-				}
-			}
-		}
-	}
-}' ]
+			  s << 'tasks.register("' << self class taskName
+			  <<
+			  '") { doLast { def rootDirPath = rootDir.canonicalPath; allprojects.findAll { it.projectDir.canonicalPath.startsWith(rootDirPath) }.each { project -> println("-${'
+			  << self groupCode << '}:${' << self nameCode << '}:${' << self versionCode
+			  <<
+			  '}"); def projectDirPath = project.projectDir.canonicalPath; println(projectDirPath.equals(rootDirPath) ? "." : projectDirPath.substring(rootDirPath.length() + 1)); configurations.findAll { it.canBeResolved }.each { configuration -> def scope = configuration.name; configuration.resolvedConfiguration.resolvedArtifacts.each { artifact -> println("${artifact.moduleVersion.id.group}:${artifact.name}:${artifact.extension ?: "jar"}:${artifact.moduleVersion.id.version}:$scope") } } } } }' ]
 ]
 
 { #category : 'accessing' }
@@ -113,6 +94,7 @@ MooseNexusGradleProjectImporter >> groupCode: aString [
 { #category : 'initialization' }
 MooseNexusGradleProjectImporter >> initialize [
 
+	super initialize.
 	localRepositories := {
 		                     MooseNexusGradleRepository default.
 		                     MooseNexusMavenRepository default }
@@ -120,16 +102,28 @@ MooseNexusGradleProjectImporter >> initialize [
 
 { #category : 'constants' }
 MooseNexusGradleProjectImporter >> kotlinCodeForDependencies [
-	"Code to insert into a build.gradle.kts file to get the flat list of dependencies.
-	Kotlin is sensitive to line endings, so they are removed for convenience."
+	"Code to append to build.gradle.kts for pathless resolved dependency coordinates."
 
 	^ String streamContents: [ :s |
-			  s << 'tasks.register("' << self class taskName
+			  s << 'tasks.register("' << self class taskName << '") {'.
+			  s crlf tab << 'doLast {'.
+			  (s crlf tab: 2) << 'val rootDirPath = rootDir.canonicalPath'.
+			  (s crlf tab: 2) << 'allprojects.filter { it.projectDir.canonicalPath.startsWith(rootDirPath) }.forEach { project ->'.
+			  (s crlf tab: 3) << 'println("-${' << self groupCode << '}:${' << self nameCode << '}:${' << self versionCode << '}")'.
+			  (s crlf tab: 3) << 'val projectDirPath = project.projectDir.canonicalPath'.
+			  (s crlf tab: 3)
+			  << 'println(if (projectDirPath.equals(rootDirPath)) "." else projectDirPath.substring(rootDirPath.length + 1))'.
+			  (s crlf tab: 3) << 'project.configurations.filter { it.isCanBeResolved }.forEach { configuration ->'.
+			  (s crlf tab: 4) << 'val scope = configuration.name'.
+			  (s crlf tab: 4) << 'configuration.resolvedConfiguration.resolvedArtifacts.forEach { artifact ->'.
+			  (s crlf tab: 5)
 			  <<
-			  '") { doLast { val rootDirPath = rootDir.canonicalPath; allprojects.filter { it.projectDir.canonicalPath.startsWith(rootDirPath) }.forEach { project -> println("-${'
-			  << self groupCode << '}:${' << self nameCode << '}:${' << self versionCode
-			  <<
-			  '}"); val projectDirPath = project.projectDir.canonicalPath; if (projectDirPath.equals(rootDirPath)) { println(".") } else { println(projectDirPath.substring(rootDirPath.length + 1)) }; configurations.filter { it.isCanBeResolved }.forEach { configuration -> val scope = configuration.name; configuration.resolvedConfiguration.resolvedArtifacts.forEach { artifact -> val group = artifact.moduleVersion.id.group; val name = artifact.name; val type = artifact.extension ?: "jar"; val version = artifact.moduleVersion.id.version; val path = artifact.file.absolutePath; /* forces artifact download */ println("$group:$name:$type:$version:$scope:$path") }}}}}' ]
+			  'println("${artifact.moduleVersion.id.group}:${artifact.name}:${artifact.extension ?: "jar"}:${artifact.moduleVersion.id.version}:$scope")'.
+			  (s crlf tab: 4) nextPut: $}.
+			  (s crlf tab: 3) nextPut: $}.
+			  (s crlf tab: 2) nextPut: $}.
+			  s crlf tab nextPut: $}.
+			  s crlf nextPut: $} ]
 ]
 
 { #category : 'accessing' }
@@ -153,61 +147,55 @@ MooseNexusGradleProjectImporter >> newProject [
 
 { #category : 'parsing' }
 MooseNexusGradleProjectImporter >> parse: raw [
-	"Parses the result of the command listing the dependencies.
-	Resolves each dependency to obtain the path to its local location.
-	The result of the command is formatted as follows for each project:
-	-group:name:version
-	directory
-	(group:name:type:version:scope:path)*"
+	"Parse pathless Gradle-resolved dependency coordinates."
 
 	| lines line index |
 	lines := raw lines.
 	index := 2.
-
-	[ "project info starts at the third line at the earliest, after the line '> Task ...'"
-	(line := lines at: (index := index + 1)) isNotEmpty and: [ line first == $- ] ] whileFalse.
-
+	[ (line := lines at: (index := index + 1)) isNotEmpty and: [ line first == $- ] ] whileFalse.
 	[ (line := lines at: index) isNotEmpty ] whileTrue: [
 			| projectData group name version path dependencies |
-			"read project descriptor"
 			projectData := $: split: line allButFirst.
 			group := projectData first ifEmpty: [ 'unknown' ].
 			name := projectData second.
 			version := self validateProjectVersion: projectData third.
-
-			"read the project location, relative to the directory"
 			path := lines at: (index := index + 1).
-
-			"read dependencies per scope"
 			dependencies := Dictionary new.
-			[ (line := lines at: (index := index + 1)) isEmpty or: [ line first == $- ] ] whileFalse: [ "resolve the descriptor: 'group:name:type:version:scope:path'"
-				(self resolve: line) ifNotNil: [ :mapping | self addDependency: mapping value to: dependencies group: mapping key ] ].
-
-			"register the parsed project; project name is unique so this never overwrites"
-			project projects
-				at: group
-				at: name
-				put:
-				(MooseNexusManagedProjectDescriptor version: version path: path dependencyGraph: (self dependencyGraphFrom: dependencies)) ]
+			[ (line := lines at: (index := index + 1)) isEmpty or: [ line first == $- ] ] whileFalse: [
+					| parts dependency |
+					parts := $: split: line.
+					dependency := MooseNexusDependencyDescriptor
+						              coordinates: (MooseNexusCoordinates group: parts first name: parts second version: (parts at: 4))
+						              type: (parts at: 3)
+						              scopes: { (parts at: 5) }.
+					self addDependency: dependency to: dependencies group: dependency group ].
+			project projects at: group at: name put: (MooseNexusManagedProjectDescriptor
+					 version: version
+					 path: path
+					 dependencyGraph: (self dependencyGraphFrom: dependencies)
+					 workspaceDependencies: #(  )) ]
 ]
 
 { #category : 'reading' }
 MooseNexusGradleProjectImporter >> read [
-	"Append the dependency task, run Gradle, and restore the build file even when Gradle fails."
+	"Append a temporary dependency query task, run Gradle, and restore the build file even when Gradle fails."
 
 	| buildFile gradleCmd originalSize command commandResult |
 	buildFile := self findBuildFile.
 	gradleCmd := self findGradleCommand.
 	originalSize := buildFile size.
 	command := String streamContents: [ :stream |
-			           stream << 'cd "' << directory pathString << '" && ' << gradleCmd << ' ' << self class taskName << '; printf "'
+			           stream << 'cd "' << directory pathString << '" && ' << gradleCmd << ' ' << self class taskName << ' 2>&1; printf "'
 			           << self commandExitStatusMarker << '%s" "$?"' ].
 
 	^ [
 		  buildFile writeStreamDo: [ :stream |
-				  stream setToEnd crlf << (buildFile extension = 'kts'
-					   ifTrue: [ self kotlinCodeForDependencies ]
-					   ifFalse: [ self groovyCodeForDependencies ]) ].
+				  stream
+					  setToEnd;
+					  crlf;
+					  nextPutAll: (buildFile extension = 'kts'
+							   ifTrue: [ self kotlinCodeForDependencies ]
+							   ifFalse: [ self groovyCodeForDependencies ]) ].
 
 		  commandResult := LibC resultOfCommand: command.
 		  self commandOutputFrom: commandResult forToolNamed: 'Gradle' ] ensure: [
