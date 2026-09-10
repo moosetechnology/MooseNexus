@@ -13,7 +13,7 @@ BaselineOfMooseNexus >> baseline: spec [
 			spec baseline: 'XMLParser' with: [
 					spec
 						loads: #( 'Core' );
-						repository: 'github://pharo-contributions/XML-XMLParser:v3.6.3/src' ].
+						repository: 'github://pharo-contributions/XML-XMLParser:v3.6.x/src' ].
 
 			spec
 				package: 'MooseNexus' with: [ spec requires: #( 'XMLParser' ) ];
