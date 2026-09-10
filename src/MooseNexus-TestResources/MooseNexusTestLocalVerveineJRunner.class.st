@@ -5,8 +5,8 @@ Class {
 		'returnCode',
 		'executedCommand'
 	],
-	#category : 'MooseNexus-Tests-ModelExtraction',
-	#package : 'MooseNexus-Tests',
+	#category : 'MooseNexus-TestResources-ModelExtraction',
+	#package : 'MooseNexus-TestResources',
 	#tag : 'ModelExtraction'
 }
 

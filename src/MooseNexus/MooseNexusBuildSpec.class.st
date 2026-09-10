@@ -11,14 +11,15 @@ Class {
 	#instVars : [
 		'projectSpec',
 		'extractor',
-		'withDependencies',
 		'modelName',
 		'modelComment',
 		'localRepositories',
 		'dependencyConflictResolver',
-		'dependencySourceSelectionPolicy',
 		'unresolvedDependencyPolicy',
-		'projectImporter'
+		'projectImporter',
+		'language',
+		'withDependencyClasspath',
+		'dependencyClasspathSelectionPolicy'
 	],
 	#category : 'MooseNexus-Project',
 	#package : 'MooseNexus',
@@ -53,11 +54,11 @@ MooseNexusBuildSpec >> configureImporter: aMooseNexusProjectImporter [
 MooseNexusBuildSpec >> configureModelBuilder: aMooseNexusModelBuilder [
 
 	aMooseNexusModelBuilder
-		withDependencies: withDependencies;
+		withDependencyClasspath: withDependencyClasspath;
 		modelComment: self modelComment;
 		buildProvenance: self buildProvenance.
 
-	dependencySourceSelectionPolicy ifNotNil: [ :policy | aMooseNexusModelBuilder dependencySourceSelectionPolicy: policy ].
+	dependencyClasspathSelectionPolicy ifNotNil: [ :policy | aMooseNexusModelBuilder dependencyClasspathSelectionPolicy: policy ].
 	modelName ifNotNil: [ aMooseNexusModelBuilder modelName: modelName ].
 	extractor ifNotNil: [ aMooseNexusModelBuilder extractor: extractor ]
 ]
@@ -66,6 +67,18 @@ MooseNexusBuildSpec >> configureModelBuilder: aMooseNexusModelBuilder [
 MooseNexusBuildSpec >> coordinates [
 
 	^ projectSpec coordinates
+]
+
+{ #category : 'accessing' }
+MooseNexusBuildSpec >> dependencyClasspathSelectionPolicy [
+
+	^ dependencyClasspathSelectionPolicy
+]
+
+{ #category : 'accessing' }
+MooseNexusBuildSpec >> dependencyClasspathSelectionPolicy: aMooseNexusDependencyClasspathSelectionPolicy [
+
+	dependencyClasspathSelectionPolicy := aMooseNexusDependencyClasspathSelectionPolicy
 ]
 
 { #category : 'accessing' }
@@ -78,18 +91,6 @@ MooseNexusBuildSpec >> dependencyConflictResolver [
 MooseNexusBuildSpec >> dependencyConflictResolver: aMooseNexusDependencyConflictResolver [
 
 	dependencyConflictResolver := aMooseNexusDependencyConflictResolver
-]
-
-{ #category : 'accessing' }
-MooseNexusBuildSpec >> dependencySourceSelectionPolicy [
-
-	^ dependencySourceSelectionPolicy
-]
-
-{ #category : 'accessing' }
-MooseNexusBuildSpec >> dependencySourceSelectionPolicy: aMooseNexusDependencySourceSelectionPolicy [
-
-	dependencySourceSelectionPolicy := aMooseNexusDependencySourceSelectionPolicy
 ]
 
 { #category : 'execution' }
@@ -126,7 +127,19 @@ MooseNexusBuildSpec >> group [
 MooseNexusBuildSpec >> initialize [
 
 	super initialize.
-	withDependencies := false
+	withDependencyClasspath := true
+]
+
+{ #category : 'accessing' }
+MooseNexusBuildSpec >> language [
+
+	^ language
+]
+
+{ #category : 'accessing' }
+MooseNexusBuildSpec >> language: aString [
+
+	language := aString
 ]
 
 { #category : 'accessing' }
@@ -232,13 +245,13 @@ MooseNexusBuildSpec >> version [
 ]
 
 { #category : 'accessing' }
-MooseNexusBuildSpec >> withDependencies [
+MooseNexusBuildSpec >> withDependencyClasspath [
 
-	^ withDependencies
+	^ withDependencyClasspath
 ]
 
 { #category : 'accessing' }
-MooseNexusBuildSpec >> withDependencies: aBoolean [
+MooseNexusBuildSpec >> withDependencyClasspath: aBoolean [
 
-	withDependencies := aBoolean
+	withDependencyClasspath := aBoolean
 ]

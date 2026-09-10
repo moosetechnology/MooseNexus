@@ -62,7 +62,7 @@ MooseNexusProject class >> isAbstract [
 { #category : 'properties' }
 MooseNexusProject class >> propertiesSchemaVersion [
 
-	^ 'alpha'
+	^ '1'
 ]
 
 { #category : 'properties' }
@@ -85,18 +85,6 @@ MooseNexusProject >> addImageArtifact: anImageArtifact [
 	(self imageArtifactsDirectory / anImageArtifact name) ensureCreateDirectory.
 	self writeImageArtifacts: (self imageArtifacts copyWith: anImageArtifact).
 	^ anImageArtifact
-]
-
-{ #category : 'adding' }
-MooseNexusProject >> addModel: aMooseNexusModelArtifact buildProvenance: aMooseNexusBuildProvenance [
-	"Add a model artifact with its build provenance. Prefer addModelManifest: when the complete build context is available."
-
-	self addModelManifest: (MooseNexusModelArtifactManifest
-			 modelArtifact: aMooseNexusModelArtifact
-			 dependencyResolutionResult: (MooseNexusDependencyResolutionResult forProject: self)
-			 generatedFiles: #(  )
-			 createdTimestamp: aMooseNexusModelArtifact timestamp
-			 buildProvenance: aMooseNexusBuildProvenance)
 ]
 
 { #category : 'adding' }
@@ -162,17 +150,6 @@ MooseNexusProject >> imageArtifactsDirectory [
 ]
 
 { #category : 'setup' }
-MooseNexusProject >> importModel [
-	"There can be multiple models with different settings for the same project."
-
-	self models ifEmpty: [ self inform: 'No models to import' ] ifNotEmpty: [ :models |
-			models size = 1 ifTrue: [ ^ self importModel: models first ].
-
-			"Open a presenter to choose a model to import."
-			(MooseNexusModelSelectionPresenter on: self) open ]
-]
-
-{ #category : 'setup' }
 MooseNexusProject >> importModel: aMooseNexusModelArtifact [
 
 	| model |
@@ -221,6 +198,31 @@ MooseNexusProject >> mainSourceDirectory [
 	"The directory containing the source tree of the main project represented by these coordinates."
 
 	^ self sourceDirectory / 'main'
+]
+
+{ #category : 'building' }
+MooseNexusProject >> materializeDependency: dependency into: dependenciesDirectory [
+
+	^ dependency materializeInto: dependenciesDirectory using: self
+]
+
+{ #category : 'building' }
+MooseNexusProject >> materializeLocalDependency: dependency into: dependenciesDirectory [
+
+	| artifact target |
+	artifact := FileLocator home / dependency path.
+	target := dependenciesDirectory / dependency materializationFileName.
+	artifact copyTo: target.
+	^ MooseNexusDependencyMaterializationResult
+		  dependency: dependency
+		  path: (target relativeTo: self repositoryDirectory) pathString
+		  source: 'local'
+]
+
+{ #category : 'building' }
+MooseNexusProject >> materializeRemoteDependency: dependency into: dependenciesDirectory [
+
+	Error signal: 'Cannot materialize a remote dependency without a managed build-tool project'
 ]
 
 { #category : 'enumerating' }

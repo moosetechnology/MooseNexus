@@ -155,6 +155,51 @@ MooseNexusImporterExtractorProtocolTest >> testMavenImporterAnswersOutputWhenMav
 ]
 
 { #category : 'tests' }
+MooseNexusImporterExtractorProtocolTest >> testMavenImporterBuildsWorkspaceReferencesFromEffectivePom [
+
+	| importer managedProject projectElement dependencies workspaceDependency |
+	importer := MooseNexusMavenProjectImporter new.
+	managedProject := MooseNexusMavenProject new.
+	managedProject projects at: 'org.example' put: (Dictionary with: 'workspace' -> (MooseNexusManagedProjectDescriptor
+				  version: '1.0.0'
+				  path: 'workspace'
+				  dependencyGraph: MooseNexusDependencyGraph empty
+				  workspaceDependencies: #(  ))).
+	importer project: managedProject.
+
+	projectElement := (importer effectiveProjectElementsFrom:
+		                   '<project><groupId>org.example</groupId><artifactId>consumer</artifactId><version>1.0.0</version><dependencies><dependency><groupId>org.example</groupId><artifactId>workspace</artifactId><version>1.0.0</version></dependency><dependency><groupId>org.external</groupId><artifactId>external</artifactId><version>2.0.0</version></dependency></dependencies></project>')
+		                  first.
+	dependencies := importer workspaceDependenciesDeclaredIn: projectElement.
+	workspaceDependency := dependencies first.
+
+	self assert: dependencies size equals: 1.
+	self assert: workspaceDependency coordinates group equals: 'org.example'.
+	self assert: workspaceDependency coordinates name equals: 'workspace'.
+	self assert: workspaceDependency coordinates version equals: '1.0.0'.
+	self assert: workspaceDependency scopes equals: #( 'compile' )
+]
+
+{ #category : 'tests' }
+MooseNexusImporterExtractorProtocolTest >> testMavenImporterCreatesPathlessDependencyReferencesFromTreeNodes [
+
+	| importer descriptor |
+	importer := MooseNexusMavenProjectImporter new.
+
+	descriptor := importer dependencyReferenceForTreeNode: (Dictionary
+			               with: 'groupId' -> 'org.example'
+			               with: 'artifactId' -> 'lib'
+			               with: 'version' -> '1.0.0'
+			               with: 'type' -> 'jar'
+			               with: 'scope' -> 'runtime').
+
+	self assert: descriptor class equals: MooseNexusDependencyDescriptor.
+	self deny: descriptor isLocal.
+	self assert: descriptor scopes equals: #( 'runtime' ).
+	self deny: (descriptor asDictionary includesKey: #path)
+]
+
+{ #category : 'tests' }
 MooseNexusImporterExtractorProtocolTest >> testMavenImporterDeclaresCapabilitiesAndRequirements [
 
 	| importer requirement |
@@ -168,7 +213,126 @@ MooseNexusImporterExtractorProtocolTest >> testMavenImporterDeclaresCapabilities
 	self assert: requirement name equals: 'Maven'.
 	self assert: (requirement availabilityValidation includesSubstring: '--version').
 	self assert: (requirement versionValidation includesSubstring: '--version').
-	self assert: (requirement expectedVersionDescription includesSubstring: 'dependency:resolve')
+	self assert: (requirement expectedVersionDescription includesSubstring: '3.6.3')
+]
+
+{ #category : 'tests' }
+MooseNexusImporterExtractorProtocolTest >> testMavenImporterExcludesWorkspaceNodesFromExternalDependencyTree [
+
+	| importer managedProject dependencies externalDependency |
+	importer := MooseNexusMavenProjectImporter new.
+	managedProject := MooseNexusMavenProject new.
+	managedProject projects at: 'org.example' put: (Dictionary with: 'workspace' -> (MooseNexusManagedProjectDescriptor
+				  version: '1.0.0'
+				  path: 'workspace'
+				  dependencyGraph: MooseNexusDependencyGraph empty
+				  workspaceDependencies: #(  ))).
+	importer project: managedProject.
+
+	dependencies := importer resolvedExternalDependenciesInTree: (Dictionary with: 'children' -> {
+				                 (Dictionary
+					                  with: 'groupId' -> 'org.example'
+					                  with: 'artifactId' -> 'workspace'
+					                  with: 'version' -> '1.0.0'
+					                  with: 'type' -> 'jar'
+					                  with: 'children' -> { (Dictionary
+							                   with: 'groupId' -> 'org.external'
+							                   with: 'artifactId' -> 'transitive'
+							                   with: 'version' -> '2.0.0'
+							                   with: 'type' -> 'jar') }).
+				                 (Dictionary
+					                  with: 'groupId' -> 'org.external'
+					                  with: 'artifactId' -> 'direct'
+					                  with: 'version' -> '3.0.0'
+					                  with: 'type' -> 'jar') }).
+
+	self deny: (dependencies includesKey: 'org.example').
+	self assert: (dependencies at: 'org.external') size equals: 2.
+	externalDependency := (dependencies at: 'org.external') values first.
+	self assert: externalDependency isLocal equals: false.
+	self assert: externalDependency scopes equals: #( 'compile' )
+]
+
+{ #category : 'tests' }
+MooseNexusImporterExtractorProtocolTest >> testMavenImporterParsesMavenVersionBanners [
+
+	| importer |
+	importer := MooseNexusMavenProjectImporter new.
+
+	self assert: (importer mavenVersionFrom: 'Apache Maven 3.9.11') equals: '3.9.11'.
+	self assert: (importer mavenVersionFrom: 'Apache Maven 3.9.11 (deadbeef)') equals: '3.9.11'.
+	self should: [ importer mavenVersionFrom: 'Maven 3.9.11' ] raise: Error.
+	self should: [ importer mavenVersionFrom: 'Apache Maven ' ] raise: Error
+]
+
+{ #category : 'tests' }
+MooseNexusImporterExtractorProtocolTest >> testMavenImporterParsesSingleAndReactorEffectiveProjects [
+
+	| importer singleProject reactorProjects |
+	importer := MooseNexusMavenProjectImporter new.
+
+	singleProject := importer effectiveProjectElementsFrom: '<project><groupId>org.example</groupId></project>'.
+	reactorProjects := importer effectiveProjectElementsFrom:
+		                   '<projects><project><groupId>org.first</groupId></project><project><groupId>org.second</groupId></project></projects>'.
+
+	self assert: singleProject size equals: 1.
+	self assert: singleProject first name equals: 'project'.
+	self assert: reactorProjects size equals: 2.
+	self assertCollection: (reactorProjects collect: #name) hasSameElements: #( project project )
+]
+
+{ #category : 'tests' }
+MooseNexusImporterExtractorProtocolTest >> testMavenImporterRecognizesSupportedMaven3Versions [
+
+	| importer |
+	importer := MooseNexusMavenProjectImporter new.
+
+	#( '3.6.3' '3.8.8' '3.9.11' ) do: [ :version | self assert: (importer isSupportedMavenVersion: version) ].
+	self deny: (importer isSupportedMavenVersion: '3.6.2').
+	self deny: (importer isSupportedMavenVersion: '4.0.0')
+]
+
+{ #category : 'tests' }
+MooseNexusImporterExtractorProtocolTest >> testMavenImporterRegistersEffectivePomProjectsAndWorkspaceDependencies [
+
+	| importer project producer consumer workspaceDependency |
+	project := MooseNexusMavenProject new.
+	importer := MooseNexusTestMavenProjectImporter new
+		            project: project;
+		            paths:
+			            (Dictionary with: { 'org.example'. 'producer' } -> 'producer' with: { 'org.example'. 'consumer' } -> 'consumer');
+		            yourself.
+
+	importer parseEffectivePom:
+		'<projects><project><groupId>org.example</groupId><artifactId>producer</artifactId><version>1.0.0</version></project><project><groupId>org.example</groupId><artifactId>consumer</artifactId><version>1.0.0</version><dependencies><dependency><groupId>org.example</groupId><artifactId>producer</artifactId><version>1.0.0</version><scope>runtime</scope></dependency><dependency><groupId>org.external</groupId><artifactId>external</artifactId><version>2.0.0</version></dependency></dependencies></project></projects>'.
+
+	producer := (project projects at: 'org.example') at: 'producer'.
+	consumer := (project projects at: 'org.example') at: 'consumer'.
+	workspaceDependency := consumer workspaceDependencies first.
+
+	self assert: producer path equals: 'producer'.
+	self assert: consumer path equals: 'consumer'.
+	self assert: consumer workspaceDependencies size equals: 1.
+	self assert: workspaceDependency coordinates name equals: 'producer'.
+	self assert: workspaceDependency scopes equals: #( 'runtime' )
+]
+
+{ #category : 'tests' }
+MooseNexusImporterExtractorProtocolTest >> testMavenImporterRejectsUnsupportedVersionsDuringPreflight [
+
+	| importer |
+	importer := MooseNexusMavenProjectImporter new.
+
+	self
+		should: [ importer validateMavenVersion: 'Apache Maven 3.6.2' ]
+		raise: Error
+		whoseDescriptionIncludes: 'Maven 3.6.3 through 3.x'
+		description: 'Maven below the plugin floor must not proceed'.
+	self
+		should: [ importer validateMavenVersion: 'Apache Maven 4.0.0' ]
+		raise: Error
+		whoseDescriptionIncludes: 'Maven 4 is not yet supported'
+		description: 'Untested Maven 4 must not proceed'
 ]
 
 { #category : 'tests' }

@@ -69,7 +69,7 @@ MooseNexusModelBuilderTest >> testBuildSpecConfiguresModelBuilder [
 	extractor := Object new.
 	spec := MooseNexusBuildSpec projectSpec: (MooseNexusProjectSpec coordinates: project coordinates sourceDirectory: rootDirectory).
 	spec
-		withDependencies: false;
+		withDependencyClasspath: false;
 		modelName: 'configured-model';
 		modelComment: 'configured comment';
 		extractor: extractor.
@@ -78,7 +78,7 @@ MooseNexusModelBuilderTest >> testBuildSpecConfiguresModelBuilder [
 	spec configureModelBuilder: builder.
 
 	self assert: builder project equals: project.
-	self deny: builder withDependencies.
+	self deny: builder withDependencyClasspath.
 	self assert: builder modelName equals: 'configured-model'.
 	self assert: builder modelComment equals: 'configured comment'.
 	self assert: builder extractor identicalTo: extractor.
@@ -95,7 +95,7 @@ MooseNexusModelBuilderTest >> testBuildSpecExecutesPlanAndAnswersModelBuildResul
 	(sourceProjectDirectory / '.moosenexus-test') ensureCreateFile.
 	spec := MooseNexusBuildSpec coordinates: project coordinates sourceDirectory: sourceProjectDirectory.
 	spec
-		withDependencies: false;
+		withDependencyClasspath: false;
 		modelName: 'planned-model';
 		extractor: MooseNexusTestModelExtractor new.
 
@@ -134,7 +134,7 @@ MooseNexusModelBuilderTest >> testBuildSpecExecutesUnmanagedProjectPlan [
 	spec := MooseNexusBuildSpec coordinates: project coordinates sourceDirectory: sourceProjectDirectory.
 	spec
 		projectImporter: importer;
-		withDependencies: false;
+		withDependencyClasspath: false;
 		modelName: 'unmanaged-model';
 		extractor: MooseNexusTestModelExtractor new.
 
@@ -167,9 +167,32 @@ MooseNexusModelBuilderTest >> testBuildSpecKeepsModelBuilderDefaultsWhenOptionsA
 	spec configureModelBuilder: builder.
 
 	self assert: builder project equals: project.
-	self deny: builder withDependencies.
+	self assert: builder withDependencyClasspath.
 	self assert: builder modelName equals: project name.
 	self assert: builder modelComment equals: ''
+]
+
+{ #category : 'tests' }
+MooseNexusModelBuilderTest >> testBuildSpecLanguageOverrideWinsOverImporterLanguage [
+
+	| sourceProjectDirectory spec importer plan result |
+	sourceProjectDirectory := (rootDirectory / 'language-override-source-project') ensureCreateDirectory.
+	importer := MooseNexusUnmanagedProjectImporter new
+		            language: 'kotlin';
+		            dependencies: #(  ).
+	spec := MooseNexusBuildSpec coordinates: project coordinates sourceDirectory: sourceProjectDirectory.
+	spec
+		projectImporter: importer;
+		language: 'java';
+		withDependencyClasspath: false;
+		modelName: 'language-override-model';
+		extractor: MooseNexusTestModelExtractor new.
+
+	plan := spec planIn: (MooseNexusRepository new directory: rootDirectory / 'nexus').
+	result := plan execute.
+
+	self assert: plan projectImporter identicalTo: importer.
+	self assert: result project language equals: 'java'
 ]
 
 { #category : 'tests' }

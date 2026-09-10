@@ -6,8 +6,9 @@ I preserve existing project sources and merge models and image artifacts by thei
 Class {
 	#name : 'MooseNexusProjectDirectoryInstaller',
 	#superclass : 'Object',
-	#category : 'MooseNexus',
-	#package : 'MooseNexus'
+	#category : 'MooseNexus-Repository',
+	#package : 'MooseNexus',
+	#tag : 'Repository'
 }
 
 { #category : 'private' }

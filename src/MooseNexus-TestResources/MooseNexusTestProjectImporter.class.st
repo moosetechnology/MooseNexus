@@ -4,8 +4,9 @@ I am a test importer used to exercise build-spec planning without invoking Maven
 Class {
 	#name : 'MooseNexusTestProjectImporter',
 	#superclass : 'MooseNexusProjectImporter',
-	#category : 'MooseNexus-Tests',
-	#package : 'MooseNexus-Tests'
+	#category : 'MooseNexus-TestResources-Project',
+	#package : 'MooseNexus-TestResources',
+	#tag : 'Project'
 }
 
 { #category : 'testing' }

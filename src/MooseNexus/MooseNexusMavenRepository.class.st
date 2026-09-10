@@ -39,15 +39,13 @@ MooseNexusMavenRepository >> resolve: descriptor [
 	scope := parts at: 5.
 	coordinates := MooseNexusCoordinates group: group name: name version: version.
 
-	"search for the directory"
 	pathString := String streamContents: [ :s | s << (group copyReplaceAll: '.' with: '/') << '/' << name << '/' << version ].
 	homeDirectory := FileLocator home.
 	(theDirectory := homeDirectory / directory / pathString) ifAbsent: [ ^ nil ].
 
-	"search for the artifact"
 	^ theDirectory / (name , '-' , version , '.' , type)
 		  ifExists: [ :file |
-				  group -> (MooseNexusDependencyDescriptor
+				  group -> (MooseNexusLocalDependencyDescriptor
 					   coordinates: coordinates
 					   type: type
 					   scopes: { scope }

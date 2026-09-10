@@ -1,0 +1,14 @@
+SmalltalkCISpec {
+  #loading : [
+    SCIMetacelloLoadSpec {
+      #baseline : 'MooseNexus',
+      #directory : 'src',
+      #load : [ 'IntegrationTests' ],
+      #registerInIceberg : true,
+      #platforms : [ #pharo ]
+    }
+  ],
+  #testing : {
+    #packages : [ 'MooseNexus-IntegrationTests' ]
+  }
+}

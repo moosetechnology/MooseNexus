@@ -1,9 +1,9 @@
 "
-I describe a resolved dependency used by MooseNexus when building models.
+I describe a pathless external dependency reference used by MooseNexus when building models.
 
-I carry the dependency coordinates, artifact metadata, scopes, and local artifact path. The coordinates identify the dependency module; type identifies the selected artifact shape; scopes describe where the dependency is used; path records the resolved local artifact.
+I carry artifact coordinates, type, and scopes. Managed build-tool importers create me without downloading an artifact; their project materializes me lazily when the extractor classpath requires it. Explicit local artifacts use MooseNexusLocalDependencyDescriptor instead.
 
-MooseNexus uses me internally as a value-like object. Repository serialization writes flat dictionaries at the boundary so properties files remain easy to inspect.
+Repository serialization writes a portable dictionary without a machine-local path.
 "
 Class {
 	#name : 'MooseNexusDependencyDescriptor',
@@ -11,7 +11,6 @@ Class {
 	#instVars : [
 		'coordinates',
 		'type',
-		'path',
 		'scopes'
 	],
 	#category : 'MooseNexus-Dependency',
@@ -20,10 +19,17 @@ Class {
 }
 
 { #category : 'instance creation' }
+MooseNexusDependencyDescriptor class >> coordinates: aMooseNexusCoordinates type: aType scopes: aCollection [
+
+	^ self new initializeCoordinates: aMooseNexusCoordinates type: aType scopes: aCollection
+]
+
+{ #category : 'instance creation' }
 MooseNexusDependencyDescriptor class >> coordinates: aMooseNexusCoordinates type: aType scopes: aCollection path: aPath [
 
-	^ self new
-		  initializeCoordinates: aMooseNexusCoordinates
+	aPath ifNil: [ ^ self coordinates: aMooseNexusCoordinates type: aType scopes: aCollection ].
+	^ MooseNexusLocalDependencyDescriptor
+		  coordinates: aMooseNexusCoordinates
 		  type: aType
 		  scopes: aCollection
 		  path: aPath
@@ -32,14 +38,19 @@ MooseNexusDependencyDescriptor class >> coordinates: aMooseNexusCoordinates type
 { #category : 'instance creation' }
 MooseNexusDependencyDescriptor class >> fromDictionary: aDictionary [
 
-	^ self
-		  coordinates: (MooseNexusCoordinates
-				   group: (aDictionary at: #group ifAbsent: [ nil ])
-				   name: (aDictionary at: #name)
-				   version: (aDictionary at: #version))
-		  type: (aDictionary at: #type ifAbsent: [ nil ])
-		  scopes: (aDictionary at: #scopes)
-		  path: (aDictionary at: #path ifAbsent: [ nil ])
+	| coordinates path |
+	coordinates := MooseNexusCoordinates
+		               group: (aDictionary at: #group ifAbsent: [ nil ])
+		               name: (aDictionary at: #name)
+		               version: (aDictionary at: #version).
+	path := aDictionary at: #path ifAbsent: [ nil ].
+	path ifNotNil: [
+			^ MooseNexusLocalDependencyDescriptor
+				  coordinates: coordinates
+				  type: (aDictionary at: #type ifAbsent: [ nil ])
+				  scopes: (aDictionary at: #scopes)
+				  path: path ].
+	^ self coordinates: coordinates type: (aDictionary at: #type ifAbsent: [ nil ]) scopes: (aDictionary at: #scopes)
 ]
 
 { #category : 'comparing' }
@@ -47,7 +58,15 @@ MooseNexusDependencyDescriptor >> = anObject [
 
 	self == anObject ifTrue: [ ^ true ].
 	anObject class == self class ifFalse: [ ^ false ].
-	^ anObject coordinates = coordinates and: [ anObject type = type and: [ anObject scopes = scopes and: [ anObject path = path ] ] ]
+	^ anObject coordinates = coordinates and: [ anObject type = type and: [ anObject scopes = scopes ] ]
+]
+
+{ #category : 'comparing' }
+MooseNexusDependencyDescriptor >> artifactIdentity [
+
+	^ {
+		  coordinates.
+		  type }
 ]
 
 { #category : 'converting' }
@@ -58,8 +77,7 @@ MooseNexusDependencyDescriptor >> asDictionary [
 		              with: #name -> self name
 		              with: #version -> self version
 		              with: #type -> type
-		              with: #scopes -> scopes copy
-		              with: #path -> path.
+		              with: #scopes -> scopes copy.
 	self group ifNotNil: [ :group | dictionary at: #group put: group ].
 	^ dictionary
 ]
@@ -79,22 +97,45 @@ MooseNexusDependencyDescriptor >> group [
 { #category : 'comparing' }
 MooseNexusDependencyDescriptor >> hasSameArtifactAs: anotherDescriptor [
 
-	^ anotherDescriptor coordinates = coordinates and: [ anotherDescriptor type = type and: [ anotherDescriptor path = path ] ]
+	^ self artifactIdentity = anotherDescriptor artifactIdentity
 ]
 
 { #category : 'comparing' }
 MooseNexusDependencyDescriptor >> hash [
 
-	^ coordinates hash bitXor: (type hash bitXor: (scopes hash bitXor: path hash))
+	^ coordinates hash bitXor: (type hash bitXor: scopes hash)
 ]
 
 { #category : 'initialization' }
-MooseNexusDependencyDescriptor >> initializeCoordinates: aMooseNexusCoordinates type: aType scopes: aCollection path: aPath [
+MooseNexusDependencyDescriptor >> initializeCoordinates: aMooseNexusCoordinates type: aType scopes: aCollection [
 
 	coordinates := aMooseNexusCoordinates.
 	type := aType.
-	scopes := self normalizeScopes: aCollection.
-	path := aPath
+	scopes := self normalizeScopes: aCollection
+]
+
+{ #category : 'testing' }
+MooseNexusDependencyDescriptor >> isLocal [
+
+	^ false
+]
+
+{ #category : 'building' }
+MooseNexusDependencyDescriptor >> materializationFileName [
+	"Answer an injective, filesystem-safe staging filename for this dependency reference."
+
+	^ String streamContents: [ :stream |
+			  {
+				  (self group ifNil: [ '' ]).
+				  self name.
+				  self version } do: [ :component | stream << component size asString << '-' << component ].
+			  stream << '.' << self type ]
+]
+
+{ #category : 'building' }
+MooseNexusDependencyDescriptor >> materializeInto: dependenciesDirectory using: project [
+
+	^ project materializeRemoteDependency: self into: dependenciesDirectory
 ]
 
 { #category : 'copying' }
@@ -126,12 +167,6 @@ MooseNexusDependencyDescriptor >> normalizeScopes: aCollection [
 	^ normalizedScopes asArray
 ]
 
-{ #category : 'accessing' }
-MooseNexusDependencyDescriptor >> path [
-
-	^ path
-]
-
 { #category : 'printing' }
 MooseNexusDependencyDescriptor >> printOn: aStream [
 
@@ -159,19 +194,11 @@ MooseNexusDependencyDescriptor >> version [
 { #category : 'copying' }
 MooseNexusDependencyDescriptor >> withGroup: aGroup [
 
-	^ self class
-		  coordinates: (MooseNexusCoordinates group: aGroup name: self name version: self version)
-		  type: type
-		  scopes: scopes
-		  path: path
+	^ self class coordinates: (MooseNexusCoordinates group: aGroup name: self name version: self version) type: type scopes: scopes
 ]
 
 { #category : 'copying' }
 MooseNexusDependencyDescriptor >> withScopes: aCollection [
 
-	^ self class
-		  coordinates: coordinates
-		  type: type
-		  scopes: aCollection
-		  path: path
+	^ self class coordinates: coordinates type: type scopes: aCollection
 ]

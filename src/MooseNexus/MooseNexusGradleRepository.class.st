@@ -42,8 +42,9 @@ MooseNexusGradleRepository >> findGroup: group name: name version: version type:
 
 { #category : 'resolving' }
 MooseNexusGradleRepository >> resolve: descriptor [
+	"Attempts to find the local path to an artifact based on the descriptor."
 
-	| parts group name type version scope path artifact coordinates |
+	| parts group name type version scope path coordinates artifact |
 	parts := $: split: descriptor.
 	group := parts at: 1.
 	name := parts at: 2.
@@ -60,7 +61,7 @@ MooseNexusGradleRepository >> resolve: descriptor [
 				             version: version
 				             type: type) ifNil: [ ^ nil ] ].
 
-	^ group -> (MooseNexusDependencyDescriptor
+	^ group -> (MooseNexusLocalDependencyDescriptor
 		   coordinates: coordinates
 		   type: type
 		   scopes: { scope }

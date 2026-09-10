@@ -7,8 +7,9 @@ Class {
 	#instVars : [
 		'target'
 	],
-	#category : 'MooseNexus-Tests',
-	#package : 'MooseNexus-Tests'
+	#category : 'MooseNexus-TestResources-ModelExtraction',
+	#package : 'MooseNexus-TestResources',
+	#tag : 'ModelExtraction'
 }
 
 { #category : 'capabilities' }

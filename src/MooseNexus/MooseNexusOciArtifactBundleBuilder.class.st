@@ -17,13 +17,13 @@ Class {
 { #category : 'constants' }
 MooseNexusOciArtifactBundleBuilder class >> artifactType [
 
-	^ 'application/vnd.moosenexus.build.alpha+json'
+	^ 'application/vnd.moosenexus.build+json'
 ]
 
 { #category : 'constants' }
 MooseNexusOciArtifactBundleBuilder class >> configMediaType [
 
-	^ 'application/vnd.moosenexus.build.config.alpha+json'
+	^ 'application/vnd.moosenexus.build.config+json'
 ]
 
 { #category : 'constants' }
@@ -54,7 +54,7 @@ MooseNexusOciArtifactBundleBuilder class >> projectPropertiesFileName [
 { #category : 'constants' }
 MooseNexusOciArtifactBundleBuilder class >> projectPropertiesMediaType [
 
-	^ 'application/vnd.moosenexus.project-properties.alpha+json'
+	^ 'application/vnd.moosenexus.project-properties+json'
 ]
 
 { #category : 'constants' }
