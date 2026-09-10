@@ -16,12 +16,14 @@ BaselineOfMooseNexus >> baseline: spec [
 						repository: 'github://pharo-contributions/XML-XMLParser:v3.6.3/src' ].
 
 			spec
-				package: 'MooseNexus' with: [ spec requires: #( 'MooseNexus-UI' 'XML-Parser' ) ];
-				package: 'MooseNexus-UI';
+				package: 'MooseNexus' with: [ spec requires: #( 'XMLParser' ) ];
+				package: 'MooseNexus-UI' with: [ spec requires: #( 'MooseNexus' ) ];
 				package: 'MooseNexus-Tests' with: [ spec requires: #( 'MooseNexus' ) ].
 
 			spec
-				group: 'core' with: #( 'MooseNexus' );
-				group: 'tests' with: #( 'MooseNexus-Tests' );
-				group: 'default' with: #( core tests ) ]
+				group: 'Core' with: #( 'MooseNexus' );
+				group: 'UI' with: #( 'MooseNexus-UI' );
+				group: 'Tests' with: #( 'MooseNexus-Tests' );
+				group: 'all' with: #( 'default' 'UI' );
+				group: 'default' with: #( 'Core' 'Tests' ) ]
 ]
