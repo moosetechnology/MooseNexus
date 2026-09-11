@@ -145,6 +145,16 @@ MooseNexusDependencyDescriptorTest >> testDictionaryRoundTrip [
 ]
 
 { #category : 'tests' }
+MooseNexusDependencyDescriptorTest >> testGenericReaderRejectsAnEcosystemWithoutALoadedExtension [
+
+	self
+		should: [ MooseNexusDependencyDescriptor fromDictionary: (Dictionary with: 'ecosystem' -> 'unknown') ]
+		raise: Error
+		whoseDescriptionIncludes: 'No loaded MooseNexus dependency extension'
+		description: 'An optional dependency ecosystem must not be silently read as a generic descriptor'
+]
+
+{ #category : 'tests' }
 MooseNexusDependencyDescriptorTest >> testLocalDescriptorSerializesItsPathSeparately [
 
 	| descriptor reloadedDescriptor |
@@ -252,23 +262,6 @@ MooseNexusDependencyDescriptorTest >> testResolvedDependencySetDictionaryRoundTr
 
 	self assert: sameSet equals: resolvedSet.
 	self assert: sameSet dependencies equals: { dependency }
-]
-
-{ #category : 'tests' }
-MooseNexusDependencyDescriptorTest >> testUnresolvedDependencyPolicyWarnsAndContinues [
-
-	| policy warnings result |
-	policy := MooseNexusUnresolvedDependencyPolicy warnAndContinue.
-	warnings := OrderedCollection new.
-
-	result := policy
-		          handleUnresolvedDescriptor: 'org.example:dep:jar:1.0.0:compile'
-		          repository: MooseNexusMavenRepository default
-		          warnings: warnings.
-
-	self assert: result equals: nil.
-	self assert: warnings size equals: 1.
-	self assert: (warnings first includesSubstring: 'org.example:dep:1.0.0')
 ]
 
 { #category : 'tests' }

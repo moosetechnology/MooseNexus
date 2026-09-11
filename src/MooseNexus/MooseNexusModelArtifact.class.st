@@ -111,6 +111,12 @@ MooseNexusModelArtifact >> initializeArtifactCoordinates: aMooseNexusModelArtifa
 ]
 
 { #category : 'accessing' }
+MooseNexusModelArtifact >> metamodel [
+
+	^ artifactCoordinates metamodel
+]
+
+{ #category : 'accessing' }
 MooseNexusModelArtifact >> name [
 
 	^ artifactCoordinates name

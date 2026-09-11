@@ -40,39 +40,10 @@ MooseNexusManagedProject class >> isAbstract [
 	^ self == MooseNexusManagedProject
 ]
 
-{ #category : 'known names' }
-MooseNexusManagedProject class >> knownLanguages [
-
-	^ #( java )
-]
-
 { #category : 'querying' }
 MooseNexusManagedProject >> determineLanguage [
 
-	| knownLanguages candidates sourceDirectory |
-	knownLanguages := self class knownLanguages.
-	(projects isEmpty or: [ projects anyOne isEmpty ]) ifTrue: [ Error signal: 'Cannot determine language without any project' ].
-	candidates := Set new.
-	sourceDirectory := self mainSourceDirectory.
-
-	"check if this project directory has sources"
-	sourceDirectory / 'src/main' ifExists: [ :mainDirectory |
-		knownLanguages do: [ :lang | mainDirectory / lang ifExists: [ candidates add: lang ] ] ].
-
-	"check the sources of each project"
-	projects do: [ :projectGroup |
-			projectGroup keysDo: [ :projectName |
-					sourceDirectory / projectName ifExists: [ :projectDirectory |
-							projectDirectory / 'src/main' ifExists: [ :mainDirectory |
-								knownLanguages do: [ :lang | mainDirectory / lang ifExists: [ candidates add: lang ] ] ] ] ] ].
-
-	candidates ifEmpty: [ Error signal: 'Could not determine language automatically' ].
-	candidates size == 1 ifFalse: [
-			Warning signal: (String streamContents: [ :s |
-						 s << 'Multiple languages detected: `'.
-						 candidates do: [ :candidate | s << candidate ] separatedBy: [ s << ', ' ].
-						 s << '`, proceed to choose the first one' ]) ].
-	^ candidates anyOne
+	^ (MooseNexusLanguageDetector detectIn: self mainSourceDirectory) language
 ]
 
 { #category : 'testing' }

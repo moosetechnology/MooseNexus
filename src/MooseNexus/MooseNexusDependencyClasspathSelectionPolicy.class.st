@@ -39,6 +39,7 @@ MooseNexusDependencyClasspathSelectionPolicy >> includedScopes [
 { #category : 'testing' }
 MooseNexusDependencyClasspathSelectionPolicy >> includesDependency: aMooseNexusDependencyDescriptor [
 
+	aMooseNexusDependencyDescriptor supportsClasspathMaterialization ifFalse: [ ^ false ].
 	includedScopes ifNil: [ ^ true ].
 	includedScopes ifEmpty: [ ^ false ].
 	^ aMooseNexusDependencyDescriptor scopes anySatisfy: [ :scope | includedScopes includes: scope ]

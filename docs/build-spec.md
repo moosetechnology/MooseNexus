@@ -26,7 +26,7 @@ The build lifecycle is:
 
 ## Managed Source Projects
 
-Managed source projects are projects whose metadata and dependency declarations are read from a supported build tool. Maven and Gradle are currently supported.
+Managed source projects are projects whose metadata and dependency declarations are read from a supported build tool. The default-loaded MooseNexus Java package provides Maven and Gradle support. The optional MooseNexus TypeScript package supports npm projects on Moose 13 when they commit a v2 or v3 `package-lock.json`.
 
 When no importer is configured explicitly, the build spec asks `MooseNexusProjectImporter` to select an importer from the source directory.
 
@@ -52,11 +52,14 @@ spec
 result := spec executeIn: repository.
 ```
 
-This keeps Maven/Gradle detection as a convenience:
+This keeps build-tool detection as a convenience:
 
 - a Maven project is selected when the Maven importer can handle the directory;
 - a Gradle project is selected when the Gradle importer can handle the directory;
+- an npm project is selected when the npm importer can handle the directory;
 - an error is raised when no supported importer can handle the directory.
+
+If several supported project natures match, MooseNexus raises an ambiguity error rather than choosing one arbitrarily. Set `projectImporter:` to choose the importer directly, or set `language:` when it uniquely narrows the candidates. Language detection itself aggregates evidence: it selects a language only when exactly one candidate is found; otherwise configure `language:` explicitly.
 
 ## Unmanaged Source Projects
 
@@ -119,7 +122,7 @@ importer := MooseNexusUnmanagedProjectImporter new
 	dependencies: { dependency }.
 ```
 
-`withDependencies:` controls whether dependency sources or artifacts are copied into the model extraction workspace. If dependency paths do not point to existing local files, keep `withDependencies: false`.
+`withDependencies:` controls whether dependency sources or artifacts are copied into the model extraction workspace. If dependency paths do not point to existing local files, keep `withDependencies: false`. Locked npm references are deliberately not materialized by this option.
 
 ## Model Extraction
 
@@ -131,13 +134,13 @@ Use `extractor:` when the caller wants a specific extractor implementation:
 spec extractor: MooseNexusLocalVerveineJRunner new.
 ```
 
-The extractor must validate its requirements and produce a model file under the recorded project's repository directory.
+The extractor must validate its requirements and produce a model file under the recorded project's repository directory. Java selects a VerveineJ runner. TypeScript selects the Docker ts2famix runner by default and requires `tsconfig.json` at the copied project's `sources/main/tsconfig.json`. A local TypeScript runner is available only when configured explicitly with an existing command; MooseNexus never performs an implicit npm installation.
 
 ## Model Import
 
 `project importModel` imports a recorded model artifact into the Pharo image and registers it in `MooseModel root`.
 
-The imported Moose model root folder is the recorded project's `sourceDirectory`. That directory is resolved by the repository backend that hosts the project, so the same project can use the default repository under the user's MooseNexus home, a custom local repository, or an image-relative local repository.
+The imported Moose model root folder is selected by the metamodel importer. Java models use the recorded project's `sourceDirectory`; TypeScript models use its `mainSourceDirectory`. Those directories are resolved by the repository backend that hosts the project, so the same project can use the default repository under the user's MooseNexus home, a custom local repository, or an image-relative local repository.
 
 ## Execution
 

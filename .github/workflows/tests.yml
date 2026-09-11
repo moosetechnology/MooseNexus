@@ -62,6 +62,9 @@ jobs:
           mvn --version
           gradle --version
 
+      - name: Build TypeScript importer image
+        run: docker build --tag ghcr.io/moosetechnology/moosenexus-ts2famix:3.2.0-679f54e docker/ts2famix
+
       - uses: hpi-swa/setup-smalltalkCI@v1
         with:
           smalltalk-image: Moose64-13

@@ -31,13 +31,26 @@ MooseNexusProjectImporter class >> canHandle: directory [
 
 { #category : 'instance creation' }
 MooseNexusProjectImporter class >> fromDirectory: directory [
-	"Expects the path string of a directory containing the sources of a project.
-	Attempts to determine the type of project in the directory.
-	Returns an instance of the appropriate class for importing the project."
+	"Determine a unique supported project nature from the source directory."
 
-	self allSubclassesDo: [ :subclass |
-		(subclass isAbstract not and: [ subclass canHandle: directory ]) ifTrue: [ ^ subclass new directory: directory ] ].
-	Error signal: 'Cannot figure out nature of project in directory: ' , directory
+	^ self fromDirectory: directory language: nil
+]
+
+{ #category : 'instance creation' }
+MooseNexusProjectImporter class >> fromDirectory: directory language: aLanguage [
+	"Answer the uniquely matching importer. An explicit language narrows autodetection."
+
+	| candidates natureNames |
+	candidates := self allSubclasses select: [ :subclass |
+			              subclass isAbstract not and: [
+					              (subclass canHandle: directory) and: [
+						              aLanguage isNil or: [
+							              subclass supportedLanguages anySatisfy: [ :language | language asString = aLanguage asString ] ] ] ] ].
+	candidates := candidates asSortedCollection: [ :left :right | left buildToolName <= right buildToolName ].
+	candidates size = 1 ifTrue: [ ^ candidates anyOne new directory: directory ].
+	candidates isEmpty ifTrue: [ Error signal: 'Cannot figure out nature of project in directory: ' , directory ].
+	natureNames := ', ' join: (candidates collect: [ :each | each buildToolName ]).
+	Error signal: 'Multiple project natures detected: ' , natureNames , '. Configure MooseNexusBuildSpec projectImporter explicitly.'
 ]
 
 { #category : 'testing' }

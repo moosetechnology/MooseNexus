@@ -18,6 +18,12 @@ Class {
 	#tag : 'Dependency'
 }
 
+{ #category : 'testing' }
+MooseNexusDependencyDescriptor class >> canReadDictionary: aDictionary [
+
+	^ false
+]
+
 { #category : 'instance creation' }
 MooseNexusDependencyDescriptor class >> coordinates: aMooseNexusCoordinates type: aType scopes: aCollection [
 
@@ -37,6 +43,15 @@ MooseNexusDependencyDescriptor class >> coordinates: aMooseNexusCoordinates type
 
 { #category : 'instance creation' }
 MooseNexusDependencyDescriptor class >> fromDictionary: aDictionary [
+
+	self allSubclassesDo: [ :subclass | (subclass canReadDictionary: aDictionary) ifTrue: [ ^ subclass fromDictionary: aDictionary ] ].
+	(aDictionary includesKey: 'ecosystem') ifTrue: [
+		Error signal: 'No loaded MooseNexus dependency extension for ecosystem: ' , (aDictionary at: 'ecosystem') ].
+	^ self fromGenericDictionary: aDictionary
+]
+
+{ #category : 'instance creation' }
+MooseNexusDependencyDescriptor class >> fromGenericDictionary: aDictionary [
 
 	| coordinates path |
 	coordinates := MooseNexusCoordinates
@@ -177,6 +192,12 @@ MooseNexusDependencyDescriptor >> printOn: aStream [
 MooseNexusDependencyDescriptor >> scopes [
 
 	^ scopes
+]
+
+{ #category : 'capabilities' }
+MooseNexusDependencyDescriptor >> supportsClasspathMaterialization [
+
+	^ true
 ]
 
 { #category : 'accessing' }

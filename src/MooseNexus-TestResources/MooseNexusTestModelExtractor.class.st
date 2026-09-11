@@ -12,6 +12,19 @@ Class {
 	#tag : 'ModelExtraction'
 }
 
+{ #category : 'cleanup' }
+MooseNexusTestModelExtractor >> cleanUp [
+	"The test extractor creates no temporary output."
+
+	^ self
+]
+
+{ #category : 'capabilities' }
+MooseNexusTestModelExtractor >> metamodel [
+
+	^ 'Famix-Java'
+]
+
 { #category : 'capabilities' }
 MooseNexusTestModelExtractor >> requirements [
 

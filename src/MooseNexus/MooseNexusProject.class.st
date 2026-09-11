@@ -149,21 +149,13 @@ MooseNexusProject >> imageArtifactsDirectory [
 	^ self artifactPayloadDirectory / 'images'
 ]
 
-{ #category : 'setup' }
+{ #category : 'importing' }
 MooseNexusProject >> importModel: aMooseNexusModelArtifact [
 
-	| model |
-	self validateModelImportRequirements.
-	model := FamixJavaModel named: aMooseNexusModelArtifact name.
-
-	FamixJSONFileImporter new
-		model: model;
-		inputFile: self repositoryDirectory / aMooseNexusModelArtifact path;
-		runFilteredBy: FamixJavaImportingContext new importMaximum.
-
-	model install. "add to MooseModel root"
-	model rootFolder: self sourceDirectory.
-	^ model
+	| importer |
+	importer := MooseNexusModelImporter forMetamodel: aMooseNexusModelArtifact metamodel.
+	self validateModelImportRequirements: importer modelImportRequirements.
+	^ importer importArtifact: aMooseNexusModelArtifact fromProject: self
 ]
 
 { #category : 'initialization' }
@@ -176,6 +168,12 @@ MooseNexusProject >> initializeCoordinates: aMooseNexusCoordinates [
 
 { #category : 'testing' }
 MooseNexusProject >> isManagedProject [
+
+	^ false
+]
+
+{ #category : 'testing' }
+MooseNexusProject >> isNpmProject [
 
 	^ false
 ]
@@ -235,18 +233,6 @@ MooseNexusProject >> metadataDirectory [
 MooseNexusProject >> modelArtifactsDirectory [
 
 	^ self artifactPayloadDirectory / 'models'
-]
-
-{ #category : 'setup' }
-MooseNexusProject >> modelImportRequirements [
-
-	^ { (MooseNexusImageRequirement
-		   name: 'Famix Java JSON import'
-		   availabilityValidation: [
-				   (Smalltalk globals includesKey: #FamixJavaModel) and: [
-					   (Smalltalk globals includesKey: #FamixJSONFileImporter) and: [ Smalltalk globals includesKey: #FamixJavaImportingContext ] ] ]
-		   versionValidation: [ '' ]
-		   expectedVersionDescription: 'loaded Famix Java JSON import support') }
 ]
 
 { #category : 'enumerating' }
@@ -315,11 +301,14 @@ MooseNexusProject >> readProperties: properties [
 MooseNexusProject >> rebaseLoadedModelNamed: modelName [
 	"Update the source root of the named model already loaded in the current image."
 
-	| model |
+	| model manifest importer |
 	model := MooseModel root allModels
 		         detect: [ :each | each name = modelName ]
 		         ifNone: [ Error signal: ('Cannot rebase missing loaded MooseNexus model: {1}' format: { modelName }) ].
-	model rootFolder: self sourceDirectory.
+	manifest := self modelManifestNamed: modelName.
+	manifest ifNil: [ model rootFolder: self sourceDirectory ] ifNotNil: [
+			importer := MooseNexusModelImporter forMetamodel: manifest modelArtifact metamodel.
+			model rootFolder: (importer sourceRootForProject: self) ].
 	^ model
 ]
 
@@ -392,11 +381,11 @@ MooseNexusProject >> supportsPropertiesSchemaVersion: schemaVersion [
 	^ self class supportsPropertiesSchemaVersion: schemaVersion
 ]
 
-{ #category : 'setup' }
-MooseNexusProject >> validateModelImportRequirements [
+{ #category : 'validating' }
+MooseNexusProject >> validateModelImportRequirements: requirements [
 
 	| validationResults |
-	validationResults := self modelImportRequirements collect: [ :requirement | requirement validate ].
+	validationResults := requirements collect: [ :requirement | requirement validate ].
 	validationResults detect: [ :result | result isAvailable not ] ifFound: [ :result | Error signal: result errorMessage ].
 	^ validationResults
 ]
