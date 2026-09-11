@@ -93,4 +93,4 @@ MooseNexus sits one meta layer above source code: it does not build the software
 - **Extractor**: A tool that creates a Moose/Famix model from source code. MooseNexus uses VerveineJ for Java and ts2famix for TypeScript.
 - **Build**: A MooseNexus operation that resolves source project metadata and dependencies, runs an extractor, and records the resulting model artifact.
 - **Managed source project**: A source project whose metadata and dependencies can be read from an existing build tool such as Maven, Gradle, or npm.
-- **Unmanaged source project**: A source project without a supported build tool descriptor. Support for unmanaged source projects is planned.
+- **Unmanaged source project**: A source project whose metadata is supplied explicitly rather than read from a supported build tool descriptor.
