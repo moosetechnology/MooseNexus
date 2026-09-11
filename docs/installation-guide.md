@@ -81,7 +81,7 @@ Load `IntegrationTests` and `JavaIntegrationTests` explicitly when working on in
 
 Install only the requirements for the importer and extractor you choose:
 
-- Unmanaged Java projects do not require Maven or Gradle. They require a Java model extractor, such as [VerveineJ](https://github.com/moosetechnology/VerveineJ/) or [VerveineJ-Docker](https://github.com/Evref-BL/VerveineJ-Docker).
+- Unmanaged Java projects only require a Java model extractor, such as [VerveineJ](https://github.com/moosetechnology/VerveineJ/) or [VerveineJ-Docker](https://github.com/Evref-BL/VerveineJ-Docker).
 - Maven-managed projects require Maven and a Java model extractor.
 - Gradle-managed projects require Gradle and a Java model extractor.
 
