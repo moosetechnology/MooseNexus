@@ -56,5 +56,5 @@ jobs:
         run: |
           gh release create "${{ steps.version.outputs.tag }}" \
             --target "$GITHUB_SHA" \
-            --title "MooseNexus ${{ steps.version.outputs.value }}" \
+            --title "${{ steps.version.outputs.tag }}" \
             --generate-notes
