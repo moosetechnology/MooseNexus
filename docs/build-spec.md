@@ -157,6 +157,14 @@ repository := MooseNexusRepository new directory: '/path/to/nexus-repository' as
 result := spec executeIn: repository.
 ```
 
+Execute in the repository stored beside the running image:
+
+```st
+result := spec executeIn: MooseNexusRepository imageLocal.
+```
+
+`imageLocal` uses `pharo-local/MooseNexus` next to the image file. It is useful for a self-contained image that should retain its model artifacts without using the user's default `~/.moose` repository.
+
 For lower-level orchestration, create a plan explicitly:
 
 ```st

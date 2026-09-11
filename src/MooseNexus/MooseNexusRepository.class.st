@@ -32,6 +32,13 @@ MooseNexusRepository class >> default [
 ]
 
 { #category : 'instance creation' }
+MooseNexusRepository class >> imageLocal [
+	"Answer the repository stored beside the running image, under pharo-local/MooseNexus."
+
+	^ self localDirectory: FileLocator imageDirectory / 'pharo-local' / 'MooseNexus'
+]
+
+{ #category : 'instance creation' }
 MooseNexusRepository class >> localDirectory: aFileReference [
 
 	^ self new directory: aFileReference
