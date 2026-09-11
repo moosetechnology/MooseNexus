@@ -13,27 +13,37 @@ It also provides structured and versioned tracking of models.
 
 ```st
 Metacello new
-	githubUser: 'moosetechnology' project: 'MooseNexus' commitish: 'main' path: 'src';
+	githubUser: 'moosetechnology' project: 'MooseNexus' commitish: 'v1.x.x' path: 'src';
 	baseline: 'MooseNexus';
 	load
 ```
 
-To import Java projects, install the appropriate build tools, [Maven](https://maven.apache.org/install.html) and [Gradle](https://gradle.org/install.html). TypeScript import uses Docker by default; it runs a pinned `ts2famix` image without installing Node or npm packages on the host.
+`v1.x.x` is the floating tag for the newest compatible v1 release. Use an exact version tag when reproducibility matters.
+
+To depend on MooseNexus from another baseline:
+
+```st
+spec
+	baseline: 'MooseNexus'
+	with: [ spec repository: 'github://moosetechnology/MooseNexus:v1.x.x/src' ].
+```
+
+To import Java projects, install [Maven](https://maven.apache.org/install.html) and [Gradle](https://gradle.org/install.html).
 
 To create new models, you will need to install the appropriate model extractor, such as [VerveineJ](https://github.com/moosetechnology/VerveineJ/) locally or through [VerveineJ-Docker](https://github.com/Evref-BL/VerveineJ-Docker).
 
-TypeScript support is optional. Load it, together with FamixTypeScript, explicitly:
+TypeScript support is experimental and deferred from the v1 support commitment. It can be loaded, together with FamixTypeScript, explicitly for evaluation:
 
 ```st
 Metacello new
-	githubUser: 'moosetechnology' project: 'MooseNexus' commitish: 'main' path: 'src';
+	githubUser: 'moosetechnology' project: 'MooseNexus' commitish: 'v1.x.x' path: 'src';
 	baseline: 'MooseNexus';
 	load: 'TypeScript'
 ```
 
 ## Support
 
-Java support lives in the default-loaded `MooseNexus-Java` package and covers Maven, Gradle, and explicitly configured unmanaged projects. The optional `MooseNexus-TypeScript` package supports npm-managed projects with a committed `package-lock.json` in v2 or v3 format; it currently requires Moose 13.
+Java support lives in the default-loaded `MooseNexus-Java` package and covers Maven, Gradle, and explicitly configured unmanaged projects.
 
 The core package is tested on Moose 11, 12, and 13. Java managed-import integration tests run on every pull request with these build-tool boundaries:
 
@@ -44,9 +54,9 @@ The core package is tested on Moose 11, 12, and 13. Java managed-import integrat
 
 The Maven importer accepts Maven 3.6.3 and later Maven 3 releases; it rejects Maven 4. Gradle has no importer-side version guard yet, so its support is defined by the continuously checked boundary configurations above.
 
-TypeScript extraction defaults to the versioned `ghcr.io/moosetechnology/moosenexus-ts2famix:3.2.0-679f54e` Docker image. A local TypeScript runner is available when a caller explicitly configures a local `ts2famix` command; it never installs npm packages as an import side effect.
+`MooseNexus-TypeScript` is an optional experimental package for npm-managed projects with a committed v2 or v3 `package-lock.json`; it currently requires Moose 13. Its v1 delivery is deferred until ts2famix has a stable upstream release. MooseNexus will then pin that upstream release, document the supported runtime, and add extraction integration coverage. It does not publish or support a MooseNexus-owned ts2famix image.
 
-Known TypeScript limits: JavaScript is not supported yet; Yarn, pnpm, Bun, and lockfile-free npm projects are not supported; npm packages are recorded as locked remote references but are not downloaded or added to the model.
+Known experimental TypeScript limits: JavaScript is not supported; Yarn, pnpm, Bun, and lockfile-free npm projects are not supported; npm packages are recorded as locked remote references but are not downloaded or added to the model.
 
 ## Usage
 
@@ -65,6 +75,8 @@ result := spec executeIn: MooseNexusRepository default.
 ```
 
 See [Build Spec](docs/build-spec.md) for managed and unmanaged project build examples.
+
+See [Persisted Metadata](docs/persisted-metadata.md) for the project and model-artifact portability contract.
 
 See [OCI Artifacts](docs/oci-artifacts.md) for publishing model artifacts and source archives to an OCI registry such as Harbor through ORAS.
 
@@ -98,8 +110,8 @@ MooseNexus sits one meta layer above source code: it does not build the software
 - **Model artifact**: A stored output of a MooseNexus build. It contains, or points to, a generated model and should carry enough metadata to identify how it was produced.
 - **Dependency**: Another source project or software artifact required to analyze or model a source project. Dependencies may be pathless Maven, Gradle, or npm references, or explicit local paths for unmanaged projects.
 - **Dependency scope**: The context in which a dependency is used by the source project, such as compile, runtime, or test. MooseNexus may use scopes to decide which dependencies are included in a model.
-- **Nature**: The kind of source project MooseNexus knows how to inspect, usually derived from the source project's build tool. Maven, Gradle, and locked npm projects are supported natures.
-- **Extractor**: A tool that creates a Moose/Famix model from source code. MooseNexus uses VerveineJ for Java and ts2famix for TypeScript.
+- **Nature**: The kind of source project MooseNexus knows how to inspect, usually derived from the source project's build tool. Maven and Gradle are supported natures; locked npm projects are experimental.
+- **Extractor**: A tool that creates a Moose/Famix model from source code. MooseNexus uses VerveineJ for Java and has experimental ts2famix support for TypeScript.
 - **Build**: A MooseNexus operation that resolves source project metadata and dependencies, runs an extractor, and records the resulting model artifact.
 - **Managed source project**: A source project whose metadata and dependencies can be read from an existing build tool such as Maven, Gradle, or npm.
 - **Unmanaged source project**: A source project whose metadata is supplied explicitly rather than read from a supported build tool descriptor.
