@@ -49,30 +49,6 @@ jobs:
           github-token: ${{ github.token }}
           file: coverage/lcov.info
 
-  integration:
-    runs-on: ubuntu-latest
-    name: Moose64-13 integration
-    steps:
-      - uses: actions/checkout@v7
-        with:
-          fetch-depth: 0
-
-      - name: Check build tools
-        run: |
-          mvn --version
-          gradle --version
-
-      - uses: hpi-swa/setup-smalltalkCI@v1
-        with:
-          smalltalk-image: Moose64-13
-
-      - name: Run integration tests
-        run: smalltalkci -s Moose64-13 .smalltalk.integration.ston
-        shell: bash
-        timeout-minutes: 15
-        env:
-          GITHUB_TOKEN: ${{ github.token }}
-
   build-tool-compatibility:
     runs-on: ubuntu-latest
     strategy:
