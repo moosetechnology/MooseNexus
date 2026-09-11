@@ -7,9 +7,9 @@ Class {
 	#instVars : [
 		'locks'
 	],
-	#category : 'MooseNexus-ConflictResolver',
+	#category : 'MooseNexus-Dependency',
 	#package : 'MooseNexus',
-	#tag : 'ConflictResolver'
+	#tag : 'Dependency'
 }
 
 { #category : 'adding' }

@@ -3,12 +3,12 @@ SmalltalkCISpec {
     SCIMetacelloLoadSpec {
       #baseline : 'MooseNexus',
       #directory : 'src',
-      #load : [ 'IntegrationTests' ],
+      #load : [ 'IntegrationTests', 'JavaIntegrationTests' ],
       #registerInIceberg : true,
       #platforms : [ #pharo ]
     }
   ],
   #testing : {
-    #packages : [ 'MooseNexus-IntegrationTests' ]
+    #packages : [ 'MooseNexus-IntegrationTests', 'MooseNexus-Java-IntegrationTests' ]
   }
 }

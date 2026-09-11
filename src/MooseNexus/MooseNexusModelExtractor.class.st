@@ -58,6 +58,13 @@ MooseNexusModelExtractor class >> modelFormats [
 	self subclassResponsibility
 ]
 
+{ #category : 'cleanup' }
+MooseNexusModelExtractor >> cleanUp [
+	"Remove temporary files created by this extractor after model registration."
+
+	^ self
+]
+
 { #category : 'capabilities' }
 MooseNexusModelExtractor >> language [
 

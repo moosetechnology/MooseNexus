@@ -13,6 +13,13 @@ Class {
 	#tag : 'ModelExtraction'
 }
 
+{ #category : 'cleanup' }
+MooseNexusUnavailableToolModelExtractor >> cleanUp [
+	"The unavailable test extractor creates no temporary output."
+
+	^ self
+]
+
 { #category : 'testing' }
 MooseNexusUnavailableToolModelExtractor >> didRun [
 

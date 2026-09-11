@@ -7,9 +7,9 @@ The role of my subclasses is to provide strategies for resolving these conflicts
 Class {
 	#name : 'MooseNexusDependencyConflictResolver',
 	#superclass : 'Object',
-	#category : 'MooseNexus-ConflictResolver',
+	#category : 'MooseNexus-Dependency',
 	#package : 'MooseNexus',
-	#tag : 'ConflictResolver'
+	#tag : 'Dependency'
 }
 
 { #category : 'testing' }

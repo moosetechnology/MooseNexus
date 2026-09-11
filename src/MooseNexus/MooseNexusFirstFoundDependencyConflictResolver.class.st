@@ -5,9 +5,9 @@ While I have little (if any) semantic value, I guarantee to resolve all conflict
 Class {
 	#name : 'MooseNexusFirstFoundDependencyConflictResolver',
 	#superclass : 'MooseNexusDependencyConflictResolver',
-	#category : 'MooseNexus-ConflictResolver',
+	#category : 'MooseNexus-Dependency',
 	#package : 'MooseNexus',
-	#tag : 'ConflictResolver'
+	#tag : 'Dependency'
 }
 
 { #category : 'accessing' }

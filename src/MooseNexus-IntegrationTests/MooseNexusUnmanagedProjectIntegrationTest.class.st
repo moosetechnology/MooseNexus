@@ -10,8 +10,9 @@ Class {
 		'rootDirectory',
 		'localArtifactDirectory'
 	],
-	#category : 'MooseNexus-IntegrationTests',
-	#package : 'MooseNexus-IntegrationTests'
+	#category : 'MooseNexus-IntegrationTests-Tests',
+	#package : 'MooseNexus-IntegrationTests',
+	#tag : 'Tests'
 }
 
 { #category : 'private' }

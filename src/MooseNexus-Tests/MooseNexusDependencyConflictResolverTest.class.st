@@ -9,8 +9,9 @@ Class {
 	#instVars : [
 		'resolver'
 	],
-	#category : 'MooseNexus-Tests',
-	#package : 'MooseNexus-Tests'
+	#category : 'MooseNexus-Tests-Dependency',
+	#package : 'MooseNexus-Tests',
+	#tag : 'Dependency'
 }
 
 { #category : 'testing' }

@@ -193,7 +193,7 @@ MooseNexusBuildSpec >> planIn: aMooseNexusRepository [
 { #category : 'accessing' }
 MooseNexusBuildSpec >> projectImporter [
 
-	^ projectImporter ifNil: [ MooseNexusProjectImporter fromDirectory: self sourceDirectory pathString ]
+	^ projectImporter ifNil: [ MooseNexusProjectImporter fromDirectory: self sourceDirectory pathString language: self language ]
 ]
 
 { #category : 'accessing' }

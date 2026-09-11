@@ -19,5 +19,5 @@ ManifestMooseNexus class >> formatter [
 ManifestMooseNexus class >> ruleLongMethodsRuleV1FalsePositive [
 
 	<ignoreForCoverage>
-	^ #(#(#(#RGPackageDefinition #(#MooseNexus)) #'2024-10-24T0:0:0+00:00') )
+	^ #( #( #( #RGPackageDefinition #( #MooseNexus ) ) #'2024-10-24T00:00:00+00:00' ) )
 ]

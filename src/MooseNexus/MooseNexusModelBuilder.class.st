@@ -52,9 +52,8 @@ MooseNexusModelBuilder >> buildProvenance: aMooseNexusBuildProvenance [
 
 { #category : 'cleanup' }
 MooseNexusModelBuilder >> cleanUp [
-	"delete temp directories"
 
-	(project repositoryDirectory / 'dependencies') ensureDeleteAll
+	[ self extractor cleanUp ] ensure: [ (project repositoryDirectory / 'dependencies') ensureDeleteAll ]
 ]
 
 { #category : 'accessing' }
@@ -163,7 +162,7 @@ MooseNexusModelBuilder >> registerModel: modelPath [
 		                       projectCoordinates: project coordinates
 		                       name: self modelName
 		                       format: source extension
-		                       metamodel: 'unknown'
+		                       metamodel: self extractor metamodel
 		                       classifier: 'main'.
 	modelArtifact := MooseNexusModelArtifact
 		                 artifactCoordinates: artifactCoordinates
