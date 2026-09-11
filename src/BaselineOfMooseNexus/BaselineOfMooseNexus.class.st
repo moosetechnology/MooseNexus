@@ -29,7 +29,7 @@ BaselineOfMooseNexus >> baseline: spec [
 				package: 'MooseNexus-Java-Tests' with: [ spec requires: #( 'MooseNexus-TestResources' ) ];
 				package: 'MooseNexus-TypeScript-Tests' with: [ spec requires: #( 'MooseNexus-TypeScript' 'MooseNexus-TestResources' ) ];
 				package: 'MooseNexus-IntegrationTests' with: [ spec requires: #( 'MooseNexus-TestResources' ) ];
-				package: 'MooseNexus-Java-IntegrationTests' with: [ spec requires: #( 'MooseNexus-TestResources' ) ];
+				package: 'MooseNexus-Java-IntegrationTests' with: [ spec requires: #( 'MooseNexus-Java' 'MooseNexus-TestResources' ) ];
 				package: 'MooseNexus-TypeScript-IntegrationTests'
 				with: [ spec requires: #( 'MooseNexus-TypeScript' 'MooseNexus-TestResources' ) ].
 

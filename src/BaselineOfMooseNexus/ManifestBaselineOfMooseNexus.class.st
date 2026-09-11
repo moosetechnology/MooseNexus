@@ -14,3 +14,10 @@ ManifestBaselineOfMooseNexus class >> formatter [
 
 	^ EFFormatter new installNewContext: (EFContext new maxLineLength: 130)
 ]
+
+{ #category : 'code-critics' }
+ManifestBaselineOfMooseNexus class >> ruleReCyclomaticComplexityRuleV1FalsePositive [
+
+	<ignoreForCoverage>
+	^ #( #( #( #RGPackageDefinition #( #BaselineOfMooseNexus ) ) #'2026-09-11T00:00:00+00:00' ) )
+]
