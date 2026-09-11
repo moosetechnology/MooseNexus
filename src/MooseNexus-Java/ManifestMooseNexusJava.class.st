@@ -19,5 +19,5 @@ ManifestMooseNexusJava class >> formatter [
 ManifestMooseNexusJava class >> ruleMissingSubclassResponsibilityRuleV1FalsePositive [
 
 	<ignoreForCoverage>
-	^ #( #( #( #RGPackageDefinition #( #'MooseNexus-Java' ) ) #'2026-09-11T00:00:00.0+00:00' ) )
+	^ #( #( #( #RGPackageDefinition #( #'MooseNexus-Java' ) ) #'2026-09-11T00:00:00+00:00' ) )
 ]

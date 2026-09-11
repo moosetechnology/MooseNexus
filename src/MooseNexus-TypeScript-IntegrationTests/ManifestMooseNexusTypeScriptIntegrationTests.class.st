@@ -20,5 +20,5 @@ ManifestMooseNexusTypeScriptIntegrationTests class >> ruleReTestClassNotInPackag
 
 	<ignoreForCoverage>
 	^ #( #( #( #RGPackageDefinition #( #'MooseNexus-TypeScript-IntegrationTests' ) )
-	        #'2026-09-11T00:00:00.0+00:00' ) )
+	        #'2026-09-11T00:00:00+00:00' ) )
 ]

@@ -20,5 +20,5 @@ ManifestMooseNexusJavaIntegrationTests class >> ruleReTestClassNotInPackageWithT
 
 	<ignoreForCoverage>
 	^ #( #( #( #RGPackageDefinition #( #'MooseNexus-Java-IntegrationTests' ) )
-	        #'2026-09-11T00:00:00.0+00:00' ) )
+	        #'2026-09-11T00:00:00+00:00' ) )
 ]
