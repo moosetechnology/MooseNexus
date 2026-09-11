@@ -49,6 +49,20 @@ MooseNexusNpmProjectImporterTest >> testExcludesLinkedAndFileDependencies [
 ]
 
 { #category : 'tests' }
+MooseNexusNpmProjectImporterTest >> testNpmProjectIsManagedWithoutMultiModuleMetadata [
+
+	| project properties |
+	project := MooseNexusNpmProject new.
+	project initializeCoordinates: (MooseNexusCoordinates group: 'org.example' name: 'npm-project' version: '1.0.0').
+	project language: 'typescript'.
+	properties := project properties.
+
+	self assert: project isManagedProject.
+	self deny: (properties includesKey: #projects).
+	self assert: (properties at: #language) equals: 'typescript'
+]
+
+{ #category : 'tests' }
 MooseNexusNpmProjectImporterTest >> testNpmReferenceRoundTripsThroughGenericDependencyReader [
 
 	| descriptor reloaded |

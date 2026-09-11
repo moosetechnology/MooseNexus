@@ -5,7 +5,7 @@ The Gradle importer records Gradle-resolved, pathless dependency references from
 "
 Class {
 	#name : 'MooseNexusGradleProject',
-	#superclass : 'MooseNexusManagedProject',
+	#superclass : 'MooseNexusMultiModuleManagedProject',
 	#category : 'MooseNexus-Java-Project',
 	#package : 'MooseNexus-Java',
 	#tag : 'Project'

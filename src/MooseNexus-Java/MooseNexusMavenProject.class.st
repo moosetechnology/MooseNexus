@@ -5,7 +5,7 @@ The Maven importer records Maven-resolved, pathless dependency references. When 
 "
 Class {
 	#name : 'MooseNexusMavenProject',
-	#superclass : 'MooseNexusManagedProject',
+	#superclass : 'MooseNexusMultiModuleManagedProject',
 	#category : 'MooseNexus-Java-Project',
 	#package : 'MooseNexus-Java',
 	#tag : 'Project'
