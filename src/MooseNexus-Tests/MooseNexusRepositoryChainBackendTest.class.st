@@ -8,8 +8,9 @@ Class {
 		'rootDirectory',
 		'localBackend'
 	],
-	#category : 'MooseNexus-Tests',
-	#package : 'MooseNexus-Tests'
+	#category : 'MooseNexus-Tests-Repository',
+	#package : 'MooseNexus-Tests',
+	#tag : 'Repository'
 }
 
 { #category : 'running' }

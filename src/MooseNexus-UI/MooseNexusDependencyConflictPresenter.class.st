@@ -11,8 +11,9 @@ Class {
 		'#conflictId',
 		'#freezeLock'
 	],
-	#category : 'MooseNexus-UI',
-	#package : 'MooseNexus-UI'
+	#category : 'MooseNexus-UI-Dependency',
+	#package : 'MooseNexus-UI',
+	#tag : 'Dependency'
 }
 
 { #category : 'accessing' }

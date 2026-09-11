@@ -1,8 +1,9 @@
 Class {
 	#name : 'MooseNexusSemanticVersioningDependencyConflictResolverTest',
 	#superclass : 'MooseNexusDependencyConflictResolverTest',
-	#category : 'MooseNexus-Tests',
-	#package : 'MooseNexus-Tests'
+	#category : 'MooseNexus-Tests-Dependency',
+	#package : 'MooseNexus-Tests',
+	#tag : 'Dependency'
 }
 
 { #category : 'running' }

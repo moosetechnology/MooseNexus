@@ -9,9 +9,9 @@ Class {
 	#instVars : [
 		'fallbackResolver'
 	],
-	#category : 'MooseNexus-ConflictResolver',
+	#category : 'MooseNexus-Dependency',
 	#package : 'MooseNexus',
-	#tag : 'ConflictResolver'
+	#tag : 'Dependency'
 }
 
 { #category : 'testing' }

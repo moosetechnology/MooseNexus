@@ -9,8 +9,9 @@ Class {
 		'importerDropList',
 		'addFolderPresenter'
 	],
-	#category : 'MooseNexus-UI',
-	#package : 'MooseNexus-UI'
+	#category : 'MooseNexus-UI-Importer',
+	#package : 'MooseNexus-UI',
+	#tag : 'Importer'
 }
 
 { #category : 'specs' }

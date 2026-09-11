@@ -1,8 +1,9 @@
 Class {
 	#name : 'BaselineOfMooseNexus',
 	#superclass : 'BaselineOf',
-	#category : 'BaselineOfMooseNexus',
-	#package : 'BaselineOfMooseNexus'
+	#category : 'BaselineOfMooseNexus-Baseline',
+	#package : 'BaselineOfMooseNexus',
+	#tag : 'Baseline'
 }
 
 { #category : 'baselines' }
