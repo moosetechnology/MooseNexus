@@ -72,3 +72,45 @@ jobs:
         timeout-minutes: 15
         env:
           GITHUB_TOKEN: ${{ github.token }}
+
+  build-tool-compatibility:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - name: oldest supported
+            java: '8'
+            maven: '3.6.3'
+            gradle: '6.9.4'
+          - name: current stable
+            java: '17'
+            maven: '3.9.16'
+            gradle: '9.7.1'
+    name: Java build tools (${{ matrix.name }})
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: ${{ matrix.java }}
+
+      - name: Install Maven and Gradle
+        run: ci/install-build-tools.sh "$RUNNER_TEMP/build-tools" "${{ matrix.maven }}" "${{ matrix.gradle }}" >> "$GITHUB_PATH"
+
+      - name: Check build tools
+        run: |
+          mvn --version
+          gradle --version
+
+      - uses: hpi-swa/setup-smalltalkCI@v1
+        with:
+          smalltalk-image: Moose64-13
+
+      - name: Run integration tests
+        run: smalltalkci -s Moose64-13 .smalltalk.integration.ston
+        shell: bash
+        timeout-minutes: 15
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
