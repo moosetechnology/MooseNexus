@@ -108,6 +108,15 @@ MooseNexusRepositoryChainBackendTest >> testChainTriesRemotesInOrder [
 ]
 
 { #category : 'tests' }
+MooseNexusRepositoryChainBackendTest >> testImageLocalRepositoryUsesImageCompanionDirectory [
+
+	| expectedDirectory |
+	expectedDirectory := FileLocator imageDirectory / 'pharo-local' / 'MooseNexus'.
+
+	self assert: MooseNexusRepository imageLocal directory equals: expectedDirectory
+]
+
+{ #category : 'tests' }
 MooseNexusRepositoryChainBackendTest >> testRemoteBackendBuildsUrlsFromRepositoryRelativePaths [
 
 	| remote |
