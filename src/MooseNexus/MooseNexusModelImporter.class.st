@@ -24,6 +24,12 @@ MooseNexusModelImporter class >> forMetamodel: aMetamodelName [
 	Error signal: 'No MooseNexus model importer for metamodel: ' , aMetamodelName
 ]
 
+{ #category : 'testing' }
+MooseNexusModelImporter class >> isAbstract [
+
+	^ self == MooseNexusModelImporter
+]
+
 { #category : 'capabilities' }
 MooseNexusModelImporter class >> metamodel [
 

@@ -14,6 +14,12 @@ Class {
 	#tag : 'Project'
 }
 
+{ #category : 'testing' }
+MooseNexusMultiModuleManagedProject class >> isAbstract [
+
+	^ self == MooseNexusMultiModuleManagedProject
+]
+
 { #category : 'enumerating' }
 MooseNexusMultiModuleManagedProject >> projectDependenciesDo: aBlock [
 	"Iterate over dependency descriptors declared by managed modules."
