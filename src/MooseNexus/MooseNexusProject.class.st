@@ -181,7 +181,7 @@ MooseNexusProject >> isNpmProject [
 { #category : 'testing' }
 MooseNexusProject >> isRecorded [
 
-	^ repositoryBackend notNil and: [ repositoryPath notNil ]
+	^ repositoryBackend isNotNil and: [ repositoryPath isNotNil ]
 ]
 
 { #category : 'accessing' }

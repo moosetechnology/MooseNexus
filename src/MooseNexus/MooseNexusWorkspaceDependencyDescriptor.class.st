@@ -90,7 +90,7 @@ MooseNexusWorkspaceDependencyDescriptor >> normalizeScopes: aCollection [
 	(aCollection isString
 		 ifTrue: [ { aCollection } ]
 		 ifFalse: [ aCollection ]) do: [ :scope |
-			(scope notNil and: [ (seenScopes includes: scope) not ]) ifTrue: [
+			(scope isNotNil and: [ (seenScopes includes: scope) not ]) ifTrue: [
 					seenScopes add: scope.
 					normalizedScopes add: scope ] ].
 	^ normalizedScopes asArray
