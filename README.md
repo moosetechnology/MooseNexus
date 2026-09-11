@@ -35,6 +35,15 @@ Metacello new
 
 Java support lives in the default-loaded `MooseNexus-Java` package and covers Maven, Gradle, and explicitly configured unmanaged projects. The optional `MooseNexus-TypeScript` package supports npm-managed projects with a committed `package-lock.json` in v2 or v3 format; it currently requires Moose 13.
 
+The core package is tested on Moose 11, 12, and 13. Java managed-import integration tests run on every pull request with these build-tool boundaries:
+
+| Toolchain | Java | Maven | Gradle |
+| --- | --- | --- | --- |
+| Oldest supported | 8 | 3.6.3 | 6.9.4 |
+| Current stable | 17 | 3.9.16 | 9.7.1 |
+
+The Maven importer accepts Maven 3.6.3 and later Maven 3 releases; it rejects Maven 4. Gradle has no importer-side version guard yet, so its support is defined by the continuously checked boundary configurations above.
+
 TypeScript extraction defaults to the versioned `ghcr.io/moosetechnology/moosenexus-ts2famix:3.2.0-679f54e` Docker image. A local TypeScript runner is available when a caller explicitly configures a local `ts2famix` command; it never installs npm packages as an import side effect.
 
 Known TypeScript limits: JavaScript is not supported yet; Yarn, pnpm, Bun, and lockfile-free npm projects are not supported; npm packages are recorded as locked remote references but are not downloaded or added to the model.
