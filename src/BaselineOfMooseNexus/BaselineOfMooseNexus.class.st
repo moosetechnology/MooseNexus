@@ -14,10 +14,9 @@ BaselineOfMooseNexus >> baseline: spec [
 					spec
 						loads: #( 'Core' );
 						repository: 'github://pharo-contributions/XML-XMLParser:v3.6.x/src' ].
-			spec baseline: 'FamixTypeScript' with: [
-					spec
-						loads: #( 'Famix-TypeScript-Entities' );
-						repository: 'github://fuhrmanator/FamixTypeScript:de43767b802588b14212fef65413a286bf24ba71/src' ].
+			spec
+				baseline: 'FamixTypeScript'
+				with: [ spec repository: 'github://fuhrmanator/FamixTypeScript:de43767b802588b14212fef65413a286bf24ba71/src' ].
 
 			spec
 				package: 'MooseNexus' with: [ spec requires: #( 'XMLParser' ) ];
@@ -25,13 +24,11 @@ BaselineOfMooseNexus >> baseline: spec [
 				package: 'MooseNexus-TypeScript' with: [ spec requires: #( 'MooseNexus' 'FamixTypeScript' ) ];
 				package: 'MooseNexus-UI' with: [ spec requires: #( 'MooseNexus' ) ];
 				package: 'MooseNexus-TestResources' with: [ spec requires: #( 'MooseNexus' ) ];
-				package: 'MooseNexus-Java-TestResources' with: [ spec requires: #( 'MooseNexus-Java' ) ];
 				package: 'MooseNexus-Tests' with: [ spec requires: #( 'MooseNexus-TestResources' ) ];
-				package: 'MooseNexus-Java-Tests' with: [ spec requires: #( 'MooseNexus-Java-TestResources' 'MooseNexus-TestResources' ) ];
+				package: 'MooseNexus-Java-Tests' with: [ spec requires: #( 'MooseNexus-TestResources' ) ];
 				package: 'MooseNexus-TypeScript-Tests' with: [ spec requires: #( 'MooseNexus-TypeScript' 'MooseNexus-TestResources' ) ];
 				package: 'MooseNexus-IntegrationTests' with: [ spec requires: #( 'MooseNexus-TestResources' ) ];
-				package: 'MooseNexus-Java-IntegrationTests'
-				with: [ spec requires: #( 'MooseNexus-Java-TestResources' 'MooseNexus-TestResources' ) ];
+				package: 'MooseNexus-Java-IntegrationTests' with: [ spec requires: #( 'MooseNexus-TestResources' ) ];
 				package: 'MooseNexus-TypeScript-IntegrationTests'
 				with: [ spec requires: #( 'MooseNexus-TypeScript' 'MooseNexus-TestResources' ) ].
 
