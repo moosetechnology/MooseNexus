@@ -85,7 +85,7 @@ Install only the requirements for the importer and extractor you choose:
 - Maven-managed projects require Maven and a Java model extractor.
 - Gradle-managed projects require Gradle and a Java model extractor.
 
-The Maven importer supports Maven 3.6.3 and later Maven 3 releases, and rejects Maven 4. Gradle has no importer-side version guard; managed-import integration tests continuously check these boundary configurations:
+Both managed importers validate their build-tool version before reading the project. The Maven importer accepts Maven 3.6.3 through the Maven 3 line and rejects Maven 4. The Gradle importer accepts Gradle 6.9.4 through the Gradle 9 line and rejects Gradle 10. Managed-import integration tests continuously exercise these boundary configurations:
 
 | Toolchain | Java | Maven | Gradle |
 | --- | --- | --- | --- |

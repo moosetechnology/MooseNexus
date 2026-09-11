@@ -61,7 +61,52 @@ MooseNexusImporterExtractorProtocolTest >> testGradleImporterDeclaresCapabilitie
 	self assert: requirement name equals: 'Gradle'.
 	self assert: (requirement availabilityValidation includesSubstring: '--version').
 	self assert: (requirement versionValidation includesSubstring: '--version').
-	self assert: (requirement expectedVersionDescription includesSubstring: 'dependency task')
+	self assert: (requirement expectedVersionDescription includesSubstring: '6.9.4').
+	self assert: (requirement expectedVersionDescription includesSubstring: '9.x')
+]
+
+{ #category : 'tests' }
+MooseNexusImporterExtractorProtocolTest >> testGradleImporterParsesGradleVersionBanners [
+
+	| importer banner |
+	importer := MooseNexusGradleProjectImporter new.
+	banner := '------------------------------------------------------------' , String cr , 'Gradle 9.7.1' , String cr
+	          , '------------------------------------------------------------'.
+
+	self assert: (importer gradleVersionFrom: banner) equals: '9.7.1'.
+	self assert: (importer gradleVersionFrom: 'Gradle 8.0') equals: '8.0'.
+	self should: [ importer gradleVersionFrom: 'Gradle' ] raise: Error.
+	self should: [ importer gradleVersionFrom: 'Gradle ' ] raise: Error
+]
+
+{ #category : 'tests' }
+MooseNexusImporterExtractorProtocolTest >> testGradleImporterRecognizesSupportedGradleVersions [
+
+	| importer |
+	importer := MooseNexusGradleProjectImporter new.
+
+	#( '6.9.4' '7.6.4' '8.0' '8.14.3' '9.7.1' ) do: [ :version | self assert: (importer isSupportedGradleVersion: version) ].
+	self deny: (importer isSupportedGradleVersion: '6.9.3').
+	self deny: (importer isSupportedGradleVersion: '10.0.0').
+	self deny: (importer isSupportedGradleVersion: '9.8-rc-1')
+]
+
+{ #category : 'tests' }
+MooseNexusImporterExtractorProtocolTest >> testGradleImporterRejectsUnsupportedVersionsDuringPreflight [
+
+	| importer |
+	importer := MooseNexusGradleProjectImporter new.
+
+	self
+		should: [ importer validateGradleVersion: 'Gradle 6.9.3' ]
+		raise: Error
+		whoseDescriptionIncludes: 'Gradle 6.9.4 through 9.x'
+		description: 'Gradle below the plugin floor must not proceed'.
+	self
+		should: [ importer validateGradleVersion: 'Gradle 10.0.0' ]
+		raise: Error
+		whoseDescriptionIncludes: 'Gradle 10 is not yet supported'
+		description: 'Untested Gradle 10 must not proceed'
 ]
 
 { #category : 'tests' }

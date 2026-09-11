@@ -35,6 +35,24 @@ MooseNexusGradleProjectImporter class >> canHandle: directory [
 ]
 
 { #category : 'capabilities' }
+MooseNexusGradleProjectImporter class >> maximumSupportedGradleMajorVersion [
+
+	^ 9
+]
+
+{ #category : 'capabilities' }
+MooseNexusGradleProjectImporter class >> minimumGradleVersion [
+
+	^ #( 6 9 4 )
+]
+
+{ #category : 'capabilities' }
+MooseNexusGradleProjectImporter class >> supportedGradleVersionDescription [
+
+	^ 'Gradle 6.9.4 through 9.x; Gradle 10 is not yet supported'
+]
+
+{ #category : 'capabilities' }
 MooseNexusGradleProjectImporter class >> supportedLanguages [
 
 	^ #( java )
@@ -63,6 +81,32 @@ MooseNexusGradleProjectImporter >> findGradleCommand [
 		ifFalse: [ "assume *nix" directory / 'gradlew' ifExists: [ ^ './gradlew' ] ].
 	"assume gradle is installed"
 	^ 'gradle'
+]
+
+{ #category : 'private' }
+MooseNexusGradleProjectImporter >> gradleVersionComponentsFrom: versionString [
+
+	| components |
+	components := versionString findTokens: '.-'.
+	(components size between: 2 and: 3) ifFalse: [ ^ nil ].
+	(components allSatisfy: [ :each | each allSatisfy: [ :character | character isDigit ] ]) ifFalse: [ ^ nil ].
+	^ {
+		  components first asInteger.
+		  components second asInteger.
+		  (components at: 3 ifAbsent: [ 0 ]) asInteger }
+]
+
+{ #category : 'private' }
+MooseNexusGradleProjectImporter >> gradleVersionFrom: versionDetails [
+
+	| prefix versionLine versionString |
+	prefix := 'Gradle '.
+	versionLine := versionDetails lines
+		               detect: [ :line | line beginsWith: prefix ]
+		               ifNone: [ self signalCannotDetermineGradleVersionFrom: versionDetails ].
+	versionString := (versionLine allButFirst: prefix size) trimBoth.
+	versionString ifEmpty: [ self signalCannotDetermineGradleVersionFrom: versionDetails ].
+	^ versionString
 ]
 
 { #category : 'constants' }
@@ -98,6 +142,22 @@ MooseNexusGradleProjectImporter >> initialize [
 	localRepositories := {
 		                     MooseNexusGradleRepository default.
 		                     MooseNexusMavenRepository default }
+]
+
+{ #category : 'private' }
+MooseNexusGradleProjectImporter >> isSupportedGradleVersion: versionString [
+
+	| components minimumVersion major minor patch |
+	components := self gradleVersionComponentsFrom: versionString.
+	components ifNil: [ ^ false ].
+	minimumVersion := self class minimumGradleVersion.
+	major := components first.
+	major < minimumVersion first ifTrue: [ ^ false ].
+	major > self class maximumSupportedGradleMajorVersion ifTrue: [ ^ false ].
+	major > minimumVersion first ifTrue: [ ^ true ].
+	minor := components second.
+	patch := components third.
+	^ minor > minimumVersion second or: [ minor = minimumVersion second and: [ patch >= minimumVersion third ] ]
 ]
 
 { #category : 'constants' }
@@ -211,7 +271,27 @@ MooseNexusGradleProjectImporter >> requirements [
 		   name: 'Gradle'
 		   availabilityValidation: command
 		   versionValidation: command
-		   expectedVersionDescription: 'Gradle CLI compatible with injected MooseNexus dependency task') }
+		   expectedVersionDescription: self class supportedGradleVersionDescription) }
+]
+
+{ #category : 'private' }
+MooseNexusGradleProjectImporter >> signalCannotDetermineGradleVersionFrom: versionDetails [
+
+	Error signal: (String streamContents: [ :stream |
+				 stream
+					 nextPutAll: 'Cannot determine Gradle version from: ';
+					 nextPutAll: versionDetails ])
+]
+
+{ #category : 'validating' }
+MooseNexusGradleProjectImporter >> validateGradleVersion: versionDetails [
+
+	| versionString |
+	versionString := self gradleVersionFrom: versionDetails.
+	(self isSupportedGradleVersion: versionString) ifFalse: [
+			Error signal:
+				'Unsupported Gradle version ' , versionString , '. MooseNexus requires ' , self class supportedGradleVersionDescription ].
+	^ versionString
 ]
 
 { #category : 'validating' }
@@ -222,6 +302,16 @@ MooseNexusGradleProjectImporter >> validateProjectVersion: version [
 	validatedVersion = 'unspecified' ifTrue: [
 		Error signal: 'Cannot infer MooseNexus project version from Gradle unspecified project version' ].
 	^ validatedVersion
+]
+
+{ #category : 'validating' }
+MooseNexusGradleProjectImporter >> validateRequirements [
+
+	| validationResults gradleValidation |
+	validationResults := super validateRequirements.
+	gradleValidation := validationResults detect: [ :each | each requirementName = 'Gradle' ].
+	self validateGradleVersion: gradleValidation versionDetails.
+	^ validationResults
 ]
 
 { #category : 'accessing' }
