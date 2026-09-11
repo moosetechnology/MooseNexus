@@ -5,9 +5,8 @@ Class {
 		'returnCode',
 		'executedCommand'
 	],
-	#category : 'MooseNexus-Java-TestResources-ModelExtraction',
-	#package : 'MooseNexus-Java-TestResources',
-	#tag : 'ModelExtraction'
+	#category : 'MooseNexus-Java-Tests',
+	#package : 'MooseNexus-Java-Tests'
 }
 
 { #category : 'accessing' }

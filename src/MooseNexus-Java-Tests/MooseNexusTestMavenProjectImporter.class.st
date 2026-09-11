@@ -7,9 +7,8 @@ Class {
 	#instVars : [
 		'paths'
 	],
-	#category : 'MooseNexus-Java-TestResources-Importer',
-	#package : 'MooseNexus-Java-TestResources',
-	#tag : 'Importer'
+	#category : 'MooseNexus-Java-Tests',
+	#package : 'MooseNexus-Java-Tests'
 }
 
 { #category : 'initialization' }
