@@ -92,7 +92,7 @@ MooseNexusNpmProjectImporter >> isExternalPackageAt: packagePath metadata: metad
 
 	| version resolved |
 	packagePath isEmpty ifTrue: [ ^ false ].
-	(metadata at: 'link' ifAbsent: [ false ]) ifTrue: [ ^ false ].
+	metadata at: 'link' ifPresent: [ ^ false ].
 	version := metadata at: 'version' ifAbsent: [ ^ false ].
 	(version beginsWith: 'file:') ifTrue: [ ^ false ].
 	(version beginsWith: 'workspace:') ifTrue: [ ^ false ].
@@ -142,9 +142,9 @@ MooseNexusNpmProjectImporter >> scopesFor: metadata [
 
 	| scopes |
 	scopes := OrderedCollection new.
-	(metadata at: 'dev' ifAbsent: [ false ]) ifTrue: [ scopes add: 'dev' ].
-	(metadata at: 'optional' ifAbsent: [ false ]) ifTrue: [ scopes add: 'optional' ].
-	(metadata at: 'peer' ifAbsent: [ false ]) ifTrue: [ scopes add: 'peer' ].
+	metadata at: 'dev' ifPresent: [ scopes add: 'dev' ].
+	metadata at: 'optional' ifPresent: [ scopes add: 'optional' ].
+	metadata at: 'peer' ifPresent: [ scopes add: 'peer' ].
 	scopes ifEmpty: [ scopes add: 'runtime' ].
 	^ scopes asArray
 ]
