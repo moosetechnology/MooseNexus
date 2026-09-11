@@ -1,0 +1,60 @@
+name: Release
+
+on:
+  workflow_dispatch:
+
+permissions:
+  actions: read
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Require main
+        run: |
+          if [ "$GITHUB_REF" != "refs/heads/main" ]; then
+            echo "Run this workflow from main." >&2
+            exit 1
+          fi
+
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+
+      - name: Verify CI
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          successful_runs="$(gh run list --commit "$GITHUB_SHA" --workflow Tests --status completed --json conclusion --jq '[.[] | select(.conclusion == "success")] | length')"
+          if [ "$successful_runs" -eq 0 ]; then
+            echo "Tests must succeed for this commit before releasing it." >&2
+            exit 1
+          fi
+
+      - name: Read MooseNexus version
+        id: version
+        run: |
+          moose_nexus_version="$(sed -nE "s/^[[:space:]]*\^[[:space:]]*'([0-9]+\.[0-9]+\.[0-9]+)'.*/\1/p" src/MooseNexus/MooseNexusVersion.class.st)"
+          if [ -z "$moose_nexus_version" ] || [ "$(printf '%s\n' "$moose_nexus_version" | wc -l | tr -d ' ')" -ne 1 ]; then
+            echo "Could not read exactly one release version from MooseNexusVersion." >&2
+            exit 1
+          fi
+          printf 'value=%s\n' "$moose_nexus_version" >> "$GITHUB_OUTPUT"
+          printf 'tag=v%s\n' "$moose_nexus_version" >> "$GITHUB_OUTPUT"
+
+      - name: Verify tag is new
+        run: |
+          if git show-ref --tags --verify --quiet "refs/tags/${{ steps.version.outputs.tag }}"; then
+            echo "Tag ${{ steps.version.outputs.tag }} already exists." >&2
+            exit 1
+          fi
+
+      - name: Create GitHub release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release create "${{ steps.version.outputs.tag }}" \
+            --target "$GITHUB_SHA" \
+            --title "MooseNexus ${{ steps.version.outputs.value }}" \
+            --generate-notes
