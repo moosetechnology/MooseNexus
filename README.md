@@ -1,9 +1,8 @@
-[![Moose version](https://img.shields.io/badge/Moose-11-%23aac9ff.svg)](https://github.com/moosetechnology/Moose)
-[![Moose version](https://img.shields.io/badge/Moose-12-%23aac9ff.svg)](https://github.com/moosetechnology/Moose)
+# MooseNexus
+
+[![Moose version](https://img.shields.io/badge/Moose-11%20%7C%2012%20%7C%2013-%23aac9ff.svg)](https://github.com/moosetechnology/Moose)
 ![Build Info](https://github.com/moosetechnology/MooseNexus/workflows/Tests/badge.svg)
 [![Coverage Status](https://coveralls.io/repos/github/moosetechnology/MooseNexus/badge.svg?branch=main)](https://coveralls.io/github/moosetechnology/MooseNexus?branch=main)
-
-# MooseNexus
 
 MooseNexus builds, stores, and shares Moose models of software projects. It records model provenance and dependency metadata independently from a project’s build system.
 
