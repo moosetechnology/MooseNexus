@@ -431,6 +431,16 @@ MooseNexusImporterExtractorProtocolTest >> testModelBuilderValidatesExtractorBef
 ]
 
 { #category : 'tests' }
+MooseNexusImporterExtractorProtocolTest >> testProjectImporterAutodetectionExcludesTestMavenImporter [
+
+	| importer |
+	(rootDirectory / 'pom.xml') ensureCreateFile.
+	importer := MooseNexusProjectImporter fromDirectory: rootDirectory language: 'java'.
+
+	self assert: importer class equals: MooseNexusMavenProjectImporter
+]
+
+{ #category : 'tests' }
 MooseNexusImporterExtractorProtocolTest >> testToolRequirementCanValidateAvailabilityAndVersionWithInjectedRunners [
 
 	| requirement result |
