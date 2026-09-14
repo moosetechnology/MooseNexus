@@ -126,7 +126,7 @@ MooseNexusOciArtifactBundleBuilder >> copyModelPayload: aMooseNexusModelArtifact
 	| target |
 	target := directory / ('model.' , aMooseNexusModelArtifact format).
 	target ifExists: [ target delete ].
-	project repositoryDirectory / aMooseNexusModelArtifact path copyTo: target.
+	(aMooseNexusModelArtifact fileReferenceIn: project) copyTo: target.
 	^ target
 ]
 

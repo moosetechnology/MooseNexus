@@ -22,7 +22,7 @@ MooseNexusJavaModelImporter >> importArtifact: aMooseNexusModelArtifact fromProj
 	model := FamixJavaModel named: aMooseNexusModelArtifact name.
 	FamixJSONFileImporter new
 		model: model;
-		inputFile: aMooseNexusProject repositoryDirectory / aMooseNexusModelArtifact path;
+		inputFile: (aMooseNexusModelArtifact fileReferenceIn: aMooseNexusProject);
 		runFilteredBy: FamixJavaImportingContext new importMaximum.
 	model install.
 	model rootFolder: (self sourceRootForProject: aMooseNexusProject).

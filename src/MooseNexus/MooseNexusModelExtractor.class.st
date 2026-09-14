@@ -97,7 +97,7 @@ MooseNexusModelExtractor >> target [
 ]
 
 { #category : 'accessing' }
-MooseNexusModelExtractor >> target: pathString [
+MooseNexusModelExtractor >> target: aFileReference [
 
-	target := pathString
+	target := aFileReference asFileReference
 ]

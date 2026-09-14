@@ -333,6 +333,30 @@ MooseNexusModelBuilderTest >> testModelArtifactManifestDictionaryRoundTrip [
 ]
 
 { #category : 'tests' }
+MooseNexusModelBuilderTest >> testModelArtifactRejectsAnAbsoluteRepositoryPath [
+
+	| artifactCoordinates absolutePath |
+	artifactCoordinates := MooseNexusModelArtifactCoordinates
+		                       projectCoordinates: project coordinates
+		                       name: 'demo-model'
+		                       format: 'json'
+		                       metamodel: 'Famix-Java'
+		                       classifier: 'main'.
+	absolutePath := (FileLocator temp / 'outside-model.json') pathString.
+
+	self
+		should: [
+				MooseNexusModelArtifact
+					artifactCoordinates: artifactCoordinates
+					path: absolutePath
+					comment: ''
+					timestamp: '2026-09-14T00:00:00+02:00' ]
+		raise: Error
+		whoseDescriptionIncludes: 'model artifact paths must be relative'
+		description: 'A persisted artifact path must be owned by its project repository'
+]
+
+{ #category : 'tests' }
 MooseNexusModelBuilderTest >> testProjectRecordsImageArtifactsByNameAndModelArtifactName [
 
 	| modelArtifact manifest imageArtifact serializedArtifacts |
@@ -352,6 +376,27 @@ MooseNexusModelBuilderTest >> testProjectRecordsImageArtifactsByNameAndModelArti
 	self assert: (project imageArtifactsDirectory / 'demo-image') exists.
 	serializedArtifacts := project metadataDirectory / 'images.json' readStreamDo: [ :stream | STON fromStream: stream ].
 	self assert: serializedArtifacts equals: { imageArtifact asDictionary }
+]
+
+{ #category : 'tests' }
+MooseNexusModelBuilderTest >> testProjectResolvesRepositoryRelativePathsThroughItsBackend [
+
+	| artifact file absolutePath |
+	artifact := self modelArtifactNamed: 'demo-model'.
+	file := artifact fileReferenceIn: project.
+	absolutePath := (FileLocator temp / 'outside-model.json') pathString.
+
+	self assert: file pathString equals: (project repositoryDirectory / artifact path) pathString.
+	self
+		should: [ project fileReferenceForRepositoryPath: absolutePath ]
+		raise: Error
+		whoseDescriptionIncludes: 'repository paths must be relative'
+		description: 'A repository-relative path cannot be absolute'.
+	self
+		should: [ project fileReferenceForRepositoryPath: '../outside-model.json' ]
+		raise: Error
+		whoseDescriptionIncludes: 'cannot escape their backend'
+		description: 'A repository-relative path cannot escape its owning backend'
 ]
 
 { #category : 'tests' }

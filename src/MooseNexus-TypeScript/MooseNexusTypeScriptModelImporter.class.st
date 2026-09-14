@@ -20,8 +20,7 @@ MooseNexusTypeScriptModelImporter >> importArtifact: aMooseNexusModelArtifact fr
 
 	| model |
 	model := FamixTypeScriptModel named: aMooseNexusModelArtifact name.
-	aMooseNexusProject repositoryDirectory / aMooseNexusModelArtifact path readStreamDo: [ :stream |
-		model importFromJSONStream: stream ].
+	(aMooseNexusModelArtifact fileReferenceIn: aMooseNexusProject) readStreamDo: [ :stream | model importFromJSONStream: stream ].
 	model install.
 	model rootFolder: (self sourceRootForProject: aMooseNexusProject).
 	^ model

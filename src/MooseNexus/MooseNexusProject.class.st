@@ -126,6 +126,21 @@ MooseNexusProject >> dependencies: aCollection [
 ]
 
 { #category : 'accessing' }
+MooseNexusProject >> fileReferenceForRepositoryPath: aPath [
+	"Answer the filesystem location of a relative path owned by this project's repository."
+
+	| relativePath file |
+	relativePath := aPath asFileReference.
+	relativePath isAbsolute ifTrue: [ Error signal: 'MooseNexus repository paths must be relative: ' , aPath ].
+	(relativePath pathSegments includes: '..') ifTrue: [
+		Error signal: 'MooseNexus repository paths cannot escape their backend: ' , aPath ].
+	file := self repositoryDirectory / aPath.
+	(file isContainedBy: self repositoryDirectory) ifFalse: [
+		Error signal: 'MooseNexus repository paths cannot escape their backend: ' , aPath ].
+	^ file
+]
+
+{ #category : 'accessing' }
 MooseNexusProject >> group [
 
 	^ self coordinates group

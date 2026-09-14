@@ -17,6 +17,16 @@ Project coordinates in `properties.json` are the canonical identity and determin
 
 Build provenance identifies the runtime that produced a model; it is not a replay environment. Dependency references and generated-file paths are portable metadata, while a materialization entry is only an audit of a particular build.
 
+## Location Ownership
+
+MooseNexus distinguishes a location by its owner rather than treating every path as a generic string:
+
+- external local inputs, such as a source directory or an unmanaged local dependency, are filesystem locations. APIs accept `FileReference` values and persist their normalized absolute paths when they need to be recorded;
+- project payload paths, such as model artifacts and generated files, are relative to their owning MooseNexus project directory and are resolved through that project's repository backend;
+- remote repository and OCI paths are identifiers within their respective remote backends, not local filesystem paths.
+
+Consequently, a repository-relative payload path cannot be absolute or escape its project backend. A local input may live on any mounted filesystem; it is intentionally environment-specific.
+
 ## Compatibility and Migration
 
 MooseNexus v1 writes version-1 project properties and model manifests, and supports reading version-1 metadata written by earlier MooseNexus releases. Additive fields may be introduced without changing a schema version only when they are optional and older readers can ignore them.
