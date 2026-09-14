@@ -103,14 +103,14 @@ This lets artifact consumers select an exact compatible runtime instead of inter
 
 ## Unmanaged Dependencies
 
-An unmanaged importer can add a local directory to the extractor classpath. This is the practical choice for a project with a large collection of local JARs: no artifact coordinates are required. The directory path is relative to the user's home directory, as with individual local artifact paths. MooseNexus preserves the directory tree while staging it temporarily for extraction, so nested JARs remain available to Java extraction.
+An unmanaged importer can add a local directory to the extractor classpath. This is the practical choice for a project with a large collection of local JARs: no artifact coordinates are required. Supply an absolute path or `FileReference`; MooseNexus does not rebase local inputs under the user's home directory. MooseNexus preserves the directory tree while staging it temporarily for extraction, so nested JARs remain available to Java extraction.
 
 ```st
 | importer |
 
 importer := MooseNexusUnmanagedProjectImporter new
 	language: 'java';
-	dependencyDirectory: 'local-libraries'.
+	dependencyDirectory: '/path/to/local-libraries' asFileReference.
 ```
 
 The directory is a local classpath input rather than an artifact descriptor. It is recorded as such and is not assigned invented coordinates.
@@ -127,7 +127,7 @@ dependency := MooseNexusDependencyDescriptor
 		version: '2.0.0')
 	type: 'jar'
 	scopes: #( 'compile' )
-	path: 'repository/org.example/library/2.0.0/artifacts/library-2.0.0.jar'.
+	path: '/path/to/library-2.0.0.jar' asFileReference.
 
 importer := MooseNexusUnmanagedProjectImporter new
 	language: 'java';
@@ -135,6 +135,8 @@ importer := MooseNexusUnmanagedProjectImporter new
 ```
 
 `withDependencyClasspath:` controls whether selected dependencies and local dependency directories are staged for the extractor. It defaults to `true`. Set it to `false` when the extractor should run without a dependency classpath.
+
+Local inputs are environment-specific. Their paths may be absolute on any mounted filesystem. A relative local input is resolved immediately by Pharo's current working directory and persisted as an absolute path; clients should prefer an absolute path or `FileReference`. Paths for files inside a recorded MooseNexus project remain relative to that project's repository backend.
 
 ## Model Extraction
 

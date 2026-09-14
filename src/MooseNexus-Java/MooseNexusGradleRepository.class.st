@@ -15,7 +15,9 @@ Class {
 { #category : 'accessing' }
 MooseNexusGradleRepository class >> default [
 
-	^ default ifNil: [ default := self new directory: '.gradle/caches/modules-2/files-2.1' ]
+	default ifNil: [ default := self new ].
+	default directory: FileLocator home / '.gradle' / 'caches' / 'modules-2' / 'files-2.1'.
+	^ default
 ]
 
 { #category : 'parsing' }
@@ -31,7 +33,7 @@ MooseNexusGradleRepository >> findGroup: group name: name version: version type:
 	"Search for an artifact (a file) based on its descriptor."
 
 	| artifactDirectory fileName |
-	(artifactDirectory := FileLocator home / directory / group / name / version) ifAbsent: [ ^ nil ].
+	(artifactDirectory := directory asFileReference / group / name / version) ifAbsent: [ ^ nil ].
 	fileName := name , '-' , version , '.' , type.
 
 	"Gradle can have multiple directories named with a UUID at this level,
@@ -65,7 +67,7 @@ MooseNexusGradleRepository >> resolve: descriptor [
 		   coordinates: coordinates
 		   type: type
 		   scopes: { scope }
-		   path: (artifact relativeTo: FileLocator home) pathString)
+		   path: artifact pathString)
 ]
 
 { #category : 'parsing' }

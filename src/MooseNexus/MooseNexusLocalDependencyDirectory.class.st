@@ -46,6 +46,12 @@ MooseNexusLocalDependencyDirectory >> asDictionary [
 	^ Dictionary with: #kind -> 'local-directory' with: #path -> path
 ]
 
+{ #category : 'accessing' }
+MooseNexusLocalDependencyDirectory >> fileReference [
+
+	^ path asFileReference
+]
+
 { #category : 'comparing' }
 MooseNexusLocalDependencyDirectory >> hash [
 
@@ -55,7 +61,7 @@ MooseNexusLocalDependencyDirectory >> hash [
 { #category : 'initialization' }
 MooseNexusLocalDependencyDirectory >> initializePath: aPath [
 
-	path := aPath
+	path := aPath asFileReference pathString
 ]
 
 { #category : 'testing' }

@@ -28,13 +28,13 @@ MooseNexusUnmanagedProjectIntegrationTest >> localDependency [
 		  coordinates: (MooseNexusCoordinates group: 'org.moosenexus.fixture' name: 'local-dependency' version: '1.0.0')
 		  type: 'jar'
 		  scopes: #( 'compile' )
-		  path: (localArtifactDirectory / 'local-dependency-1.0.0.jar' relativeTo: FileLocator home) pathString
+		  path: (localArtifactDirectory / 'local-dependency-1.0.0.jar') pathString
 ]
 
 { #category : 'private' }
 MooseNexusUnmanagedProjectIntegrationTest >> localDependencyDirectory [
 
-	^ MooseNexusLocalDependencyDirectory path: (localArtifactDirectory relativeTo: FileLocator home) pathString
+	^ MooseNexusLocalDependencyDirectory path: localArtifactDirectory pathString
 ]
 
 { #category : 'running' }

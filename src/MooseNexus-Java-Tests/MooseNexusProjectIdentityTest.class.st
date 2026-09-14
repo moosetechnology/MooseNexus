@@ -183,6 +183,13 @@ MooseNexusProjectIdentityTest >> testCoordinatesAreValueObjects [
 ]
 
 { #category : 'tests' }
+MooseNexusProjectIdentityTest >> testDefaultLocalRepositoriesUseAbsoluteDirectories [
+
+	self assert: MooseNexusMavenRepository default directory isAbsolute.
+	self assert: MooseNexusGradleRepository default directory isAbsolute
+]
+
+{ #category : 'tests' }
 MooseNexusProjectIdentityTest >> testManagedImporterCapturesDependencyConflictDecisions [
 
 	| project importer dependency otherDependency projectDescriptor otherProjectDescriptor result decision |
@@ -226,7 +233,8 @@ MooseNexusProjectIdentityTest >> testManagedImporterCapturesDependencyConflictDe
 { #category : 'tests' }
 MooseNexusProjectIdentityTest >> testManagedProjectDescriptorDictionaryRoundTrip [
 
-	| dictionary descriptor dependencyGraph dependency |
+	| dictionary descriptor dependencyGraph dependency dependencyPath |
+	dependencyPath := 'repository/dep-2.0.0.jar' asFileReference pathString.
 	dictionary := Dictionary
 		              with: #path -> '.'
 		              with: #version -> '1.0.0'
@@ -236,7 +244,7 @@ MooseNexusProjectIdentityTest >> testManagedProjectDescriptorDictionaryRoundTrip
 					                with: #version -> '2.0.0'
 					                with: #type -> 'jar'
 					                with: #scopes -> #( 'compile' )
-					                with: #path -> 'repository/dep-2.0.0.jar') })
+					                with: #path -> dependencyPath) })
 		              with: #workspaceDependencies -> #(  ).
 	descriptor := MooseNexusManagedProjectDescriptor fromDictionary: dictionary.
 	dependencyGraph := descriptor dependencyGraph.

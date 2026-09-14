@@ -15,7 +15,9 @@ Class {
 { #category : 'accessing' }
 MooseNexusMavenRepository class >> default [
 
-	^ default ifNil: [ default := self new directory: '.m2/repository' ]
+	default ifNil: [ default := self new ].
+	default directory: FileLocator home / '.m2' / 'repository'.
+	^ default
 ]
 
 { #category : 'parsing' }
@@ -30,7 +32,7 @@ MooseNexusMavenRepository >> coordinatesOf: descriptor [
 MooseNexusMavenRepository >> resolve: descriptor [
 	"Attempts to find the local path to an artifact based on the descriptor."
 
-	| parts group name type version scope homeDirectory theDirectory pathString coordinates |
+	| parts group name type version scope theDirectory pathString coordinates |
 	parts := $: split: descriptor.
 	group := parts at: 1.
 	name := parts at: 2.
@@ -40,8 +42,7 @@ MooseNexusMavenRepository >> resolve: descriptor [
 	coordinates := MooseNexusCoordinates group: group name: name version: version.
 
 	pathString := String streamContents: [ :s | s << (group copyReplaceAll: '.' with: '/') << '/' << name << '/' << version ].
-	homeDirectory := FileLocator home.
-	(theDirectory := homeDirectory / directory / pathString) ifAbsent: [ ^ nil ].
+	(theDirectory := directory asFileReference / pathString) ifAbsent: [ ^ nil ].
 
 	^ theDirectory / (name , '-' , version , '.' , type)
 		  ifExists: [ :file |
@@ -49,7 +50,7 @@ MooseNexusMavenRepository >> resolve: descriptor [
 					   coordinates: coordinates
 					   type: type
 					   scopes: { scope }
-					   path: (file relativeTo: homeDirectory) pathString) ]
+					   path: file pathString) ]
 		  ifAbsent: [ nil ]
 ]
 

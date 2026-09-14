@@ -1,6 +1,7 @@
 "
-I am responsible for importing a project that uses a build automation tool to manage dependencies.
-Each of my subclasses knows how to interact with a specific tool to get them.
+I import a project managed by an external build tool.
+
+Each subclass interacts with its build tool to obtain project metadata and dependencies. Optional local dependency repositories identify explicit filesystem locations.
 "
 Class {
 	#name : 'MooseNexusManagedProjectImporter',
@@ -219,11 +220,10 @@ MooseNexusManagedProjectImporter >> localRepositories [
 ]
 
 { #category : 'accessing' }
-MooseNexusManagedProjectImporter >> localRepositories: pathStringCollection [
-	"Define the local repositories of the build automation tools to use for this project.
-	All paths must be relative to the home directory (result of `FileLocator home pathString`)."
+MooseNexusManagedProjectImporter >> localRepositories: repositoryCollection [
+	"Define the local dependency repositories available to this project. Each repository identifies an explicit filesystem location."
 
-	localRepositories := pathStringCollection
+	localRepositories := repositoryCollection
 ]
 
 { #category : 'parsing' }
