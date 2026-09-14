@@ -43,6 +43,10 @@ jobs:
           printf 'value=%s\n' "$moose_nexus_version" >> "$GITHUB_OUTPUT"
           printf 'tag=v%s\n' "$moose_nexus_version" >> "$GITHUB_OUTPUT"
 
+          IFS=. read -r major minor patch <<< "$moose_nexus_version"
+          printf 'major_tag=v%s.x.x\n' "$major" >> "$GITHUB_OUTPUT"
+          printf 'minor_tag=v%s.%s.x\n' "$major" "$minor" >> "$GITHUB_OUTPUT"
+
       - name: Verify tag is new
         run: |
           if git show-ref --tags --verify --quiet "refs/tags/${{ steps.version.outputs.tag }}"; then
@@ -58,3 +62,10 @@ jobs:
             --target "$GITHUB_SHA" \
             --title "${{ steps.version.outputs.tag }}" \
             --generate-notes
+
+      - name: Update floating release tags
+        run: |
+          for tag in "${{ steps.version.outputs.major_tag }}" "${{ steps.version.outputs.minor_tag }}"; do
+            git tag --force "$tag" "$GITHUB_SHA"
+            git push origin "refs/tags/$tag" --force
+          done
