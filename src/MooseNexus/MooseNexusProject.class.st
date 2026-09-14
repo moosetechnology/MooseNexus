@@ -218,6 +218,19 @@ MooseNexusProject >> materializeLocalDependency: dependency into: dependenciesDi
 ]
 
 { #category : 'building' }
+MooseNexusProject >> materializeLocalDependencyDirectory: dependencyDirectory into: dependenciesDirectory [
+
+	| sourceDirectory targetDirectory |
+	sourceDirectory := FileLocator home / dependencyDirectory path.
+	targetDirectory := dependenciesDirectory / dependencyDirectory materializationDirectoryName.
+	sourceDirectory copyAllTo: targetDirectory.
+	^ MooseNexusDependencyMaterializationResult
+		  dependency: dependencyDirectory
+		  path: (targetDirectory relativeTo: self repositoryDirectory) pathString
+		  source: 'local-directory'
+]
+
+{ #category : 'building' }
 MooseNexusProject >> materializeRemoteDependency: dependency into: dependenciesDirectory [
 
 	Error signal: 'Cannot materialize a remote dependency without a managed build-tool project'

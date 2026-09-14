@@ -1,7 +1,7 @@
 "
 I import an unmanaged source project from explicit MooseNexus configuration.
 
-I do not inspect Maven, Gradle, or another external build tool. The build specification provides the source directory and coordinates, while clients configure me with the project language and dependency descriptors to record.
+I do not inspect Maven, Gradle, or another external build tool. The build specification provides the source directory and coordinates, while clients configure me with the project language and dependency classpath inputs to record.
 "
 Class {
 	#name : 'MooseNexusUnmanagedProjectImporter',
@@ -31,6 +31,12 @@ MooseNexusUnmanagedProjectImporter >> dependencies [
 MooseNexusUnmanagedProjectImporter >> dependencies: dependencyDescriptors [
 
 	dependencies := dependencyDescriptors ifNil: [ #(  ) ] ifNotNil: [ dependencyDescriptors asArray ]
+]
+
+{ #category : 'accessing' }
+MooseNexusUnmanagedProjectImporter >> dependencyDirectory: aPath [
+
+	self dependencies: (self dependencies copyWith: (MooseNexusLocalDependencyDirectory path: aPath))
 ]
 
 { #category : 'importing' }

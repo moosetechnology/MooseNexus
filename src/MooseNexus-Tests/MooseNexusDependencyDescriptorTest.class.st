@@ -155,6 +155,19 @@ MooseNexusDependencyDescriptorTest >> testGenericReaderRejectsAnEcosystemWithout
 ]
 
 { #category : 'tests' }
+MooseNexusDependencyDescriptorTest >> testLocalDependencyDirectorySerializesWithoutArtifactCoordinates [
+
+	| directory reloadedDirectory |
+	directory := MooseNexusLocalDependencyDirectory path: 'local-libraries'.
+	reloadedDirectory := MooseNexusDependencyDescriptor fromDictionary: directory asDictionary.
+
+	self assert: directory asDictionary equals: (Dictionary with: #kind -> 'local-directory' with: #path -> 'local-libraries').
+	self assert: reloadedDirectory class equals: MooseNexusLocalDependencyDirectory.
+	self assert: reloadedDirectory equals: directory.
+	self assert: directory scopes equals: #( 'compile' )
+]
+
+{ #category : 'tests' }
 MooseNexusDependencyDescriptorTest >> testLocalDescriptorSerializesItsPathSeparately [
 
 	| descriptor reloadedDescriptor |

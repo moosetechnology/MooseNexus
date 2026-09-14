@@ -1,7 +1,7 @@
 "
-I describe the exact dependency descriptors resolved for a MooseNexus project build.
+I describe the exact dependencies selected for a MooseNexus project build.
 
-I am distinct from a declared dependency graph: I contain the dependency artifacts selected for a build after scope aggregation and conflict resolution. I own the serialized representation used by project properties.
+I am distinct from a declared dependency graph: I contain the dependency artifacts selected for a build after scope aggregation and conflict resolution, or explicit local classpath inputs for an unmanaged build. I own the serialized representation used by project properties.
 "
 Class {
 	#name : 'MooseNexusResolvedDependencySet',

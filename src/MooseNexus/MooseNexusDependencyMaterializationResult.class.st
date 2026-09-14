@@ -1,7 +1,7 @@
 "
-I record a dependency artifact staged temporarily for a model build.
+I record a dependency classpath input staged temporarily for a model build.
 
-My repository-relative path identifies the staging location used by the extractor. Model-builder cleanup removes that location after extraction, so it is an audit detail rather than a durable dependency reference. The dependency descriptor remains the portable, durable reference.
+My repository-relative path identifies the staging location used by the extractor. Model-builder cleanup removes that location after extraction, so it is an audit detail rather than a durable input location. The dependency reference or local directory remains the durable build input.
 "
 Class {
 	#name : 'MooseNexusDependencyMaterializationResult',

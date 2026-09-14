@@ -47,7 +47,7 @@ spec := MooseNexusBuildSpec
 spec
 	modelName: 'demo-model';
 	modelComment: 'Generated from the managed source project';
-	withDependencies: false.
+	withDependencyClasspath: false.
 
 result := spec executeIn: repository.
 ```
@@ -88,7 +88,7 @@ spec := MooseNexusBuildSpec
 spec
 	projectImporter: importer;
 	modelName: 'demo-model';
-	withDependencies: false.
+	withDependencyClasspath: false.
 
 result := spec executeIn: repository.
 ```
@@ -103,7 +103,19 @@ This lets artifact consumers select an exact compatible runtime instead of inter
 
 ## Unmanaged Dependencies
 
-An unmanaged importer can receive dependency descriptors directly. For now, those descriptors become the project's resolved dependencies.
+An unmanaged importer can add a local directory to the extractor classpath. This is the practical choice for a project with a large collection of local JARs: no artifact coordinates are required. The directory path is relative to the user's home directory, as with individual local artifact paths. MooseNexus preserves the directory tree while staging it temporarily for extraction, so nested JARs remain available to Java extraction.
+
+```st
+| importer |
+
+importer := MooseNexusUnmanagedProjectImporter new
+	language: 'java';
+	dependencyDirectory: 'local-libraries'.
+```
+
+The directory is a local classpath input rather than an artifact descriptor. It is recorded as such and is not assigned invented coordinates.
+
+An unmanaged importer can also receive individual local artifact descriptors. Use this when the artifact identity and scopes are known and worth recording:
 
 ```st
 | dependency importer |
@@ -122,7 +134,7 @@ importer := MooseNexusUnmanagedProjectImporter new
 	dependencies: { dependency }.
 ```
 
-`withDependencies:` controls whether dependency sources or artifacts are copied into the model extraction workspace. If dependency paths do not point to existing local files, keep `withDependencies: false`. Locked npm references are deliberately not materialized by this option.
+`withDependencyClasspath:` controls whether selected dependencies and local dependency directories are staged for the extractor. It defaults to `true`. Set it to `false` when the extractor should run without a dependency classpath.
 
 ## Model Extraction
 

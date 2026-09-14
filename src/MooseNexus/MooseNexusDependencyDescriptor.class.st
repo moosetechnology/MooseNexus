@@ -44,6 +44,8 @@ MooseNexusDependencyDescriptor class >> coordinates: aMooseNexusCoordinates type
 { #category : 'instance creation' }
 MooseNexusDependencyDescriptor class >> fromDictionary: aDictionary [
 
+	(MooseNexusLocalDependencyDirectory canReadDictionary: aDictionary) ifTrue: [
+		^ MooseNexusLocalDependencyDirectory fromDictionary: aDictionary ].
 	self allSubclassesDo: [ :subclass | (subclass canReadDictionary: aDictionary) ifTrue: [ ^ subclass fromDictionary: aDictionary ] ].
 	(aDictionary includesKey: 'ecosystem') ifTrue: [
 		Error signal: 'No loaded MooseNexus dependency extension for ecosystem: ' , (aDictionary at: 'ecosystem') ].
