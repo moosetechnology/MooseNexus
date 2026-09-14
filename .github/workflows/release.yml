@@ -4,8 +4,7 @@ on:
   workflow_dispatch:
 
 permissions:
-  actions: read
-  contents: write
+  contents: read
 
 jobs:
   release:
@@ -18,13 +17,25 @@ jobs:
             exit 1
           fi
 
+      - name: Create release app token
+        id: release-app-token
+        uses: actions/create-github-app-token@v3
+        with:
+          app-id: ${{ vars.RELEASE_APP_ID }}
+          private-key: ${{ secrets.RELEASE_APP_PRIVATE_KEY }}
+          owner: moosetechnology
+          repositories: MooseNexus
+          permission-actions: read
+          permission-contents: write
+
       - uses: actions/checkout@v7
         with:
           fetch-depth: 0
+          token: ${{ steps.release-app-token.outputs.token }}
 
       - name: Verify CI
         env:
-          GH_TOKEN: ${{ github.token }}
+          GH_TOKEN: ${{ steps.release-app-token.outputs.token }}
         run: |
           successful_runs="$(gh run list --commit "$GITHUB_SHA" --workflow Tests --status completed --json conclusion --jq '[.[] | select(.conclusion == "success")] | length')"
           if [ "$successful_runs" -eq 0 ]; then
@@ -43,6 +54,10 @@ jobs:
           printf 'value=%s\n' "$moose_nexus_version" >> "$GITHUB_OUTPUT"
           printf 'tag=v%s\n' "$moose_nexus_version" >> "$GITHUB_OUTPUT"
 
+          IFS=. read -r major minor patch <<< "$moose_nexus_version"
+          printf 'major_tag=v%s.x.x\n' "$major" >> "$GITHUB_OUTPUT"
+          printf 'minor_tag=v%s.%s.x\n' "$major" "$minor" >> "$GITHUB_OUTPUT"
+
       - name: Verify tag is new
         run: |
           if git show-ref --tags --verify --quiet "refs/tags/${{ steps.version.outputs.tag }}"; then
@@ -52,9 +67,16 @@ jobs:
 
       - name: Create GitHub release
         env:
-          GH_TOKEN: ${{ github.token }}
+          GH_TOKEN: ${{ steps.release-app-token.outputs.token }}
         run: |
           gh release create "${{ steps.version.outputs.tag }}" \
             --target "$GITHUB_SHA" \
             --title "${{ steps.version.outputs.tag }}" \
             --generate-notes
+
+      - name: Update floating release tags
+        run: |
+          for tag in "${{ steps.version.outputs.major_tag }}" "${{ steps.version.outputs.minor_tag }}"; do
+            git tag --force "$tag" "$GITHUB_SHA"
+            git push origin "refs/tags/$tag" --force
+          done
