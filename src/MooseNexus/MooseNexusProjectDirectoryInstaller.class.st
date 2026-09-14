@@ -59,12 +59,14 @@ MooseNexusProjectDirectoryInstaller >> installImageArtifact: incomingArtifact fr
 { #category : 'private' }
 MooseNexusProjectDirectoryInstaller >> installModelManifest: incomingManifest from: incomingDirectory in: project force: shouldForce [
 
-	| existingManifest modelArtifact |
+	| existingManifest modelArtifact incomingModelFile targetModelFile |
 	modelArtifact := incomingManifest modelArtifact.
+	incomingModelFile := incomingDirectory / modelArtifact path.
+	targetModelFile := modelArtifact fileReferenceIn: project.
 	existingManifest := project modelManifestNamed: modelArtifact name.
 
 	existingManifest ifNil: [
-			self copyFile: incomingDirectory / modelArtifact path to: project repositoryDirectory / modelArtifact path.
+			self copyFile: incomingModelFile to: targetModelFile.
 			project addModelManifest: incomingManifest.
 			^ self ].
 
@@ -72,7 +74,7 @@ MooseNexusProjectDirectoryInstaller >> installModelManifest: incomingManifest fr
 		Error signal: 'Cannot merge MooseNexus model artifact with a different manifest: ' , modelArtifact name ].
 
 	shouldForce ifFalse: [ ^ self ].
-	self copyFile: incomingDirectory / modelArtifact path to: project repositoryDirectory / modelArtifact path.
+	self copyFile: incomingModelFile to: targetModelFile.
 	project replaceModelManifest: incomingManifest
 ]
 

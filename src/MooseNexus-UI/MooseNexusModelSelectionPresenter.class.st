@@ -86,8 +86,7 @@ MooseNexusModelSelectionPresenter >> updateLabels [
 	commentLabel label: 'Comment: ' , modelsList selectedItem comment.
 	timestampLabel label: 'Timestamp: ' , modelsList selectedItem timestamp.
 	famixVersionLabel label: 'Famix version: ' , modelsList selectedItem famixVersion.
-	fileSizeLabel label:
-		'File size: ' , (FileLocator home / nexusProject directory / modelsList selectedItem path) size humanReadableByteSizeString
+	fileSizeLabel label: 'File size: ' , (modelsList selectedItem fileReferenceIn: nexusProject) size humanReadableByteSizeString
 ]
 
 { #category : 'updating' }

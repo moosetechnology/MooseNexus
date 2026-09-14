@@ -53,8 +53,8 @@ MooseNexusDockerVerveineJRunner >> version: aString [
 { #category : 'writing' }
 MooseNexusDockerVerveineJRunner >> writeCommand [
 
-	^ String streamContents: [ :s |
-			  s << 'docker run --rm -v ' << target << '/sources:/src -v ' << target
+	^ String streamContents: [ :stream |
+			  stream << 'docker run --rm -v ' << target pathString << '/sources:/src -v ' << target pathString
 			  << '/dependencies:/dependency ghcr.io/evref-bl/verveinej:' << self version << ' '.
-			  self printOptionsOn: s ]
+			  self printOptionsOn: stream ]
 ]

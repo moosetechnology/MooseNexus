@@ -82,6 +82,13 @@ MooseNexusModelArtifact >> description [
 ]
 
 { #category : 'accessing' }
+MooseNexusModelArtifact >> fileReferenceIn: aMooseNexusProject [
+	"Answer my filesystem location in the owning project's repository."
+
+	^ aMooseNexusProject fileReferenceForRepositoryPath: path
+]
+
+{ #category : 'accessing' }
 MooseNexusModelArtifact >> format [
 
 	^ artifactCoordinates format
@@ -104,6 +111,7 @@ MooseNexusModelArtifact >> hash [
 { #category : 'initialization' }
 MooseNexusModelArtifact >> initializeArtifactCoordinates: aMooseNexusModelArtifactCoordinates path: aPath comment: aComment timestamp: aTimestamp [
 
+	aPath asFileReference isAbsolute ifTrue: [ Error signal: 'MooseNexus model artifact paths must be relative: ' , aPath ].
 	artifactCoordinates := aMooseNexusModelArtifactCoordinates.
 	path := aPath.
 	comment := aComment.
