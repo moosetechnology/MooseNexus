@@ -12,6 +12,12 @@ Class {
 	#tag : 'Importer'
 }
 
+{ #category : 'testing' }
+MooseNexusTestMavenProjectImporter class >> isAbstract [
+
+	^ true
+]
+
 { #category : 'initialization' }
 MooseNexusTestMavenProjectImporter >> initialize [
 
