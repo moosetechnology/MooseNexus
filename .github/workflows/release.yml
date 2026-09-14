@@ -4,7 +4,8 @@ on:
   workflow_dispatch:
 
 permissions:
-  contents: read
+  actions: read
+  contents: write
 
 jobs:
   release:
@@ -17,25 +18,13 @@ jobs:
             exit 1
           fi
 
-      - name: Create release app token
-        id: release-app-token
-        uses: actions/create-github-app-token@v3
-        with:
-          app-id: ${{ vars.RELEASE_APP_ID }}
-          private-key: ${{ secrets.RELEASE_APP_PRIVATE_KEY }}
-          owner: moosetechnology
-          repositories: MooseNexus
-          permission-actions: read
-          permission-contents: write
-
       - uses: actions/checkout@v7
         with:
           fetch-depth: 0
-          token: ${{ steps.release-app-token.outputs.token }}
 
       - name: Verify CI
         env:
-          GH_TOKEN: ${{ steps.release-app-token.outputs.token }}
+          GH_TOKEN: ${{ github.token }}
         run: |
           successful_runs="$(gh run list --commit "$GITHUB_SHA" --workflow Tests --status completed --json conclusion --jq '[.[] | select(.conclusion == "success")] | length')"
           if [ "$successful_runs" -eq 0 ]; then
@@ -67,15 +56,28 @@ jobs:
 
       - name: Create GitHub release
         env:
-          GH_TOKEN: ${{ steps.release-app-token.outputs.token }}
+          GH_TOKEN: ${{ github.token }}
         run: |
           gh release create "${{ steps.version.outputs.tag }}" \
             --target "$GITHUB_SHA" \
             --title "${{ steps.version.outputs.tag }}" \
             --generate-notes
 
+      - name: Create floating-tag updater token
+        id: floating-tag-updater-token
+        uses: actions/create-github-app-token@v3
+        with:
+          client-id: ${{ vars.RELEASE_APP_CLIENT_ID }}
+          private-key: ${{ secrets.RELEASE_APP_PRIVATE_KEY }}
+          owner: moosetechnology
+          repositories: MooseNexus
+          permission-contents: write
+
       - name: Update floating release tags
+        env:
+          FLOATING_TAG_UPDATER_TOKEN: ${{ steps.floating-tag-updater-token.outputs.token }}
         run: |
+          git remote set-url origin "https://x-access-token:${FLOATING_TAG_UPDATER_TOKEN}@github.com/${GITHUB_REPOSITORY}.git"
           for tag in "${{ steps.version.outputs.major_tag }}" "${{ steps.version.outputs.minor_tag }}"; do
             git tag --force "$tag" "$GITHUB_SHA"
             git push origin "refs/tags/$tag" --force
