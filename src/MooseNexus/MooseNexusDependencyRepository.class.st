@@ -1,6 +1,7 @@
 "
 I represent a local dependency repository of a build automation tool.
-Each of my subclasses knows how to resolve a dependency based on a descriptor string based on the indexing of a specific tool.
+
+My directory is an explicit filesystem location. Each subclass knows how to resolve a dependency from the indexing of its specific tool.
 "
 Class {
 	#name : 'MooseNexusDependencyRepository',
@@ -32,9 +33,9 @@ MooseNexusDependencyRepository >> directory [
 ]
 
 { #category : 'accessing' }
-MooseNexusDependencyRepository >> directory: pathString [
+MooseNexusDependencyRepository >> directory: aPath [
 
-	directory := pathString
+	directory := aPath asFileReference
 ]
 
 { #category : 'resolving' }

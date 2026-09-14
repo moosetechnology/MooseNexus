@@ -1,5 +1,5 @@
 "
-I select which dependency artifacts are materialized into the extractor classpath. I do not decide whether dependency classes are represented in a Moose model.
+I select which dependency classpath inputs are materialized for an extractor. I do not decide whether dependency classes are represented in a Moose model.
 "
 Class {
 	#name : 'MooseNexusDependencyClasspathSelectionPolicy',
@@ -37,12 +37,12 @@ MooseNexusDependencyClasspathSelectionPolicy >> includedScopes [
 ]
 
 { #category : 'testing' }
-MooseNexusDependencyClasspathSelectionPolicy >> includesDependency: aMooseNexusDependencyDescriptor [
+MooseNexusDependencyClasspathSelectionPolicy >> includesDependency: aClasspathInput [
 
-	aMooseNexusDependencyDescriptor supportsClasspathMaterialization ifFalse: [ ^ false ].
+	aClasspathInput supportsClasspathMaterialization ifFalse: [ ^ false ].
 	includedScopes ifNil: [ ^ true ].
 	includedScopes ifEmpty: [ ^ false ].
-	^ aMooseNexusDependencyDescriptor scopes anySatisfy: [ :scope | includedScopes includes: scope ]
+	^ aClasspathInput scopes anySatisfy: [ :scope | includedScopes includes: scope ]
 ]
 
 { #category : 'initialization' }

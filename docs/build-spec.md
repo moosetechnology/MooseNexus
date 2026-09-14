@@ -47,7 +47,7 @@ spec := MooseNexusBuildSpec
 spec
 	modelName: 'demo-model';
 	modelComment: 'Generated from the managed source project';
-	withDependencies: false.
+	withDependencyClasspath: false.
 
 result := spec executeIn: repository.
 ```
@@ -88,7 +88,7 @@ spec := MooseNexusBuildSpec
 spec
 	projectImporter: importer;
 	modelName: 'demo-model';
-	withDependencies: false.
+	withDependencyClasspath: false.
 
 result := spec executeIn: repository.
 ```
@@ -103,7 +103,19 @@ This lets artifact consumers select an exact compatible runtime instead of inter
 
 ## Unmanaged Dependencies
 
-An unmanaged importer can receive dependency descriptors directly. For now, those descriptors become the project's resolved dependencies.
+An unmanaged importer can add a local directory to the extractor classpath. This is the practical choice for a project with a large collection of local JARs: no artifact coordinates are required. Supply an absolute path or `FileReference`; MooseNexus does not rebase local inputs under the user's home directory. MooseNexus preserves the directory tree while staging it temporarily for extraction, so nested JARs remain available to Java extraction.
+
+```st
+| importer |
+
+importer := MooseNexusUnmanagedProjectImporter new
+	language: 'java';
+	dependencyDirectory: '/path/to/local-libraries' asFileReference.
+```
+
+The directory is a local classpath input rather than an artifact descriptor. It is recorded as such and is not assigned invented coordinates.
+
+An unmanaged importer can also receive individual local artifact descriptors. Use this when the artifact identity and scopes are known and worth recording:
 
 ```st
 | dependency importer |
@@ -115,14 +127,16 @@ dependency := MooseNexusDependencyDescriptor
 		version: '2.0.0')
 	type: 'jar'
 	scopes: #( 'compile' )
-	path: 'repository/org.example/library/2.0.0/artifacts/library-2.0.0.jar'.
+	path: '/path/to/library-2.0.0.jar' asFileReference.
 
 importer := MooseNexusUnmanagedProjectImporter new
 	language: 'java';
 	dependencies: { dependency }.
 ```
 
-`withDependencies:` controls whether dependency sources or artifacts are copied into the model extraction workspace. If dependency paths do not point to existing local files, keep `withDependencies: false`. Locked npm references are deliberately not materialized by this option.
+`withDependencyClasspath:` controls whether selected dependencies and local dependency directories are staged for the extractor. It defaults to `true`. Set it to `false` when the extractor should run without a dependency classpath.
+
+Local inputs are environment-specific. Their paths may be absolute on any mounted filesystem. A relative local input is resolved immediately by Pharo's current working directory and persisted as an absolute path; clients should prefer an absolute path or `FileReference`. Paths for files inside a recorded MooseNexus project remain relative to that project's repository backend.
 
 ## Model Extraction
 

@@ -1,5 +1,5 @@
 "
-I describe a dependency artifact available at an explicit path relative to the user's home directory.
+I describe a dependency artifact available at an explicit local filesystem path.
 
 I retain the local-artifact niche used by unmanaged imports. Remote managed-build references are represented by my pathless superclass and materialized by their owning build-tool project.
 "
@@ -44,6 +44,12 @@ MooseNexusLocalDependencyDescriptor >> asDictionary [
 		  yourself
 ]
 
+{ #category : 'accessing' }
+MooseNexusLocalDependencyDescriptor >> fileReference [
+
+	^ path asFileReference
+]
+
 { #category : 'comparing' }
 MooseNexusLocalDependencyDescriptor >> hash [
 
@@ -54,7 +60,7 @@ MooseNexusLocalDependencyDescriptor >> hash [
 MooseNexusLocalDependencyDescriptor >> initializeCoordinates: aMooseNexusCoordinates type: aType scopes: aCollection path: aPath [
 
 	self initializeCoordinates: aMooseNexusCoordinates type: aType scopes: aCollection.
-	path := aPath
+	path := aPath asFileReference pathString
 ]
 
 { #category : 'testing' }

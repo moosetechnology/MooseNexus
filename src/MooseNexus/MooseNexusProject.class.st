@@ -208,13 +208,26 @@ MooseNexusProject >> materializeDependency: dependency into: dependenciesDirecto
 MooseNexusProject >> materializeLocalDependency: dependency into: dependenciesDirectory [
 
 	| artifact target |
-	artifact := FileLocator home / dependency path.
+	artifact := dependency fileReference.
 	target := dependenciesDirectory / dependency materializationFileName.
 	artifact copyTo: target.
 	^ MooseNexusDependencyMaterializationResult
 		  dependency: dependency
 		  path: (target relativeTo: self repositoryDirectory) pathString
 		  source: 'local'
+]
+
+{ #category : 'building' }
+MooseNexusProject >> materializeLocalDependencyDirectory: dependencyDirectory into: dependenciesDirectory [
+
+	| sourceDirectory targetDirectory |
+	sourceDirectory := dependencyDirectory fileReference.
+	targetDirectory := dependenciesDirectory / dependencyDirectory materializationDirectoryName.
+	sourceDirectory copyAllTo: targetDirectory.
+	^ MooseNexusDependencyMaterializationResult
+		  dependency: dependencyDirectory
+		  path: (targetDirectory relativeTo: self repositoryDirectory) pathString
+		  source: 'local-directory'
 ]
 
 { #category : 'building' }

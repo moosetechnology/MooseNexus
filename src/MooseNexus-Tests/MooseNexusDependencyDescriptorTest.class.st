@@ -131,17 +131,19 @@ MooseNexusDependencyDescriptorTest >> testDescriptorIsValueObject [
 { #category : 'tests' }
 MooseNexusDependencyDescriptorTest >> testDictionaryRoundTrip [
 
-	| dictionary descriptor |
+	| dictionary descriptor path |
+	path := '.m2/repository/org/example/lib/1.0.0/lib-1.0.0.jar' asFileReference pathString.
 	dictionary := Dictionary
 		              with: #group -> 'org.example'
 		              with: #name -> 'lib'
 		              with: #version -> '1.0.0'
 		              with: #type -> 'jar'
 		              with: #scopes -> #( 'compile' )
-		              with: #path -> '.m2/repository/org/example/lib/1.0.0/lib-1.0.0.jar'.
+		              with: #path -> path.
 	descriptor := MooseNexusDependencyDescriptor fromDictionary: dictionary.
 
-	self assert: descriptor asDictionary equals: dictionary
+	self assert: descriptor asDictionary equals: dictionary.
+	self assert: descriptor fileReference isAbsolute
 ]
 
 { #category : 'tests' }
@@ -152,6 +154,21 @@ MooseNexusDependencyDescriptorTest >> testGenericReaderRejectsAnEcosystemWithout
 		raise: Error
 		whoseDescriptionIncludes: 'No loaded MooseNexus dependency extension'
 		description: 'An optional dependency ecosystem must not be silently read as a generic descriptor'
+]
+
+{ #category : 'tests' }
+MooseNexusDependencyDescriptorTest >> testLocalDependencyDirectorySerializesWithoutArtifactCoordinates [
+
+	| directory reloadedDirectory path |
+	path := FileLocator temp / 'moosenexus-local-libraries'.
+	directory := MooseNexusLocalDependencyDirectory path: path.
+	reloadedDirectory := MooseNexusDependencyDescriptor fromDictionary: directory asDictionary.
+
+	self assert: directory asDictionary equals: (Dictionary with: #kind -> 'local-directory' with: #path -> path pathString).
+	self assert: reloadedDirectory class equals: MooseNexusLocalDependencyDirectory.
+	self assert: reloadedDirectory equals: directory.
+	self assert: directory fileReference isAbsolute.
+	self assert: directory scopes equals: #( 'compile' )
 ]
 
 { #category : 'tests' }

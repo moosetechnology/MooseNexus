@@ -1,7 +1,5 @@
 "
-I describe the dependency-resolution result used by a MooseNexus build.
-
-I capture the resolved dependency descriptors, warnings, conflict decisions, and temporary materialization audit produced while importing and building a project. The descriptors are portable references; materialization paths are not durable artifact locations.
+I capture resolved dependencies, warnings, conflict decisions, and the temporary materialization audit produced while importing and building a project. Remote dependency descriptors are portable references; local classpath inputs and materialization paths remain environment-specific.
 "
 Class {
 	#name : 'MooseNexusDependencyResolutionResult',
