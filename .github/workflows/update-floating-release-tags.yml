@@ -74,6 +74,7 @@ jobs:
           owner: moosetechnology
           repositories: MooseNexus
           permission-contents: write
+          permission-workflows: write
 
       - name: Update floating release tags
         env:
