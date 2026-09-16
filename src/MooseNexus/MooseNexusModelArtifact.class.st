@@ -111,7 +111,12 @@ MooseNexusModelArtifact >> hash [
 { #category : 'initialization' }
 MooseNexusModelArtifact >> initializeArtifactCoordinates: aMooseNexusModelArtifactCoordinates path: aPath comment: aComment timestamp: aTimestamp [
 
-	aPath asFileReference isAbsolute ifTrue: [ Error signal: 'MooseNexus model artifact paths must be relative: ' , aPath ].
+	| relativePath |
+	relativePath := aPath asFileReference.
+	relativePath isAbsolute ifTrue: [ Error signal: 'MooseNexus model artifact paths must be relative: ' , aPath ].
+	(relativePath pathSegments includes: '..') ifTrue: [
+		Error signal: 'MooseNexus model artifact paths must not leave the project directory: ' , aPath ].
+
 	artifactCoordinates := aMooseNexusModelArtifactCoordinates.
 	path := aPath.
 	comment := aComment.

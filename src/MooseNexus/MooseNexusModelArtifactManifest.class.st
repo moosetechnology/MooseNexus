@@ -131,3 +131,54 @@ MooseNexusModelArtifactManifest >> modelArtifact [
 
 	^ modelArtifact
 ]
+
+{ #category : 'private' }
+MooseNexusModelArtifactManifest >> validateGeneratedFile: fileReference describedBy: descriptor [
+
+	| expectedChecksum expectedSize checksumAlgorithm actualChecksum |
+	fileReference exists ifFalse: [
+		Error signal: 'MooseNexus model manifest describes a missing generated file: ' , fileReference pathString ].
+
+	checksumAlgorithm := descriptor at: 'checksumAlgorithm'.
+	checksumAlgorithm = 'sha256' ifFalse: [
+		Error signal: 'Unsupported MooseNexus generated file checksum algorithm: ' , checksumAlgorithm ].
+
+	expectedSize := descriptor at: 'size'.
+	fileReference size = expectedSize ifFalse: [
+		Error signal: 'MooseNexus generated file size does not match manifest: ' , fileReference pathString ].
+
+	expectedChecksum := descriptor at: 'checksum'.
+	actualChecksum := fileReference binaryReadStreamDo: [ :stream | (SHA256 hashStream: stream) hex ].
+	actualChecksum = expectedChecksum ifFalse: [
+		Error signal: 'MooseNexus generated file checksum does not match manifest: ' , fileReference pathString ]
+]
+
+{ #category : 'private' }
+MooseNexusModelArtifactManifest >> validateGeneratedFile: descriptor in: rootDirectory [
+
+	| pathString pathReference file |
+	pathString := descriptor at: 'path'.
+	pathReference := pathString asFileReference.
+	pathReference isAbsolute ifTrue: [ Error signal: 'MooseNexus generated file paths must be relative: ' , pathString ].
+	(pathReference pathSegments includes: '..') ifTrue: [
+		Error signal: 'MooseNexus generated file paths must not leave the project directory: ' , pathString ].
+
+	file := rootDirectory / pathString.
+	self validateGeneratedFile: file describedBy: descriptor
+]
+
+{ #category : 'validating' }
+MooseNexusModelArtifactManifest >> validateGeneratedFilesIn: rootDirectory [
+
+	generatedFiles do: [ :descriptor | self validateGeneratedFile: descriptor in: rootDirectory ]
+]
+
+{ #category : 'validating' }
+MooseNexusModelArtifactManifest >> validateModelPayload: aFileReference [
+
+	| descriptor |
+	descriptor := generatedFiles
+		              detect: [ :each | (each at: 'path') = modelArtifact path ]
+		              ifNone: [ Error signal: 'MooseNexus model manifest does not describe model payload: ' , modelArtifact path ].
+	self validateGeneratedFile: aFileReference describedBy: descriptor
+]
