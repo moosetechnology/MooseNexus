@@ -93,7 +93,7 @@ MooseNexusProjectDirectoryInstaller >> installProjectDirectory: incomingDirector
 { #category : 'installing' }
 MooseNexusProjectDirectoryInstaller >> installProjectDirectory: incomingDirectory in: aMooseNexusRepository force: shouldForce [
 
-	| sourceDirectory projectProperties projectDirectory stagedDirectory stagedProject hasExistingProject |
+	| sourceDirectory projectProperties projectDirectory stagedDirectory stagingDirectoryPath stagedProject hasExistingProject |
 	sourceDirectory := incomingDirectory asFileReference.
 	projectProperties := self projectPropertiesFrom: sourceDirectory.
 	self validateProjectDirectory: sourceDirectory.
@@ -104,6 +104,7 @@ MooseNexusProjectDirectoryInstaller >> installProjectDirectory: incomingDirector
 		self validateProjectAt: projectDirectory matchesProperties: projectProperties in: aMooseNexusRepository ].
 
 	stagedDirectory := self stagingDirectoryFor: projectDirectory.
+	stagingDirectoryPath := stagedDirectory pathString.
 	[
 		(hasExistingProject
 			 ifTrue: [ projectDirectory ]
@@ -114,7 +115,7 @@ MooseNexusProjectDirectoryInstaller >> installProjectDirectory: incomingDirector
 				self mergeProjectDirectory: sourceDirectory into: stagedProject force: shouldForce ].
 
 		self replaceProjectDirectory: projectDirectory with: stagedDirectory ] ensure: [
-		stagedDirectory exists ifTrue: [ stagedDirectory deleteAll ] ].
+		stagingDirectoryPath asFileReference ifExists: [ :directory | directory deleteAll ] ].
 
 	^ MooseNexusProject fromNexusDirectory: projectDirectory inBackend: aMooseNexusRepository localProjectBackend
 ]
