@@ -5,6 +5,10 @@ without an interactive Pharo UI. A caller executes work through the class-side
 `execute:phase:context:do:` boundary, then writes the returned result to its
 chosen result file.
 
+This contract is available from MooseNexus `1.1.0`. A client should require a
+compatible MooseNexus release before generating a script that uses it; the
+result schema version is independent of the MooseNexus release version.
+
 The result is schema version `1` and contains:
 
 | Field | Meaning |
