@@ -12,6 +12,12 @@ Class {
 }
 
 { #category : 'private' }
+MooseNexusProjectDirectoryInstaller >> backupDirectoryFor: projectDirectory [
+
+	^ projectDirectory parent / ('.moosenexus-backup-' , UUID new asString)
+]
+
+{ #category : 'private' }
 MooseNexusProjectDirectoryInstaller >> copyFile: sourceFile to: targetFile [
 
 	sourceFile exists ifFalse: [ Error signal: 'Cannot install missing MooseNexus artifact payload: ' , sourceFile pathString ].
@@ -87,21 +93,30 @@ MooseNexusProjectDirectoryInstaller >> installProjectDirectory: incomingDirector
 { #category : 'installing' }
 MooseNexusProjectDirectoryInstaller >> installProjectDirectory: incomingDirectory in: aMooseNexusRepository force: shouldForce [
 
-	| sourceDirectory projectProperties projectDirectory project |
+	| sourceDirectory projectProperties projectDirectory stagedDirectory stagedProject hasExistingProject |
 	sourceDirectory := incomingDirectory asFileReference.
 	projectProperties := self projectPropertiesFrom: sourceDirectory.
+	self validateProjectDirectory: sourceDirectory.
+
 	projectDirectory := self projectDirectoryForProperties: projectProperties in: aMooseNexusRepository.
+	hasExistingProject := projectDirectory exists.
+	hasExistingProject ifTrue: [
+		self validateProjectAt: projectDirectory matchesProperties: projectProperties in: aMooseNexusRepository ].
 
-	projectDirectory exists ifFalse: [
-			projectDirectory ensureCreateDirectory.
-			sourceDirectory copyAllTo: projectDirectory.
-			^ MooseNexusProject fromNexusDirectory: projectDirectory inBackend: aMooseNexusRepository localProjectBackend ].
+	stagedDirectory := self stagingDirectoryFor: projectDirectory.
+	[
+		(hasExistingProject
+			 ifTrue: [ projectDirectory ]
+			 ifFalse: [ sourceDirectory ]) copyAllTo: stagedDirectory.
 
-	self validateProjectAt: projectDirectory matchesProperties: projectProperties in: aMooseNexusRepository.
-	project := MooseNexusProject fromNexusDirectory: projectDirectory inBackend: aMooseNexusRepository localProjectBackend.
+		hasExistingProject ifTrue: [
+				stagedProject := MooseNexusProject fromNexusDirectory: stagedDirectory inBackend: aMooseNexusRepository localProjectBackend.
+				self mergeProjectDirectory: sourceDirectory into: stagedProject force: shouldForce ].
 
-	self mergeProjectDirectory: sourceDirectory into: project force: shouldForce.
-	^ project
+		self replaceProjectDirectory: projectDirectory with: stagedDirectory ] ensure: [
+		stagedDirectory exists ifTrue: [ stagedDirectory deleteAll ] ].
+
+	^ MooseNexusProject fromNexusDirectory: projectDirectory inBackend: aMooseNexusRepository localProjectBackend
 ]
 
 { #category : 'private' }
@@ -153,10 +168,44 @@ MooseNexusProjectDirectoryInstaller >> projectPropertiesFrom: projectDirectory [
 ]
 
 { #category : 'private' }
+MooseNexusProjectDirectoryInstaller >> replaceProjectDirectory: projectDirectory with: stagedDirectory [
+
+	| backupDirectory |
+	projectDirectory exists ifFalse: [
+			stagedDirectory moveTo: projectDirectory.
+			^ self ].
+
+	backupDirectory := self backupDirectoryFor: projectDirectory.
+	projectDirectory moveTo: backupDirectory.
+	[ stagedDirectory moveTo: projectDirectory ]
+		on: Error
+		do: [ :error |
+				backupDirectory moveTo: projectDirectory.
+				error pass ].
+	backupDirectory deleteAll
+]
+
+{ #category : 'private' }
+MooseNexusProjectDirectoryInstaller >> stagingDirectoryFor: projectDirectory [
+
+	| stagingDirectory |
+	projectDirectory parent ensureCreateDirectory.
+	stagingDirectory := projectDirectory parent / ('.moosenexus-install-' , UUID new asString).
+	stagingDirectory ensureCreateDirectory.
+	^ stagingDirectory
+]
+
+{ #category : 'private' }
 MooseNexusProjectDirectoryInstaller >> validateProjectAt: projectDirectory matchesProperties: projectProperties in: aMooseNexusRepository [
 
 	| project |
 	project := MooseNexusProject fromNexusDirectory: projectDirectory inBackend: aMooseNexusRepository localProjectBackend.
 	project properties = projectProperties ifFalse: [
 		Error signal: 'Incoming MooseNexus project properties do not match the installed project' ]
+]
+
+{ #category : 'private' }
+MooseNexusProjectDirectoryInstaller >> validateProjectDirectory: projectDirectory [
+
+	(self modelManifestsFrom: projectDirectory) do: [ :manifest | manifest validateGeneratedFilesIn: projectDirectory ]
 ]

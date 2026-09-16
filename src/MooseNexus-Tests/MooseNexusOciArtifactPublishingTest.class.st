@@ -49,16 +49,17 @@ MooseNexusOciArtifactPublishingTest >> copyBundle: bundleDirectory intoPullDirec
 { #category : 'private' }
 MooseNexusOciArtifactPublishingTest >> manifestForModelPath: modelPath [
 
-	| artifact |
+	| artifact modelFile |
 	artifact := MooseNexusModelArtifact
 		            artifactCoordinates: self artifactCoordinates
 		            path: modelPath
 		            comment: 'generated for publishing tests'
 		            timestamp: '2026-09-01T10:00:00+02:00'.
+	modelFile := project repositoryDirectory / modelPath.
 	^ MooseNexusModelArtifactManifest
 		  modelArtifact: artifact
 		  dependencyResolutionResult: (MooseNexusDependencyResolutionResult forProject: project)
-		  generatedFiles: #(  )
+		  generatedFiles: { (MooseNexusModelArtifactManifest generatedFileFor: modelFile relativeTo: project repositoryDirectory) }
 		  createdTimestamp: artifact timestamp
 		  buildProvenance: self buildProvenance
 ]
@@ -142,9 +143,10 @@ MooseNexusOciArtifactPublishingTest >> testBundleBuilderCopiesModelPropertiesAnd
 { #category : 'tests' }
 MooseNexusOciArtifactPublishingTest >> testInstallerAddsADistinctlyNamedModel [
 
-	| firstBundle secondBundle repository secondArtifact secondManifest projectDirectory |
+	| firstBundle secondBundle repository secondArtifact secondManifest projectDirectory secondModelFile |
 	firstBundle := rootDirectory / 'first-bundle'.
 	(MooseNexusOciArtifactBundleBuilder project: project manifest: manifest directory: firstBundle) build.
+
 	secondArtifact := MooseNexusModelArtifact
 		                  artifactCoordinates: (MooseNexusModelArtifactCoordinates
 				                   projectCoordinates: project coordinates
@@ -155,13 +157,15 @@ MooseNexusOciArtifactPublishingTest >> testInstallerAddsADistinctlyNamedModel [
 		                  path: 'artifacts/models/other-model.json'
 		                  comment: 'generated for publishing tests'
 		                  timestamp: '2026-09-01T10:00:00+02:00'.
+	secondModelFile := project repositoryDirectory / secondArtifact path.
+	secondModelFile writeStreamDo: [ :stream | stream nextPutAll: '{ "other": true }' ].
 	secondManifest := MooseNexusModelArtifactManifest
 		                  modelArtifact: secondArtifact
 		                  dependencyResolutionResult: (MooseNexusDependencyResolutionResult forProject: project)
-		                  generatedFiles: #(  )
+		                  generatedFiles:
+		                  { (MooseNexusModelArtifactManifest generatedFileFor: secondModelFile relativeTo: project repositoryDirectory) }
 		                  createdTimestamp: secondArtifact timestamp
 		                  buildProvenance: self buildProvenance.
-	project repositoryDirectory / secondArtifact path writeStreamDo: [ :stream | stream nextPutAll: '{ "other": true }' ].
 	secondBundle := rootDirectory / 'second-bundle'.
 	(MooseNexusOciArtifactBundleBuilder project: project manifest: secondManifest directory: secondBundle) build.
 	repository := MooseNexusRepository new directory: rootDirectory / 'installed'.
@@ -229,6 +233,38 @@ MooseNexusOciArtifactPublishingTest >> testInstallerRestoresPulledBundleIntoLoca
 		equals: 'class Dependency { }'.
 	self assert: (projectDirectory / 'artifacts' / 'models' / 'demo-model.json') contents equals: '{ }'.
 	self assert: installedProject modelManifests first equals: manifest
+]
+
+{ #category : 'tests' }
+MooseNexusOciArtifactPublishingTest >> testModelArtifactRejectsAPathOutsideItsProjectDirectory [
+
+	self
+		should: [
+				MooseNexusModelArtifact
+					artifactCoordinates: self artifactCoordinates
+					path: '../demo-model.json'
+					comment: 'invalid path'
+					timestamp: '2026-09-01T10:00:00+02:00' ]
+		raise: Error
+]
+
+{ #category : 'tests' }
+MooseNexusOciArtifactPublishingTest >> testOciInstallerRejectsInvalidPayloadWithoutCreatingProject [
+
+	| bundleDirectory repository projectDirectory |
+	bundleDirectory := rootDirectory / 'bundle'.
+	(MooseNexusOciArtifactBundleBuilder project: project manifest: manifest directory: bundleDirectory) build.
+	bundleDirectory / 'model.json' writeStreamDo: [ :stream | stream nextPutAll: '{x}' ].
+	repository := MooseNexusRepository new directory: rootDirectory / 'installed'.
+
+	self
+		should: [ MooseNexusOciArtifactInstaller new installBundleFrom: bundleDirectory in: repository ]
+		raise: Error
+		whoseDescriptionIncludes: 'checksum does not match manifest'
+		description: 'OCI installation must reject a payload that does not match its manifest'.
+
+	projectDirectory := self repositoryDirectoryForTestRepository: repository.
+	self deny: projectDirectory exists
 ]
 
 { #category : 'tests' }
@@ -379,18 +415,16 @@ MooseNexusOciArtifactPublishingTest >> testOrasTransportSignalsPushFailure [
 { #category : 'tests' }
 MooseNexusOciArtifactPublishingTest >> testProjectDirectoryInstallerForceReplacesADifferentManifest [
 
-	| incomingDirectory repository projectDirectory imageArtifact incomingManifest generatedFile |
+	| incomingDirectory repository projectDirectory imageArtifact incomingManifest generatedFile modelFile |
 	incomingDirectory := rootDirectory / 'incoming-project'.
 	imageArtifact := MooseNexusImageArtifact named: 'demo-image' forModelArtifactNamed: 'demo-model'.
 	self writePortableProjectAt: incomingDirectory imageArtifact: imageArtifact.
 	repository := MooseNexusRepository new directory: rootDirectory / 'installed'.
 	MooseNexusProjectDirectoryInstaller new installProjectDirectory: incomingDirectory in: repository.
-	generatedFile := Dictionary new
-		                 add: 'path' -> 'artifacts/models/demo-model.json';
-		                 add: 'size' -> 12;
-		                 add: 'checksumAlgorithm' -> 'sha256';
-		                 add: 'checksum' -> 'new checksum';
-		                 yourself.
+
+	modelFile := incomingDirectory / 'artifacts' / 'models' / 'demo-model.json'.
+	modelFile writeStreamDo: [ :stream | stream nextPutAll: 'new model' ].
+	generatedFile := MooseNexusModelArtifactManifest generatedFileFor: modelFile relativeTo: incomingDirectory.
 	incomingManifest := MooseNexusModelArtifactManifest
 		                    modelArtifact: manifest modelArtifact
 		                    dependencyResolutionResult: manifest dependencyResolutionResult
@@ -399,7 +433,6 @@ MooseNexusOciArtifactPublishingTest >> testProjectDirectoryInstallerForceReplace
 		                    buildProvenance: manifest buildProvenance.
 	incomingDirectory / 'metadata' / 'models.json' writeStreamDo: [ :stream |
 		STON put: { incomingManifest asDictionary } asJsonOnStream: stream ].
-	incomingDirectory / 'artifacts' / 'models' / 'demo-model.json' writeStreamDo: [ :stream | stream nextPutAll: 'new model' ].
 
 	MooseNexusProjectDirectoryInstaller new installProjectDirectory: incomingDirectory in: repository force: true.
 
@@ -426,6 +459,51 @@ MooseNexusOciArtifactPublishingTest >> testProjectDirectoryInstallerForceReplace
 
 	self assert: (projectDirectory / 'artifacts' / 'models' / 'demo-model.json') contents equals: '{ }'.
 	self assert: (projectDirectory / 'artifacts' / 'images' / 'demo-image' / 'Demo.image') contents equals: 'image payload'
+]
+
+{ #category : 'tests' }
+MooseNexusOciArtifactPublishingTest >> testProjectDirectoryInstallerKeepsExistingProjectWhenIncomingPayloadIsInvalid [
+
+	| incomingDirectory repository projectDirectory imageArtifact modelFile installedModelFile |
+	incomingDirectory := rootDirectory / 'incoming-project'.
+	imageArtifact := MooseNexusImageArtifact named: 'demo-image' forModelArtifactNamed: 'demo-model'.
+	self writePortableProjectAt: incomingDirectory imageArtifact: imageArtifact.
+
+	repository := MooseNexusRepository new directory: rootDirectory / 'installed'.
+	MooseNexusProjectDirectoryInstaller new installProjectDirectory: incomingDirectory in: repository.
+	projectDirectory := self repositoryDirectoryForTestRepository: repository.
+	installedModelFile := projectDirectory / 'artifacts' / 'models' / 'demo-model.json'.
+
+	modelFile := incomingDirectory / 'artifacts' / 'models' / 'demo-model.json'.
+	modelFile writeStreamDo: [ :stream | stream nextPutAll: '{x}' ].
+	self
+		should: [ MooseNexusProjectDirectoryInstaller new installProjectDirectory: incomingDirectory in: repository ]
+		raise: Error
+		whoseDescriptionIncludes: 'checksum does not match manifest'
+		description: 'A failed installation must not replace an already installed project'.
+
+	self assert: installedModelFile contents equals: '{ }'
+]
+
+{ #category : 'tests' }
+MooseNexusOciArtifactPublishingTest >> testProjectDirectoryInstallerRejectsInvalidPayloadWithoutCreatingProject [
+
+	| incomingDirectory repository projectDirectory imageArtifact modelFile |
+	incomingDirectory := rootDirectory / 'incoming-project'.
+	imageArtifact := MooseNexusImageArtifact named: 'demo-image' forModelArtifactNamed: 'demo-model'.
+	self writePortableProjectAt: incomingDirectory imageArtifact: imageArtifact.
+	modelFile := incomingDirectory / 'artifacts' / 'models' / 'demo-model.json'.
+	modelFile writeStreamDo: [ :stream | stream nextPutAll: '{x}' ].
+	repository := MooseNexusRepository new directory: rootDirectory / 'installed'.
+
+	self
+		should: [ MooseNexusProjectDirectoryInstaller new installProjectDirectory: incomingDirectory in: repository ]
+		raise: Error
+		whoseDescriptionIncludes: 'checksum does not match manifest'
+		description: 'Portable installation must reject a payload that does not match its manifest'.
+
+	projectDirectory := self repositoryDirectoryForTestRepository: repository.
+	self deny: projectDirectory exists
 ]
 
 { #category : 'tests' }

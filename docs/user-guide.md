@@ -4,6 +4,8 @@
 
 [Build Spec](build-spec.md) explains how to describe a source project, choose an importer, resolve dependencies, run an extractor, and store the result.
 
+[Headless Operation Contract](headless-contract.md) defines the result files written by headless MooseNexus operations.
+
 ## Model Artifacts
 
 [Persisted Metadata](persisted-metadata.md) defines the portable project-directory shape, its compatibility contract, and its migration policy.

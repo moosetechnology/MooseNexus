@@ -27,10 +27,16 @@ MooseNexus distinguishes a location by its owner rather than treating every path
 
 Consequently, a repository-relative payload path cannot be absolute or escape its project backend. A local input may live on any mounted filesystem; it is intentionally environment-specific.
 
+## Installation Integrity
+
+Every generated file recorded by a model manifest carries its size and SHA-256 checksum. Before MooseNexus installs a portable project directory or OCI bundle, it verifies every recorded generated file. A missing, truncated, or altered payload is rejected before the destination repository is changed.
+
+Installation stages the complete incoming project in a sibling temporary directory. For an existing project, metadata merging and payload copies occur only in that staging directory. MooseNexus then promotes the staged directory and restores the prior directory if promotion fails, so an invalid or failed installation does not leave a partially updated project in the repository.
+
 ## Compatibility and Migration
 
 MooseNexus v1 writes version-1 project properties and model manifests, and supports reading version-1 metadata written by earlier MooseNexus releases. Additive fields may be introduced without changing a schema version only when they are optional and older readers can ignore them.
 
 Any incompatible change to a persisted shape must introduce a new schema version. A release that reads the new version must either provide an explicit migration from supported earlier versions or reject the metadata with a clear unsupported-schema error. Migration must create a new portable project directory or explicitly replace a selected copy; MooseNexus must not silently rewrite stored artifacts during ordinary reads.
 
-Payload compatibility is separate from metadata compatibility. Before importing a model, use its recorded build provenance to select a compatible Moose, Pharo, and MooseNexus runtime; verify generated-file checksums when transferring artifacts through an untrusted channel.
+Payload compatibility is separate from metadata compatibility. Before importing a model, use its recorded build provenance to select a compatible Moose, Pharo, and MooseNexus runtime.
