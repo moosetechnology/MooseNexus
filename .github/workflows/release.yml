@@ -21,6 +21,7 @@ jobs:
       - uses: actions/checkout@v7
         with:
           fetch-depth: 0
+          persist-credentials: false
 
       - name: Verify CI
         env:
@@ -47,21 +48,26 @@ jobs:
           printf 'major_tag=v%s.x.x\n' "$major" >> "$GITHUB_OUTPUT"
           printf 'minor_tag=v%s.%s.x\n' "$major" "$minor" >> "$GITHUB_OUTPUT"
 
-      - name: Verify tag is new
+      - name: Verify release tag
         run: |
           if git show-ref --tags --verify --quiet "refs/tags/${{ steps.version.outputs.tag }}"; then
-            echo "Tag ${{ steps.version.outputs.tag }} already exists." >&2
-            exit 1
+            existing_target="$(git rev-list -n1 "${{ steps.version.outputs.tag }}")"
+            if [ "$existing_target" != "$GITHUB_SHA" ]; then
+              echo "Tag ${{ steps.version.outputs.tag }} already exists at a different commit." >&2
+              exit 1
+            fi
           fi
 
       - name: Create GitHub release
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          gh release create "${{ steps.version.outputs.tag }}" \
-            --target "$GITHUB_SHA" \
-            --title "${{ steps.version.outputs.tag }}" \
-            --generate-notes
+          if ! gh release view "${{ steps.version.outputs.tag }}" >/dev/null 2>&1; then
+            gh release create "${{ steps.version.outputs.tag }}" \
+              --target "$GITHUB_SHA" \
+              --title "${{ steps.version.outputs.tag }}" \
+              --generate-notes
+          fi
 
       - name: Create floating-tag updater token
         id: floating-tag-updater-token
