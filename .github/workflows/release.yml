@@ -9,6 +9,9 @@ permissions:
 
 jobs:
   release:
+    outputs:
+      tag: ${{ steps.version.outputs.tag }}
+
     runs-on: ubuntu-latest
     steps:
       - name: Require main
@@ -23,6 +26,16 @@ jobs:
           fetch-depth: 0
           persist-credentials: false
 
+      - name: Read MooseNexus version
+        id: version
+        run: |
+          moose_nexus_version="$(sed -nE "s/^[[:space:]]*\^[[:space:]]*'([0-9]+\.[0-9]+\.[0-9]+)'.*/\1/p" src/MooseNexus/MooseNexusVersion.class.st)"
+          if [ -z "$moose_nexus_version" ] || [ "$(printf '%s\n' "$moose_nexus_version" | wc -l | tr -d ' ')" -ne 1 ]; then
+            echo "Could not read exactly one release version from MooseNexusVersion." >&2
+            exit 1
+          fi
+          printf 'tag=v%s\n' "$moose_nexus_version" >> "$GITHUB_OUTPUT"
+
       - name: Verify CI
         env:
           GH_TOKEN: ${{ github.token }}
@@ -33,58 +46,25 @@ jobs:
             exit 1
           fi
 
-      - name: Read MooseNexus version
-        id: version
+      - name: Verify release tag is new
         run: |
-          moose_nexus_version="$(sed -nE "s/^[[:space:]]*\^[[:space:]]*'([0-9]+\.[0-9]+\.[0-9]+)'.*/\1/p" src/MooseNexus/MooseNexusVersion.class.st)"
-          if [ -z "$moose_nexus_version" ] || [ "$(printf '%s\n' "$moose_nexus_version" | wc -l | tr -d ' ')" -ne 1 ]; then
-            echo "Could not read exactly one release version from MooseNexusVersion." >&2
+          if git ls-remote --exit-code --tags origin "refs/tags/${{ steps.version.outputs.tag }}" >/dev/null 2>&1; then
+            echo "Tag ${{ steps.version.outputs.tag }} already exists." >&2
             exit 1
-          fi
-          printf 'value=%s\n' "$moose_nexus_version" >> "$GITHUB_OUTPUT"
-          printf 'tag=v%s\n' "$moose_nexus_version" >> "$GITHUB_OUTPUT"
-
-          IFS=. read -r major minor patch <<< "$moose_nexus_version"
-          printf 'major_tag=v%s.x.x\n' "$major" >> "$GITHUB_OUTPUT"
-          printf 'minor_tag=v%s.%s.x\n' "$major" "$minor" >> "$GITHUB_OUTPUT"
-
-      - name: Verify release tag
-        run: |
-          if git show-ref --tags --verify --quiet "refs/tags/${{ steps.version.outputs.tag }}"; then
-            existing_target="$(git rev-list -n1 "${{ steps.version.outputs.tag }}")"
-            if [ "$existing_target" != "$GITHUB_SHA" ]; then
-              echo "Tag ${{ steps.version.outputs.tag }} already exists at a different commit." >&2
-              exit 1
-            fi
           fi
 
       - name: Create GitHub release
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          if ! gh release view "${{ steps.version.outputs.tag }}" >/dev/null 2>&1; then
-            gh release create "${{ steps.version.outputs.tag }}" \
-              --target "$GITHUB_SHA" \
-              --title "${{ steps.version.outputs.tag }}" \
-              --generate-notes
-          fi
+          gh release create "${{ steps.version.outputs.tag }}" \
+            --target "$GITHUB_SHA" \
+            --title "${{ steps.version.outputs.tag }}" \
+            --generate-notes
 
-      - name: Create floating-tag updater token
-        id: floating-tag-updater-token
-        uses: actions/create-github-app-token@v3
-        with:
-          client-id: ${{ vars.RELEASE_APP_CLIENT_ID }}
-          private-key: ${{ secrets.RELEASE_APP_PRIVATE_KEY }}
-          owner: moosetechnology
-          repositories: MooseNexus
-          permission-contents: write
-
-      - name: Update floating release tags
-        env:
-          FLOATING_TAG_UPDATER_TOKEN: ${{ steps.floating-tag-updater-token.outputs.token }}
-        run: |
-          git remote set-url origin "https://x-access-token:${FLOATING_TAG_UPDATER_TOKEN}@github.com/${GITHUB_REPOSITORY}.git"
-          for tag in "${{ steps.version.outputs.major_tag }}" "${{ steps.version.outputs.minor_tag }}"; do
-            git tag --force "$tag" "$GITHUB_SHA"
-            git push origin "refs/tags/$tag" --force
-          done
+  update-floating-tags:
+    needs: release
+    uses: ./.github/workflows/update-floating-release-tags.yml
+    with:
+      tag: ${{ needs.release.outputs.tag }}
+    secrets: inherit
