@@ -462,6 +462,26 @@ MooseNexusOciArtifactPublishingTest >> testProjectDirectoryInstallerForceReplace
 ]
 
 { #category : 'tests' }
+MooseNexusOciArtifactPublishingTest >> testProjectDirectoryInstallerForceReplacesReadOnlyImageArtifact [
+
+	| incomingDirectory repository installer imageArtifact projectDirectory imageDirectory |
+	incomingDirectory := rootDirectory / 'incoming-project'.
+	imageArtifact := MooseNexusImageArtifact named: 'demo-image' forModelArtifactNamed: 'demo-model'.
+	self writePortableProjectAt: incomingDirectory imageArtifact: imageArtifact.
+	repository := MooseNexusRepository new directory: rootDirectory / 'installed'.
+	installer := MooseNexusProjectDirectoryInstaller new.
+
+	installer installProjectDirectory: incomingDirectory in: repository.
+	projectDirectory := self repositoryDirectoryForTestRepository: repository.
+	imageDirectory := projectDirectory / 'artifacts' / 'images' / imageArtifact name.
+	imageDirectory permissions: (FileSystemPermission posixPermissions: 8r555).
+	imageDirectory / 'Demo.image' permissions: (FileSystemPermission posixPermissions: 8r444).
+
+	installer installProjectDirectory: incomingDirectory in: repository force: true.
+	self assert: (projectDirectory / 'artifacts' / 'images' / imageArtifact name / 'Demo.image') contents equals: 'image payload'
+]
+
+{ #category : 'tests' }
 MooseNexusOciArtifactPublishingTest >> testProjectDirectoryInstallerForcesReplacementOfExistingProjectDirectory [
 
 	| incomingDirectory repository installer imageArtifact projectDirectory |

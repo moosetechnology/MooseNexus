@@ -14,5 +14,5 @@ Class {
 { #category : 'accessing' }
 MooseNexusVersion class >> current [
 
-	^ '1.1.2'
+	^ '1.1.3'
 ]

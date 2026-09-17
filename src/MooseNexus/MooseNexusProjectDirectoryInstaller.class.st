@@ -27,6 +27,13 @@ MooseNexusProjectDirectoryInstaller >> copyFile: sourceFile to: targetFile [
 ]
 
 { #category : 'private' }
+MooseNexusProjectDirectoryInstaller >> deleteTree: directory [
+
+	self makeWritableRecursively: directory.
+	directory deleteAll
+]
+
+{ #category : 'private' }
 MooseNexusProjectDirectoryInstaller >> hasInstalledArtifactsFrom: incomingDirectory in: project [
 
 	((self modelManifestsFrom: incomingDirectory) allSatisfy: [ :incomingManifest |
@@ -69,7 +76,7 @@ MooseNexusProjectDirectoryInstaller >> installImageArtifact: incomingArtifact fr
 		Error signal: 'Cannot merge MooseNexus image artifact with a different model artifact: ' , incomingArtifact name ].
 
 	shouldForce ifFalse: [ ^ self ].
-	targetImageDirectory ifExists: [ targetImageDirectory deleteAll ].
+	targetImageDirectory ifExists: [ :directory | self deleteTree: directory ].
 	targetImageDirectory ensureCreateDirectory.
 	sourceImageDirectory copyAllTo: targetImageDirectory
 ]
@@ -129,9 +136,16 @@ MooseNexusProjectDirectoryInstaller >> installProjectDirectory: incomingDirector
 				self mergeProjectDirectory: sourceDirectory into: stagedProject force: shouldForce ].
 
 		self replaceProjectDirectory: projectDirectory with: stagedDirectory ] ensure: [
-		stagingDirectoryPath asFileReference ifExists: [ :directory | directory deleteAll ] ].
+		stagingDirectoryPath asFileReference ifExists: [ :directory | self deleteTree: directory ] ].
 
 	^ MooseNexusProject fromNexusDirectory: projectDirectory inBackend: aMooseNexusRepository localProjectBackend
+]
+
+{ #category : 'private' }
+MooseNexusProjectDirectoryInstaller >> makeWritableRecursively: fileReference [
+
+	fileReference permissions: (FileSystemPermission posixPermissions: 8r700).
+	fileReference isDirectory ifTrue: [ fileReference children do: [ :child | self makeWritableRecursively: child ] ]
 ]
 
 { #category : 'private' }
@@ -200,7 +214,7 @@ MooseNexusProjectDirectoryInstaller >> replaceProjectDirectory: projectDirectory
 		do: [ :error |
 				backupDirectoryPath asFileReference moveTo: projectDirectoryPath asFileReference.
 				error pass ].
-	backupDirectoryPath asFileReference deleteAll
+	self deleteTree: backupDirectoryPath asFileReference
 ]
 
 { #category : 'private' }
