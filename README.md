@@ -8,7 +8,7 @@ MooseNexus builds, stores, and shares Moose models of software projects. It reco
 
 ## Key Features
 
-- Imports Java projects managed by Maven or Gradle, as well as explicitly configured unmanaged projects.
+- Imports Java projects managed by Maven or Gradle, TypeScript projects managed by npm, and explicitly configured unmanaged projects.
 - Produces portable model artifacts with versioned metadata and dependency-resolution records.
 - Stores artifacts locally and can publish or install them through OCI registries.
 
@@ -20,4 +20,4 @@ MooseNexus builds, stores, and shares Moose models of software projects. It reco
 
 ## Support
 
-Java support is part of the default MooseNexus distribution. TypeScript support is experimental and deferred from the v1 support commitment.
+Java support is part of the default MooseNexus distribution. TypeScript support is available through the optional `TypeScript` group and requires Moose 13.

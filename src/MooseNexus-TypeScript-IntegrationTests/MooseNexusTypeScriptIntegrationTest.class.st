@@ -1,7 +1,7 @@
 "
 I exercise TypeScript import through the npm lockfile importer, Docker ts2famix runner, artifact recording, and FamixTypeScript model import.
 
-I require Docker and the pinned MooseNexus ts2famix image; CI builds that image locally before this test runs.
+I require Docker and the published ts2famix npm package.
 "
 Class {
 	#name : 'MooseNexusTypeScriptIntegrationTest',
@@ -25,6 +25,7 @@ MooseNexusTypeScriptIntegrationTest >> fixtureDirectory [
 MooseNexusTypeScriptIntegrationTest >> setUp [
 
 	super setUp.
+	self timeLimit: 60 seconds.
 	rootDirectory := FileLocator temp / ('MooseNexus-typescript-import-' , UUID new asString).
 	repository := MooseNexusRepository new directory: rootDirectory
 ]
@@ -65,5 +66,7 @@ MooseNexusTypeScriptIntegrationTest >> testImportsTypeScriptProjectWithLockedNpm
 	[
 		self assert: model class equals: FamixTypeScriptModel.
 		self assert: model name equals: artifact name.
-		self assert: model rootFolder pathString equals: project mainSourceDirectory pathString ] ensure: [ model remove ]
+		self assert: model rootFolder pathString equals: project mainSourceDirectory pathString.
+		self assert: (model allWithType: FamixTypeScriptTypeParameter) size equals: 1.
+		self assert: (model allWithType: FamixTypeScriptEntityTyping) isNotEmpty ] ensure: [ model remove ]
 ]

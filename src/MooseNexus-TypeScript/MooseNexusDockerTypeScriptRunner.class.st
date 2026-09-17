@@ -1,14 +1,11 @@
 "
-I run a versioned ts2famix Docker image.
+I run the released ts2famix npm package in a pinned official Node Docker image.
 
 I mount recorded sources read-only and mount only my temporary output directory writable, leaving the imported project sources unchanged.
 "
 Class {
 	#name : 'MooseNexusDockerTypeScriptRunner',
 	#superclass : 'MooseNexusTypeScriptRunner',
-	#instVars : [
-		'imageVersion'
-	],
 	#category : 'MooseNexus-TypeScript-ModelExtraction',
 	#package : 'MooseNexus-TypeScript',
 	#tag : 'ModelExtraction'
@@ -17,25 +14,13 @@ Class {
 { #category : 'accessing' }
 MooseNexusDockerTypeScriptRunner >> imageReference [
 
-	^ self imageRepository , ':' , self imageVersion
+	^ self nodeImageReference
 ]
 
 { #category : 'accessing' }
-MooseNexusDockerTypeScriptRunner >> imageRepository [
+MooseNexusDockerTypeScriptRunner >> nodeImageReference [
 
-	^ 'ghcr.io/moosetechnology/moosenexus-ts2famix'
-]
-
-{ #category : 'accessing' }
-MooseNexusDockerTypeScriptRunner >> imageVersion [
-
-	^ imageVersion ifNil: [ imageVersion := '3.2.0-679f54e' ]
-]
-
-{ #category : 'accessing' }
-MooseNexusDockerTypeScriptRunner >> imageVersion: aString [
-
-	imageVersion := aString
+	^ 'node:20.19.4-bookworm-slim@sha256:6db5e436948af8f0244488a1f658c2c8e55a3ae51ca2e1686ed042be8f25f70a'
 ]
 
 { #category : 'capabilities' }
@@ -45,13 +30,15 @@ MooseNexusDockerTypeScriptRunner >> requirements [
 		   name: 'Docker'
 		   availabilityValidation: 'docker --version'
 		   versionValidation: 'docker --version'
-		   expectedVersionDescription: 'Docker CLI capable of running ' , self imageReference) }
+		   expectedVersionDescription:
+		   'Docker CLI capable of running ' , self nodeImageReference , ' and ' , self ts2famixPackageReference) }
 ]
 
 { #category : 'running' }
 MooseNexusDockerTypeScriptRunner >> run [
 
 	| returnCode |
+	self tsConfigFile.
 	self prepareOutput.
 	returnCode := self runCommand: self writeCommand.
 	returnCode == 0 ifFalse: [
@@ -61,6 +48,12 @@ MooseNexusDockerTypeScriptRunner >> run [
 	^ self outputPath
 ]
 
+{ #category : 'accessing' }
+MooseNexusDockerTypeScriptRunner >> ts2famixPackageReference [
+
+	^ 'ts2famix@3.3.0'
+]
+
 { #category : 'writing' }
 MooseNexusDockerTypeScriptRunner >> writeCommand [
 
@@ -68,6 +61,7 @@ MooseNexusDockerTypeScriptRunner >> writeCommand [
 			  stream << 'docker run --rm'.
 			  stream << ' -v ' << (self shellQuoted: self sourceDirectory pathString , ':/source:ro').
 			  stream << ' -v ' << (self shellQuoted: self outputDirectory pathString , ':/output').
-			  stream << ' ' << self imageReference.
+			  stream << ' ' << self nodeImageReference.
+			  stream << ' npx --yes ' << self ts2famixPackageReference.
 			  stream << ' -i /source/tsconfig.json -o /output/' << self class outputFilename ]
 ]
