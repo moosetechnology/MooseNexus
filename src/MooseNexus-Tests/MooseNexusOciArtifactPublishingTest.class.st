@@ -462,6 +462,40 @@ MooseNexusOciArtifactPublishingTest >> testProjectDirectoryInstallerForceReplace
 ]
 
 { #category : 'tests' }
+MooseNexusOciArtifactPublishingTest >> testProjectDirectoryInstallerForcesReplacementOfExistingProjectDirectory [
+
+	| incomingDirectory repository installer imageArtifact projectDirectory |
+	incomingDirectory := rootDirectory / 'incoming-project'.
+	imageArtifact := MooseNexusImageArtifact named: 'demo-image' forModelArtifactNamed: 'demo-model'.
+	self writePortableProjectAt: incomingDirectory imageArtifact: imageArtifact.
+	repository := MooseNexusRepository new directory: rootDirectory / 'installed'.
+	installer := MooseNexusProjectDirectoryInstaller new.
+
+	installer installProjectDirectory: incomingDirectory in: repository.
+	installer installProjectDirectory: incomingDirectory in: repository force: true.
+
+	projectDirectory := self repositoryDirectoryForTestRepository: repository.
+	self assert: (projectDirectory / 'metadata' / 'properties.json') exists
+]
+
+{ #category : 'tests' }
+MooseNexusOciArtifactPublishingTest >> testProjectDirectoryInstallerKeepsExistingProjectDirectory [
+
+	| incomingDirectory repository installer imageArtifact projectDirectory |
+	incomingDirectory := rootDirectory / 'incoming-project'.
+	imageArtifact := MooseNexusImageArtifact named: 'demo-image' forModelArtifactNamed: 'demo-model'.
+	self writePortableProjectAt: incomingDirectory imageArtifact: imageArtifact.
+	repository := MooseNexusRepository new directory: rootDirectory / 'installed'.
+	installer := MooseNexusProjectDirectoryInstaller new.
+
+	installer installProjectDirectory: incomingDirectory in: repository.
+	installer installProjectDirectory: incomingDirectory in: repository.
+
+	projectDirectory := self repositoryDirectoryForTestRepository: repository.
+	self assert: (projectDirectory / 'metadata' / 'properties.json') exists
+]
+
+{ #category : 'tests' }
 MooseNexusOciArtifactPublishingTest >> testProjectDirectoryInstallerKeepsExistingProjectWhenIncomingPayloadIsInvalid [
 
 	| incomingDirectory repository projectDirectory imageArtifact modelFile installedModelFile |
