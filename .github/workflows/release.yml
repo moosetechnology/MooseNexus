@@ -2,6 +2,10 @@ name: Release
 
 on:
   workflow_dispatch:
+  workflow_run:
+    workflows: [Tests]
+    types: [completed]
+    branches: [main]
 
 permissions:
   actions: read
@@ -10,21 +14,37 @@ permissions:
 jobs:
   release:
     outputs:
+      released: ${{ steps.release-decision.outputs.released }}
       tag: ${{ steps.version.outputs.tag }}
+
+    if: >-
+      github.event_name == 'workflow_dispatch' ||
+      (github.event.workflow_run.conclusion == 'success' &&
+      github.event.workflow_run.event == 'push')
 
     runs-on: ubuntu-latest
     steps:
-      - name: Require main
+      - name: Select release commit
+        id: commit
+        env:
+          WORKFLOW_RUN_COMMIT: ${{ github.event.workflow_run.head_sha }}
         run: |
+          if [ "$GITHUB_EVENT_NAME" = workflow_run ]; then
+            printf 'value=%s\n' "$WORKFLOW_RUN_COMMIT" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
           if [ "$GITHUB_REF" != "refs/heads/main" ]; then
             echo "Run this workflow from main." >&2
             exit 1
           fi
+          printf 'value=%s\n' "$GITHUB_SHA" >> "$GITHUB_OUTPUT"
 
       - uses: actions/checkout@v7
         with:
           fetch-depth: 0
           persist-credentials: false
+          ref: ${{ steps.commit.outputs.value }}
 
       - name: Read MooseNexus version
         id: version
@@ -37,33 +57,71 @@ jobs:
           printf 'tag=v%s\n' "$moose_nexus_version" >> "$GITHUB_OUTPUT"
 
       - name: Verify CI
+        if: github.event_name == 'workflow_dispatch'
         env:
           GH_TOKEN: ${{ github.token }}
+          RELEASE_COMMIT: ${{ steps.commit.outputs.value }}
         run: |
-          successful_runs="$(gh run list --commit "$GITHUB_SHA" --workflow Tests --status completed --json conclusion --jq '[.[] | select(.conclusion == "success")] | length')"
+          successful_runs="$(gh run list --commit "$RELEASE_COMMIT" --workflow Tests --status completed --json conclusion --jq '[.[] | select(.conclusion == "success")] | length')"
           if [ "$successful_runs" -eq 0 ]; then
             echo "Tests must succeed for this commit before releasing it." >&2
             exit 1
           fi
 
-      - name: Verify release tag is new
+      - name: Decide whether to release
+        id: release-decision
+        env:
+          RELEASE_COMMIT: ${{ steps.commit.outputs.value }}
+          RELEASE_TAG: ${{ steps.version.outputs.tag }}
         run: |
-          if git ls-remote --exit-code --tags origin "refs/tags/${{ steps.version.outputs.tag }}" >/dev/null 2>&1; then
-            echo "Tag ${{ steps.version.outputs.tag }} already exists." >&2
+          if [ "$GITHUB_EVENT_NAME" = workflow_run ]; then
+            previous_version="$(git show "$RELEASE_COMMIT^:src/MooseNexus/MooseNexusVersion.class.st" |
+              sed -nE "s/^[[:space:]]*\^[[:space:]]*'([0-9]+\.[0-9]+\.[0-9]+)'.*/\1/p")"
+            current_version="${RELEASE_TAG#v}"
+
+            if [ "$current_version" = "$previous_version" ]; then
+              echo 'No MooseNexus version change; skipping release.'
+              echo 'released=false' >> "$GITHUB_OUTPUT"
+              exit 0
+            fi
+
+            if [ "$(printf '%s\n%s\n' "$previous_version" "$current_version" | sort -V | tail -n 1)" != "$current_version" ]; then
+              echo "MooseNexusVersion must increase, not change from $previous_version to $current_version." >&2
+              exit 1
+            fi
+          fi
+
+          existing_tag_commit="$(git ls-remote origin "refs/tags/$RELEASE_TAG^{}" | awk 'NR == 1 { print $1 }')"
+          if [ -z "$existing_tag_commit" ]; then
+            existing_tag_commit="$(git ls-remote origin "refs/tags/$RELEASE_TAG" | awk 'NR == 1 { print $1 }')"
+          fi
+
+          if [ -n "$existing_tag_commit" ]; then
+            if [ "$existing_tag_commit" = "$RELEASE_COMMIT" ]; then
+              echo "Release $RELEASE_TAG already exists for this commit; skipping release."
+              echo 'released=false' >> "$GITHUB_OUTPUT"
+              exit 0
+            fi
+
+            echo "Release $RELEASE_TAG already exists at a different commit." >&2
             exit 1
           fi
 
+          echo 'released=true' >> "$GITHUB_OUTPUT"
+
       - name: Create GitHub release
+        if: steps.release-decision.outputs.released == 'true'
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
           gh release create "${{ steps.version.outputs.tag }}" \
-            --target "$GITHUB_SHA" \
+            --target "${{ steps.commit.outputs.value }}" \
             --title "${{ steps.version.outputs.tag }}" \
             --generate-notes
 
   update-floating-tags:
     needs: release
+    if: needs.release.outputs.released == 'true'
     uses: ./.github/workflows/update-floating-release-tags.yml
     with:
       tag: ${{ needs.release.outputs.tag }}
