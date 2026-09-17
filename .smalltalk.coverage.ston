@@ -3,12 +3,13 @@ SmalltalkCISpec {
     SCIMetacelloLoadSpec {
       #baseline : 'MooseNexus',
       #directory : 'src',
+      #load : [ 'default', 'TypeScriptUnitTests' ],
       #platforms : [ #pharo ]
     }
   ],
   #testing : {
     #coverage : {
-      #packages : [ 'MooseNexus' ],
+      #packages : [ 'MooseNexus', 'MooseNexus-TypeScript' ],
       #format : #lcov
     }
   }

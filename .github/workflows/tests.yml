@@ -93,7 +93,7 @@ jobs:
           github-token: ${{ github.token }}
           file: coverage/lcov.info
 
-  build-tool-compatibility:
+  integration:
     needs: changes
     runs-on: ubuntu-latest
     strategy:
@@ -108,7 +108,7 @@ jobs:
             java: '17'
             maven: '3.9.16'
             gradle: '9.7.1'
-    name: Java build tools (${{ matrix.name }})
+    name: Integration tests (${{ matrix.name }})
     steps:
       - name: Skip integration tests
         if: needs.changes.outputs.run_tests != 'true'

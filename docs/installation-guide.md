@@ -11,7 +11,7 @@ A Metacello baseline group is a named set of packages. Choose a group to load on
 | `Core` | Core repository, project, dependency, and model-artifact support. |
 | `Java` | Java importers and runners; it also loads `Core`. |
 | `UI` | Optional MooseNexus user-interface package; it also loads `Core`. |
-| `TypeScript` | Experimental npm and TypeScript support; it also loads `Core` and FamixTypeScript. |
+| `TypeScript` | npm and TypeScript support; it also loads `Core` and FamixTypeScript. Requires Moose 13. |
 
 ### Test Groups
 
@@ -19,10 +19,10 @@ A Metacello baseline group is a named set of packages. Choose a group to load on
 | --- | --- |
 | `UnitTests` | Core unit tests. |
 | `JavaUnitTests` | Java unit tests; use with `Java`. |
-| `TypeScriptUnitTests` | Experimental TypeScript unit tests; use with `TypeScript`. |
+| `TypeScriptUnitTests` | TypeScript unit tests; use with `TypeScript`. |
 | `IntegrationTests` | Core integration tests. |
 | `JavaIntegrationTests` | Java integration tests. |
-| `TypeScriptIntegrationTests` | Experimental TypeScript integration tests. |
+| `TypeScriptIntegrationTests` | TypeScript integration tests. |
 | `Tests` | All unit and integration test groups, including TypeScript; use `all` for a complete test setup. |
 
 ### Aggregate Groups
@@ -75,7 +75,7 @@ Metacello new
 	load: 'default'.
 ```
 
-Load `IntegrationTests` and `JavaIntegrationTests` explicitly when working on integration behavior. These tests use checked-in fixtures and require an attached Iceberg repository. Load `all` only when also developing UI or experimental TypeScript support.
+Load `IntegrationTests`, `JavaIntegrationTests`, and `TypeScriptIntegrationTests` explicitly when working on integration behavior. These tests use checked-in fixtures and require an attached Iceberg repository. Load `all` only when also developing UI and every language-specific test group.
 
 ## Importer Requirements
 
@@ -84,6 +84,7 @@ Install only the requirements for the importer and extractor you choose:
 - Unmanaged Java projects only require a Java model extractor, such as [VerveineJ](https://github.com/moosetechnology/VerveineJ/) or [VerveineJ-Docker](https://github.com/Evref-BL/VerveineJ-Docker).
 - Maven-managed projects require Maven and a Java model extractor.
 - Gradle-managed projects require Gradle and a Java model extractor.
+- npm-managed TypeScript projects require a committed npm `package-lock.json` (format 2 or 3), a `tsconfig.json`, and a TypeScript model extractor.
 
 Both managed importers validate their build-tool version before reading the project. The Maven importer accepts Maven 3.6.3 through the Maven 3 line and rejects Maven 4. The Gradle importer accepts Gradle 6.9.4 through the Gradle 9 line and rejects Gradle 10. Managed-import integration tests continuously exercise these boundary configurations:
 
@@ -92,11 +93,11 @@ Both managed importers validate their build-tool version before reading the proj
 | Oldest supported | 8 | 3.6.3 | 6.9.4 |
 | Current stable | 17 | 3.9.16 | 9.7.1 |
 
-## Experimental TypeScript Support
+## TypeScript Support
 
-`MooseNexus-TypeScript` is optional, requires Moose 13, and is excluded from the v1 support commitment. Its stable extraction workflow awaits an upstream ts2famix release. MooseNexus does not publish or support a MooseNexus-owned ts2famix image.
+`MooseNexus-TypeScript` is optional and requires Moose 13. The default extractor runs the released `ts2famix@3.3.0` package in a pinned official Node Docker image. It changes neither the host's Node installation nor the source project. Docker needs network access to the npm registry when extracting a model.
 
-It can be loaded explicitly for evaluation:
+Load it explicitly when importing TypeScript projects:
 
 ```st
 Metacello new
@@ -104,3 +105,5 @@ Metacello new
 	baseline: 'MooseNexus';
 	load: 'TypeScript'.
 ```
+
+`MooseNexusLocalTypeScriptRunner` is available when a caller wants to provide its own local `ts2famix` command. The local command is caller-managed; use ts2famix 3.3.0 with Node 18.20.4 or later for parity with the default runner.

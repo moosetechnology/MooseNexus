@@ -43,11 +43,23 @@ MooseNexusTypeScriptRunnerTest >> testDockerTypeScriptRunnerDeclaresCapabilities
 	self assertCollection: extractor modelFormats hasSameElements: #( json ).
 	self assert: requirements size equals: 1.
 	self assert: dockerRequirement availabilityValidation equals: 'docker --version'.
-	self assert: (dockerRequirement expectedVersionDescription includesSubstring: 'moosenexus-ts2famix:3.2.0-679f54e').
+	self assert: (dockerRequirement expectedVersionDescription includesSubstring:
+			 'node:20.19.4-bookworm-slim@sha256:6db5e436948af8f0244488a1f658c2c8e55a3ae51ca2e1686ed042be8f25f70a').
+	self assert: (command includesSubstring: 'npx --yes ts2famix@3.3.0').
+	self deny: (command includesSubstring: 'moosenexus-ts2famix').
 	self assert: (command includesSubstring: ':/source:ro').
 	self assert: (command includesSubstring: ':/output').
 	self assert: (command includesSubstring: '-i /source/tsconfig.json').
 	self assert: (command includesSubstring: '-o /output/mooseNexusTypeScriptModel.json')
+]
+
+{ #category : 'tests' }
+MooseNexusTypeScriptRunnerTest >> testDockerTypeScriptRunnerValidatesTsconfigBeforeRunningDocker [
+
+	| extractor |
+	extractor := MooseNexusDockerTypeScriptRunner new target: rootDirectory pathString.
+
+	self should: [ extractor run ] raise: Error
 ]
 
 { #category : 'tests' }
