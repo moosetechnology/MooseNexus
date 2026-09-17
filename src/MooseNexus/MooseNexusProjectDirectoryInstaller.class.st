@@ -27,6 +27,18 @@ MooseNexusProjectDirectoryInstaller >> copyFile: sourceFile to: targetFile [
 ]
 
 { #category : 'private' }
+MooseNexusProjectDirectoryInstaller >> hasInstalledArtifactsFrom: incomingDirectory in: project [
+
+	((self modelManifestsFrom: incomingDirectory) allSatisfy: [ :incomingManifest |
+			 | existingManifest |
+			 existingManifest := project modelManifestNamed: incomingManifest modelArtifact name.
+			 existingManifest notNil and: [ existingManifest hasSameMetadataAs: incomingManifest ] ]) ifFalse: [ ^ false ].
+
+	^ (self imageArtifactsFrom: incomingDirectory) allSatisfy: [ :incomingArtifact |
+		  project imageArtifacts anySatisfy: [ :existingArtifact | existingArtifact = incomingArtifact ] ]
+]
+
+{ #category : 'private' }
 MooseNexusProjectDirectoryInstaller >> imageArtifactsFrom: projectDirectory [
 
 	| imagesFile |
@@ -101,7 +113,9 @@ MooseNexusProjectDirectoryInstaller >> installProjectDirectory: incomingDirector
 	projectDirectory := self projectDirectoryForProperties: projectProperties in: aMooseNexusRepository.
 	hasExistingProject := projectDirectory exists.
 	hasExistingProject ifTrue: [
-		self validateProjectAt: projectDirectory matchesProperties: projectProperties in: aMooseNexusRepository ].
+			self validateProjectAt: projectDirectory matchesProperties: projectProperties in: aMooseNexusRepository.
+			stagedProject := MooseNexusProject fromNexusDirectory: projectDirectory inBackend: aMooseNexusRepository localProjectBackend.
+			(shouldForce not and: [ self hasInstalledArtifactsFrom: sourceDirectory in: stagedProject ]) ifTrue: [ ^ stagedProject ] ].
 
 	stagedDirectory := self stagingDirectoryFor: projectDirectory.
 	stagingDirectoryPath := stagedDirectory pathString.
@@ -171,19 +185,22 @@ MooseNexusProjectDirectoryInstaller >> projectPropertiesFrom: projectDirectory [
 { #category : 'private' }
 MooseNexusProjectDirectoryInstaller >> replaceProjectDirectory: projectDirectory with: stagedDirectory [
 
-	| backupDirectory |
-	projectDirectory exists ifFalse: [
-			stagedDirectory moveTo: projectDirectory.
+	| backupDirectoryPath projectDirectoryPath stagedDirectoryPath |
+	projectDirectoryPath := projectDirectory pathString.
+	stagedDirectoryPath := stagedDirectory pathString.
+
+	projectDirectoryPath asFileReference exists ifFalse: [
+			stagedDirectoryPath asFileReference moveTo: projectDirectoryPath asFileReference.
 			^ self ].
 
-	backupDirectory := self backupDirectoryFor: projectDirectory.
-	projectDirectory moveTo: backupDirectory.
-	[ stagedDirectory moveTo: projectDirectory ]
+	backupDirectoryPath := (self backupDirectoryFor: projectDirectoryPath asFileReference) pathString.
+	projectDirectoryPath asFileReference moveTo: backupDirectoryPath asFileReference.
+	[ stagedDirectoryPath asFileReference moveTo: projectDirectoryPath asFileReference ]
 		on: Error
 		do: [ :error |
-				backupDirectory moveTo: projectDirectory.
+				backupDirectoryPath asFileReference moveTo: projectDirectoryPath asFileReference.
 				error pass ].
-	backupDirectory deleteAll
+	backupDirectoryPath asFileReference deleteAll
 ]
 
 { #category : 'private' }
