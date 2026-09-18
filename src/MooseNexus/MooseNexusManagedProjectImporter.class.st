@@ -59,6 +59,17 @@ MooseNexusManagedProjectImporter >> commandExitStatusMarker [
 ]
 
 { #category : 'private' }
+MooseNexusManagedProjectImporter >> commandInProjectDirectory: command [
+
+	^ String streamContents: [ :stream |
+			  stream
+				  nextPutAll: 'cd "';
+				  nextPutAll: directory pathString;
+				  nextPutAll: '" && ';
+				  nextPutAll: command ]
+]
+
+{ #category : 'private' }
 MooseNexusManagedProjectImporter >> commandOutputFrom: commandResult forToolNamed: toolName [
 
 	| markerStart commandOutput exitStatus |

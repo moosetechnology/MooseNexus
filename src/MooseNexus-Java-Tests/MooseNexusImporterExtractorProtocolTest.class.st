@@ -124,6 +124,19 @@ MooseNexusImporterExtractorProtocolTest >> testGradleImporterSignalsCommandFailu
 ]
 
 { #category : 'tests' }
+MooseNexusImporterExtractorProtocolTest >> testGradleWrapperRequirementRunsFromProjectDirectory [
+
+	| importer requirement |
+	(rootDirectory / 'gradlew') ensureCreateFile.
+	importer := MooseNexusGradleProjectImporter new directory: rootDirectory.
+	requirement := importer requirements first.
+
+	self assert:
+		(requirement availabilityValidation includesSubstring: 'cd "' , rootDirectory pathString , '" && ./gradlew --version').
+	self assert: requirement versionValidation equals: requirement availabilityValidation
+]
+
+{ #category : 'tests' }
 MooseNexusImporterExtractorProtocolTest >> testImageRequirementValidatesMooseFamixCompatibilityInImage [
 
 	| requirement result |
@@ -406,6 +419,18 @@ MooseNexusImporterExtractorProtocolTest >> testMavenImporterSignalsCommandFailur
 		raise: Error
 		whoseDescriptionIncludes: 'Could not resolve POM'
 		description: 'Maven command failures must preserve the Maven diagnostic'
+]
+
+{ #category : 'tests' }
+MooseNexusImporterExtractorProtocolTest >> testMavenWrapperRequirementRunsFromProjectDirectory [
+
+	| importer requirement |
+	(rootDirectory / 'mvnw') ensureCreateFile.
+	importer := MooseNexusMavenProjectImporter new directory: rootDirectory.
+	requirement := importer requirements first.
+
+	self assert: (requirement availabilityValidation includesSubstring: 'cd "' , rootDirectory pathString , '" && ./mvnw --version').
+	self assert: requirement versionValidation equals: requirement availabilityValidation
 ]
 
 { #category : 'tests' }
