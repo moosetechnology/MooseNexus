@@ -300,7 +300,7 @@ MooseNexusMavenProjectImporter >> registerWorkspaceDependenciesOf: element [
 MooseNexusMavenProjectImporter >> requirements [
 
 	| command |
-	command := self findMavenCommand , ' --version'.
+	command := self commandInProjectDirectory: self findMavenCommand , ' --version'.
 	^ { (MooseNexusToolRequirement
 		   name: 'Maven'
 		   availabilityValidation: command

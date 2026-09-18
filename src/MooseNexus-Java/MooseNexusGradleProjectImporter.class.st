@@ -266,7 +266,7 @@ MooseNexusGradleProjectImporter >> read [
 MooseNexusGradleProjectImporter >> requirements [
 
 	| command |
-	command := self findGradleCommand , ' --version'.
+	command := self commandInProjectDirectory: self findGradleCommand , ' --version'.
 	^ { (MooseNexusToolRequirement
 		   name: 'Gradle'
 		   availabilityValidation: command
