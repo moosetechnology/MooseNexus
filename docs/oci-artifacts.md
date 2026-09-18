@@ -116,6 +116,30 @@ project := puller
 
 `MooseNexusOrasTransport >> pull:` remains available when you only want to download the OCI artifact files into a generated temporary directory. Use `pull:into:` when you want to inspect or control that directory explicitly.
 
+## Loading A Pulled Model
+
+Pulling installs the model artifact into a MooseNexus repository. To load it in
+an existing Moose image, use the repository that received the artifact, locate
+the recorded project and model artifact, then import it:
+
+```st
+| repository project modelArtifact |
+
+repository := MooseNexusRepository default.
+project := repository
+	group: 'com.example'
+	project: 'demo'
+	version: '1.0.0'.
+modelArtifact := (project modelManifestNamed: 'demo-model') modelArtifact.
+
+project importModel: modelArtifact.
+```
+
+The image must use a Moose, Pharo, and MooseNexus runtime compatible with the
+build provenance recorded in the model manifest. When the artifact was pulled
+into a non-default repository, use `MooseNexusRepository localDirectory:` with
+that repository home instead of `MooseNexusRepository default`.
+
 ## Current Boundary
 
 The current implementation deliberately keeps OCI support client-side:
