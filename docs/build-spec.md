@@ -101,6 +101,8 @@ Every recorded model artifact includes build provenance: the MooseNexus, Moose, 
 
 This lets artifact consumers select an exact compatible runtime instead of interpreting model metadata with an arbitrary MooseNexus release. See [Persisted Metadata](persisted-metadata.md) for the metadata contract and migration policy.
 
+MooseNexus accepts sources from any directory. It does not require Git and does not record an upstream URL, source revision, or working-tree state. For automated builds, use a clean, pinned source input and explicitly version the selected extractor and its options. A source directory with local changes remains valid input when that is the intended model.
+
 ## Unmanaged Dependencies
 
 An unmanaged importer can add a local directory to the extractor classpath. This is the practical choice for a project with a large collection of local JARs: no artifact coordinates are required. Supply an absolute path or `FileReference`; MooseNexus does not rebase local inputs under the user's home directory. MooseNexus preserves the directory tree while staging it temporarily for extraction, so nested JARs remain available to Java extraction.
