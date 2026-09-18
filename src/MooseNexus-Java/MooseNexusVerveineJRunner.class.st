@@ -103,6 +103,20 @@ MooseNexusVerveineJRunner >> excludePaths: aPathStringCollection [
 	excludePaths := aPathStringCollection
 ]
 
+{ #category : 'provenance' }
+MooseNexusVerveineJRunner >> extractorOptions [
+
+	^ Dictionary new
+		  add: 'format' -> self format asString;
+		  add: 'summary' -> self summary;
+		  add: 'allLocals' -> self allLocals;
+		  add: 'anchor' -> (self anchor ifNotNil: [ :configuredAnchor | configuredAnchor asString ]);
+		  add: 'excludePaths' -> self excludePaths asArray copy;
+		  add: 'javaVersion' -> self javaVersion;
+		  add: 'jvmArgs' -> self jvmArgs;
+		  yourself
+]
+
 { #category : 'accessing' }
 MooseNexusVerveineJRunner >> format [
 

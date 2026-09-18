@@ -64,6 +64,31 @@ MooseNexusModelBuilderTest >> tearDown [
 ]
 
 { #category : 'tests' }
+MooseNexusModelBuilderTest >> testBuildProvenanceReadsManifestsWithoutExtractorConfiguration [
+
+	| dictionary provenance |
+	dictionary := self buildProvenance asDictionary copy.
+	dictionary removeKey: 'extractor'.
+
+	provenance := MooseNexusBuildProvenance fromDictionary: dictionary.
+
+	self assert: provenance extractorProvenance runnerName equals: 'unknown'
+]
+
+{ #category : 'tests' }
+MooseNexusModelBuilderTest >> testBuildProvenanceRoundTripsExtractorConfiguration [
+
+	| extractorProvenance provenance |
+	extractorProvenance := MooseNexusExtractorProvenance
+		                       runnerName: 'ExampleRunner'
+		                       identity: 'example:1.0.0'
+		                       options: (Dictionary with: 'format' -> 'json').
+	provenance := self buildProvenance withExtractorProvenance: extractorProvenance.
+
+	self assert: (MooseNexusBuildProvenance fromDictionary: provenance asDictionary) equals: provenance
+]
+
+{ #category : 'tests' }
 MooseNexusModelBuilderTest >> testBuildSpecConfiguresModelBuilder [
 
 	| spec builder extractor |
@@ -453,10 +478,48 @@ MooseNexusModelBuilderTest >> testRegisterModelCopiesOutputIntoModelArtifactPayl
 	self assert: (serializedArtifact at: 'path') equals: 'artifacts/models/demo-model.json'.
 	self assert: (serializedManifest includesKey: 'dependencyResolution').
 	provenance := serializedManifest at: 'buildProvenance'.
-	self assert: provenance equals: self buildProvenance asDictionary.
+	self
+		assert: provenance
+		equals: (self buildProvenance withExtractorProvenance: builder extractor extractorProvenance) asDictionary.
 	generatedFile := (serializedManifest at: 'generatedFiles') first.
 	self assert: (generatedFile at: 'path') equals: 'artifacts/models/demo-model.json'.
 	self assert: (generatedFile at: 'size') equals: 3.
 	self assert: (generatedFile at: 'checksumAlgorithm') equals: 'sha256'.
 	self assert: (generatedFile at: 'checksum') equals: '257c1be96ae69f4b01c2c69bdb6d78605f59175819fb007d0bf245bf48444c4a'
+]
+
+{ #category : 'tests' }
+MooseNexusModelBuilderTest >> testRegisterModelRecordsConfiguredExtractorProvenance [
+
+	| builder extractor source provenance options |
+	source := project repositoryDirectory / 'sources' / 'mooseNexusModel.mse'.
+	source writeStreamDo: [ :stream | stream nextPutAll: '()' ].
+	extractor := MooseNexusDockerVerveineJRunner new
+		             version: 'v4.1.4';
+		             format: #mse;
+		             summary: true;
+		             allLocals: true;
+		             anchor: #assoc;
+		             excludePaths: #( 'generated' );
+		             javaVersion: '17';
+		             jvmArgs: '-Xmx2g'.
+	builder := MooseNexusModelBuilder on: project.
+	builder
+		extractor: extractor;
+		modelName: 'demo-model';
+		buildProvenance: self buildProvenance.
+
+	builder registerModel: 'sources/mooseNexusModel.mse'.
+
+	provenance := project modelManifests first buildProvenance extractorProvenance.
+	options := provenance options.
+	self assert: provenance runnerName equals: MooseNexusDockerVerveineJRunner name.
+	self assert: provenance identity equals: 'ghcr.io/evref-bl/verveinej:v4.1.4'.
+	self assert: (options at: 'format') equals: 'mse'.
+	self assert: (options at: 'summary').
+	self assert: (options at: 'allLocals').
+	self assert: (options at: 'anchor') equals: 'assoc'.
+	self assert: (options at: 'excludePaths') equals: #( 'generated' ).
+	self assert: (options at: 'javaVersion') equals: '17'.
+	self assert: (options at: 'jvmArgs') equals: '-Xmx2g'
 ]

@@ -11,7 +11,7 @@ An OCI bundle contains:
 - the exported model payload;
 - the original source project archived as `sources.zip`;
 - the recorded MooseNexus project properties as `moosenexus-project-properties.json`;
-- the MooseNexus model artifact manifest as `moosenexus-artifact-manifest.json`, including the MooseNexus, Moose, and Pharo versions used to produce the model.
+- the MooseNexus model artifact manifest as `moosenexus-artifact-manifest.json`, including the runtime and extractor configuration used to produce the model.
 
 Sources are part of the bundle because they are required to inspect, reproduce, or rebuild a model artifact. The model payload is currently an exported model file. Future bundle variants can use the same publication path for other payloads, such as a Pharo image containing an imported model.
 

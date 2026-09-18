@@ -11,6 +11,18 @@ Class {
 	#tag : 'ModelExtraction'
 }
 
+{ #category : 'provenance' }
+MooseNexusDockerTypeScriptRunner >> extractorIdentity [
+
+	^ self ts2famixPackageReference
+]
+
+{ #category : 'provenance' }
+MooseNexusDockerTypeScriptRunner >> extractorOptions [
+
+	^ Dictionary with: 'runtimeImage' -> self imageReference
+]
+
 { #category : 'accessing' }
 MooseNexusDockerTypeScriptRunner >> imageReference [
 

@@ -84,6 +84,12 @@ MooseNexusModelBuilder >> dependencyResolutionResult: aMooseNexusDependencyResol
 ]
 
 { #category : 'accessing' }
+MooseNexusModelBuilder >> effectiveBuildProvenance [
+
+	^ self buildProvenance withExtractorProvenance: self extractor extractorProvenance
+]
+
+{ #category : 'accessing' }
 MooseNexusModelBuilder >> extractor [
 
 	^ extractor ifNil: [ extractor := MooseNexusModelExtractor forLanguage: project language ]
@@ -175,7 +181,7 @@ MooseNexusModelBuilder >> registerModel: modelPath [
 		            dependencyResolutionResult: self dependencyResolutionResult
 		            generatedFiles: { generatedFile }
 		            createdTimestamp: timestamp
-		            buildProvenance: self buildProvenance.
+		            buildProvenance: self effectiveBuildProvenance.
 	project addModelManifest: manifest.
 	^ modelArtifact
 ]

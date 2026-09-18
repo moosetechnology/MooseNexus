@@ -65,6 +65,24 @@ MooseNexusModelExtractor >> cleanUp [
 	^ self
 ]
 
+{ #category : 'provenance' }
+MooseNexusModelExtractor >> extractorIdentity [
+
+	^ nil
+]
+
+{ #category : 'provenance' }
+MooseNexusModelExtractor >> extractorOptions [
+
+	^ Dictionary new
+]
+
+{ #category : 'provenance' }
+MooseNexusModelExtractor >> extractorProvenance [
+
+	^ MooseNexusExtractorProvenance runnerName: self class name identity: self extractorIdentity options: self extractorOptions
+]
+
 { #category : 'capabilities' }
 MooseNexusModelExtractor >> language [
 

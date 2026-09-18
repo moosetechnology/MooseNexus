@@ -1,7 +1,7 @@
 "
-I describe the MooseNexus, Moose, and Pharo runtime that produced a model artifact.
+I describe the runtime and extractor configuration that produced a model artifact.
 
-I am persisted in a model artifact manifest so a client can provision a known compatible runtime before installing the artifact. I derive every version from the running image, keeping recorded provenance aligned with the runtime that actually built the model.
+I am persisted in a model artifact manifest so a client can provision a known compatible runtime and inspect the selected model extractor. I derive runtime versions from the running image and receive extractor provenance from the configured model builder.
 "
 Class {
 	#name : 'MooseNexusBuildProvenance',
@@ -9,7 +9,8 @@ Class {
 	#instVars : [
 		'mooseNexusVersion',
 		'mooseVersion',
-		'pharoVersion'
+		'pharoVersion',
+		'extractorProvenance'
 	],
 	#category : 'MooseNexus-Artifact',
 	#package : 'MooseNexus',
@@ -32,12 +33,30 @@ MooseNexusBuildProvenance class >> fromDictionary: aDictionary [
 		  mooseNexusVersion: (aDictionary at: 'mooseNexusVersion')
 		  mooseVersion: (aDictionary at: 'mooseVersion')
 		  pharoVersion: (aDictionary at: 'pharoVersion')
+		  extractorProvenance: (aDictionary
+				   at: 'extractor'
+				   ifPresent: [ :extractorDictionary | MooseNexusExtractorProvenance fromDictionary: extractorDictionary ]
+				   ifAbsent: [ MooseNexusExtractorProvenance unknown ])
 ]
 
 { #category : 'instance creation' }
 MooseNexusBuildProvenance class >> mooseNexusVersion: aMooseNexusVersion mooseVersion: aMooseVersion pharoVersion: aPharoVersion [
 
-	^ self new initializeMooseNexusVersion: aMooseNexusVersion mooseVersion: aMooseVersion pharoVersion: aPharoVersion
+	^ self
+		  mooseNexusVersion: aMooseNexusVersion
+		  mooseVersion: aMooseVersion
+		  pharoVersion: aPharoVersion
+		  extractorProvenance: MooseNexusExtractorProvenance unknown
+]
+
+{ #category : 'instance creation' }
+MooseNexusBuildProvenance class >> mooseNexusVersion: aMooseNexusVersion mooseVersion: aMooseVersion pharoVersion: aPharoVersion extractorProvenance: aMooseNexusExtractorProvenance [
+
+	^ self new
+		  initializeMooseNexusVersion: aMooseNexusVersion
+		  mooseVersion: aMooseVersion
+		  pharoVersion: aPharoVersion
+		  extractorProvenance: aMooseNexusExtractorProvenance
 ]
 
 { #category : 'comparing' }
@@ -47,7 +66,8 @@ MooseNexusBuildProvenance >> = anObject [
 	anObject class == self class ifFalse: [ ^ false ].
 
 	^ anObject mooseNexusVersion = mooseNexusVersion and: [
-		  anObject mooseVersion = mooseVersion and: [ anObject pharoVersion = pharoVersion ] ]
+			  anObject mooseVersion = mooseVersion and: [
+				  anObject pharoVersion = pharoVersion and: [ anObject extractorProvenance = extractorProvenance ] ] ]
 ]
 
 { #category : 'converting' }
@@ -57,21 +77,30 @@ MooseNexusBuildProvenance >> asDictionary [
 		  add: 'mooseNexusVersion' -> mooseNexusVersion;
 		  add: 'mooseVersion' -> mooseVersion;
 		  add: 'pharoVersion' -> pharoVersion;
+		  add: 'extractor' -> extractorProvenance asDictionary;
 		  yourself
+]
+
+{ #category : 'accessing' }
+MooseNexusBuildProvenance >> extractorProvenance [
+
+	^ extractorProvenance
 ]
 
 { #category : 'comparing' }
 MooseNexusBuildProvenance >> hash [
 
-	^ mooseNexusVersion hash bitXor: (mooseVersion hash bitXor: pharoVersion hash)
+	^ mooseNexusVersion hash bitXor: (mooseVersion hash bitXor: (pharoVersion hash bitXor: extractorProvenance hash))
 ]
 
 { #category : 'initialization' }
-MooseNexusBuildProvenance >> initializeMooseNexusVersion: aMooseNexusVersion mooseVersion: aMooseVersion pharoVersion: aPharoVersion [
+MooseNexusBuildProvenance >> initializeMooseNexusVersion: aMooseNexusVersion mooseVersion: aMooseVersion pharoVersion: aPharoVersion extractorProvenance: aMooseNexusExtractorProvenance [
 
+	super initialize.
 	mooseNexusVersion := aMooseNexusVersion.
 	mooseVersion := aMooseVersion.
-	pharoVersion := aPharoVersion
+	pharoVersion := aPharoVersion.
+	extractorProvenance := aMooseNexusExtractorProvenance
 ]
 
 { #category : 'accessing' }
@@ -90,4 +119,14 @@ MooseNexusBuildProvenance >> mooseVersion [
 MooseNexusBuildProvenance >> pharoVersion [
 
 	^ pharoVersion
+]
+
+{ #category : 'accessing' }
+MooseNexusBuildProvenance >> withExtractorProvenance: aMooseNexusExtractorProvenance [
+
+	^ self class
+		  mooseNexusVersion: mooseNexusVersion
+		  mooseVersion: mooseVersion
+		  pharoVersion: pharoVersion
+		  extractorProvenance: aMooseNexusExtractorProvenance
 ]
