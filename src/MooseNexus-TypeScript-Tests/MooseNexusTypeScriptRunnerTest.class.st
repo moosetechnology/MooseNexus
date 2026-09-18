@@ -54,6 +54,19 @@ MooseNexusTypeScriptRunnerTest >> testDockerTypeScriptRunnerDeclaresCapabilities
 ]
 
 { #category : 'tests' }
+MooseNexusTypeScriptRunnerTest >> testDockerTypeScriptRunnerRecordsPinnedExtractorConfiguration [
+
+	| extractor provenance options |
+	extractor := MooseNexusDockerTypeScriptRunner new.
+	provenance := extractor extractorProvenance.
+	options := provenance options.
+
+	self assert: provenance runnerName equals: MooseNexusDockerTypeScriptRunner name.
+	self assert: provenance identity equals: 'ts2famix@3.3.0'.
+	self assert: (options at: 'runtimeImage') equals: extractor imageReference
+]
+
+{ #category : 'tests' }
 MooseNexusTypeScriptRunnerTest >> testDockerTypeScriptRunnerValidatesTsconfigBeforeRunningDocker [
 
 	| extractor |

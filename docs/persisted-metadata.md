@@ -9,13 +9,13 @@ The v1 contract covers these files:
 | Path | Contents | Schema version |
 | --- | --- | --- |
 | `metadata/properties.json` | Project identity, project nature, language, and managed-project provenance | `schemaVersion: "1"` |
-| `metadata/models.json` | Model-artifact manifests, including dependency resolution, generated-file checksums, and build provenance | `schemaVersion: "1"` per manifest |
+| `metadata/models.json` | Model-artifact manifests, including dependency resolution, generated-file checksums, runtime provenance, and extractor provenance | `schemaVersion: "1"` per manifest |
 | `metadata/images.json` | Optional image-artifact references | No independent schema version yet |
 | `artifacts/` | Model and optional image payloads addressed by the metadata | Defined by the corresponding manifest |
 
-Project coordinates in `properties.json` are the canonical identity and determine the repository path. A model manifest records its own artifact coordinates, payload path, generated-file checksums, resolved dependency references, conflict decisions, materialization audit, timestamp, and the MooseNexus, Moose, and Pharo versions that produced it.
+Project coordinates in `properties.json` are the canonical identity and determine the repository path. A model manifest records its own artifact coordinates, payload path, generated-file checksums, resolved dependency references, conflict decisions, materialization audit, timestamp, runtime versions, and extractor configuration.
 
-Build provenance identifies the runtime that produced a model; it is not a replay environment. Dependency references and generated-file paths are portable metadata, while a materialization entry is only an audit of a particular build.
+Build provenance identifies the runtime and effective extractor configuration that produced a model; it is not a replay environment. Extractor provenance records the runner, an optional configured tool or image reference, and output-affecting runner options. It does not record source-control identity, source-tree state, or machine-specific local-runner paths. Dependency references and generated-file paths are portable metadata, while a materialization entry is only an audit of a particular build.
 
 ## Location Ownership
 

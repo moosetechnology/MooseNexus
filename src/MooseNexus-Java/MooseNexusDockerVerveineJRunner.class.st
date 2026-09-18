@@ -13,6 +13,18 @@ Class {
 	#tag : 'ModelExtraction'
 }
 
+{ #category : 'provenance' }
+MooseNexusDockerVerveineJRunner >> extractorIdentity [
+
+	^ self imageReference
+]
+
+{ #category : 'accessing' }
+MooseNexusDockerVerveineJRunner >> imageReference [
+
+	^ 'ghcr.io/evref-bl/verveinej:' , self version
+]
+
 { #category : 'capabilities' }
 MooseNexusDockerVerveineJRunner >> requirements [
 
@@ -20,7 +32,7 @@ MooseNexusDockerVerveineJRunner >> requirements [
 		   name: 'Docker'
 		   availabilityValidation: 'docker --version'
 		   versionValidation: 'docker --version'
-		   expectedVersionDescription: 'Docker CLI capable of running ghcr.io/evref-bl/verveinej:' , self version) }
+		   expectedVersionDescription: 'Docker CLI capable of running ' , self imageReference) }
 ]
 
 { #category : 'running' }
@@ -55,6 +67,6 @@ MooseNexusDockerVerveineJRunner >> writeCommand [
 
 	^ String streamContents: [ :stream |
 			  stream << 'docker run --rm -v ' << target pathString << '/sources:/src -v ' << target pathString
-			  << '/dependencies:/dependency ghcr.io/evref-bl/verveinej:' << self version << ' '.
+			  << '/dependencies:/dependency ' << self imageReference << ' '.
 			  self printOptionsOn: stream ]
 ]

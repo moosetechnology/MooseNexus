@@ -11,7 +11,7 @@ An OCI bundle contains:
 - the exported model payload;
 - the original source project archived as `sources.zip`;
 - the recorded MooseNexus project properties as `moosenexus-project-properties.json`;
-- the MooseNexus model artifact manifest as `moosenexus-artifact-manifest.json`, including the MooseNexus, Moose, and Pharo versions used to produce the model.
+- the MooseNexus model artifact manifest as `moosenexus-artifact-manifest.json`, including the runtime and extractor configuration used to produce the model.
 
 Sources are part of the bundle because they are required to inspect, reproduce, or rebuild a model artifact. The model payload is currently an exported model file. Future bundle variants can use the same publication path for other payloads, such as a Pharo image containing an imported model.
 
@@ -115,6 +115,30 @@ project := puller
 ```
 
 `MooseNexusOrasTransport >> pull:` remains available when you only want to download the OCI artifact files into a generated temporary directory. Use `pull:into:` when you want to inspect or control that directory explicitly.
+
+## Loading A Pulled Model
+
+Pulling installs the model artifact into a MooseNexus repository. To load it in
+an existing Moose image, use the repository that received the artifact, locate
+the recorded project and model artifact, then import it:
+
+```st
+| repository project modelArtifact |
+
+repository := MooseNexusRepository default.
+project := repository
+	group: 'com.example'
+	project: 'demo'
+	version: '1.0.0'.
+modelArtifact := (project modelManifestNamed: 'demo-model') modelArtifact.
+
+project importModel: modelArtifact.
+```
+
+The image must use a Moose, Pharo, and MooseNexus runtime compatible with the
+build provenance recorded in the model manifest. When the artifact was pulled
+into a non-default repository, use `MooseNexusRepository localDirectory:` with
+that repository home instead of `MooseNexusRepository default`.
 
 ## Current Boundary
 

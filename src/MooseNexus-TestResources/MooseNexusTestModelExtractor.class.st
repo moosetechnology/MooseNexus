@@ -19,6 +19,12 @@ MooseNexusTestModelExtractor >> cleanUp [
 	^ self
 ]
 
+{ #category : 'provenance' }
+MooseNexusTestModelExtractor >> extractorProvenance [
+
+	^ MooseNexusExtractorProvenance runnerName: self class name identity: nil options: Dictionary new
+]
+
 { #category : 'capabilities' }
 MooseNexusTestModelExtractor >> metamodel [
 

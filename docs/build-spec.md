@@ -97,9 +97,11 @@ result := spec executeIn: repository.
 
 ## Build Runtime
 
-Every recorded model artifact includes build provenance: the MooseNexus, Moose, and Pharo versions that produced it. MooseNexus obtains all three from the running image, including the Moose version through `MooseVersion current versionNumber`.
+Every recorded model artifact includes build provenance: the MooseNexus, Moose, and Pharo versions that produced it, plus the selected extractor runner, its configured tool or image reference when available, and its output-affecting options. MooseNexus obtains the runtime versions from the running image, including the Moose version through `MooseVersion current versionNumber`.
 
 This lets artifact consumers select an exact compatible runtime instead of interpreting model metadata with an arbitrary MooseNexus release. See [Persisted Metadata](persisted-metadata.md) for the metadata contract and migration policy.
+
+MooseNexus accepts sources from any directory. It does not require Git and does not record an upstream URL, source revision, or working-tree state. It likewise does not persist machine-specific local-runner paths. For automated builds, use a clean, pinned source input and explicitly version the selected extractor and its options. A source directory with local changes remains valid input when that is the intended model.
 
 ## Unmanaged Dependencies
 
