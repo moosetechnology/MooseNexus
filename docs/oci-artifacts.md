@@ -37,6 +37,17 @@ registry.example.com/moose/moosenexus/com.example/demo:1.0.0
 
 The OCI repository reference is based on the MooseNexus project coordinates: group, name, and version. The model name is stored as MooseNexus metadata and as an OCI annotation, but it is not part of the OCI repository path.
 
+`moosenexus` is the default repository prefix, not a required registry segment. Configure a mapper with `repositoryPrefix:` when the target registry uses another layout. Prefixes and namespaces may contain slash-separated path segments; an empty prefix omits the default segment entirely:
+
+```st
+mapper := MooseNexusOciReferenceMapper
+	registry: 'registry.example.com'
+	namespace: 'team/models'
+	repositoryPrefix: 'moose-artifacts'.
+```
+
+That mapper publishes `com.example:demo:1.0.0` to `registry.example.com/team/models/moose-artifacts/com.example/demo:1.0.0`.
+
 The registry must be logged in before publishing. With ORAS, that is usually done outside MooseNexus:
 
 ```sh
@@ -103,6 +114,8 @@ project := puller pull: 'registry.example.com/moose/moosenexus/com.example/demo:
 ```
 
 The pull reference must include a tag or digest. For MooseNexus artifacts, the tag is the project version.
+
+Configure the puller's mapper with the same `repositoryPrefix:` used when the artifact was published.
 
 Pulling is local-first when the reference encodes MooseNexus coordinates. If the project already exists in the local repository, the puller returns the local project without contacting the remote registry.
 

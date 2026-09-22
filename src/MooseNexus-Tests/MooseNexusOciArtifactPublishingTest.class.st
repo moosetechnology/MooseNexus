@@ -666,6 +666,15 @@ MooseNexusOciArtifactPublishingTest >> testPullerReturnsLocalProjectWhenAlreadyI
 ]
 
 { #category : 'tests' }
+MooseNexusOciArtifactPublishingTest >> testReferenceMapperAllowsAnEmptyRepositoryPrefix [
+
+	| mapper |
+	mapper := MooseNexusOciReferenceMapper registry: 'registry.example.com' namespace: 'team/moose' repositoryPrefix: ''.
+
+	self assert: (mapper referenceFor: self artifactCoordinates) equals: 'registry.example.com/team/moose/com.example/demo:1.0.0'
+]
+
+{ #category : 'tests' }
 MooseNexusOciArtifactPublishingTest >> testReferenceMapperNormalizesNamespaceReference [
 
 	| mapper |
@@ -674,6 +683,39 @@ MooseNexusOciArtifactPublishingTest >> testReferenceMapperNormalizesNamespaceRef
 	self
 		assert: (mapper referenceFor: self artifactCoordinates)
 		equals: 'registry.example.com/moose-team/moosenexus/com.example/demo:1.0.0'
+]
+
+{ #category : 'tests - reference mapper' }
+MooseNexusOciArtifactPublishingTest >> testReferenceMapperRejectsDigestReferences [
+
+	| mapper |
+	mapper := MooseNexusOciReferenceMapper registry: 'registry.example.com' namespace: 'team/moose'.
+
+	self
+		should: [ mapper coordinatesFromReference: 'registry.example.com/team/moose/moosenexus/com.example/demo@sha256:1234' ]
+		raise: Error
+		whoseDescriptionIncludes: 'Cannot infer MooseNexus coordinates from digest reference'
+		description: 'OCI digest references do not identify a coordinate version'
+]
+
+{ #category : 'tests' }
+MooseNexusOciArtifactPublishingTest >> testReferenceMapperUsesConfiguredRepositoryPrefixForReferencesAndParsing [
+
+	| mapper reference |
+	mapper := MooseNexusOciReferenceMapper
+		          registry: 'registry.example.com'
+		          namespace: 'team/moose'
+		          repositoryPrefix: 'models/moosenexus'.
+	reference := mapper referenceFor: self artifactCoordinates.
+
+	self assert: mapper repositoryPrefix equals: 'models/moosenexus'.
+	self assert: reference equals: 'registry.example.com/team/moose/models/moosenexus/com.example/demo:1.0.0'.
+	self assert: (mapper coordinatesFromReference: reference) equals: project coordinates.
+	self
+		should: [ mapper coordinatesFromReference: 'registry.example.com/team/moose/moosenexus/com.example/demo:1.0.0' ]
+		raise: Error
+		whoseDescriptionIncludes: 'configured repository layout'
+		description: 'A mapper must not accept references from another repository prefix'
 ]
 
 { #category : 'private' }
