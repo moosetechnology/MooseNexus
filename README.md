@@ -17,6 +17,7 @@ MooseNexus builds, stores, and shares Moose models of software projects. It reco
 - [General](docs/general.md): concepts, architecture, and glossary.
 - [User Guide](docs/user-guide.md): building, storing, and sharing models.
 - [Installation Guide](docs/installation-guide.md): loading MooseNexus and installing only the tools required by a chosen importer.
+- [Development](docs/development.md): tests and releases.
 
 ## Support
 
