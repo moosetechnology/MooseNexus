@@ -15,6 +15,8 @@ An OCI bundle contains:
 
 Sources are part of the bundle because they are required to inspect, reproduce, or rebuild a model artifact. The model payload is currently an exported model file. Future bundle variants can use the same publication path for other payloads, such as a Pharo image containing an imported model.
 
+MooseNexus archives the recorded source tree without scanning for or removing secrets. Files such as private keys or `.env` files may therefore be included in `sources.zip`, and the model or metadata may also contain sensitive information. Review the recorded sources and bundle before publishing it to a registry.
+
 ## References
 
 `MooseNexusOciReferenceMapper` maps model artifact coordinates to an OCI reference under a registry namespace.
